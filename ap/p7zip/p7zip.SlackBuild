@@ -1,0 +1,336 @@
+#!/bin/sh
+# $Id: p7zip.SlackBuild,v 1.24 2016/07/21 21:04:27 root Exp root $
+# Copyright 2006, 2008, 2009, 2010, 2011, 2015, 2016  Eric Hameleers, Eindhoven, NL
+# All rights reserved.
+#
+#   Permission to use, copy, modify, and distribute this software for
+#   any purpose with or without fee is hereby granted, provided that
+#   the above copyright notice and this permission notice appear in all
+#   copies.
+#
+#   THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+#   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+#   IN NO EVENT SHALL THE AUTHORS AND COPYRIGHT HOLDERS AND THEIR
+#   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+#   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+#   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+#   ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+#   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+#   OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+#   SUCH DAMAGE.
+# -----------------------------------------------------------------------------
+#
+# Slackware SlackBuild script 
+# ===========================
+# By:         Eric Hameleers <alien@slackware.com>
+# For:        p7zip
+# Descr:      file archiver with high compression rates
+# URL:        http://www.7-zip.org/
+# Needs:      wxGTK (for the gui)
+# Changelog:  
+# 4.30-1:   13/jan/2006 by Eric Hameleers <alien@slackware.com>
+#            * Initial build.
+# 4.42-1:   29/jul/2006 by Eric Hameleers <alien@slackware.com>
+#            * Update.
+# 4.57-1:    19/mar/2008 by Eric Hameleers <alien@slackware.com>
+#             * Update. Check for gcc version. Use 'make install' instead of
+#               manually copying files.
+# 4.65-1:    27/may/2009 by Eric Hameleers <alien@slackware.com>
+#             * Update.
+# 9.13-1:    14/dec/2010 by Eric Hameleers <alien@slackware.com>
+#             * Update.
+# 9.20.1-1:  18/may/2011 by Eric Hameleers <alien@slackware.com>
+#             * Update.
+# 9.38.1-1:  20/jul/2015 by Eric Hameleers <alien@slackware.com>
+#             * Update.
+# 15.09-1:   21/oct/2015 by Eric Hameleers <alien@slackware.com>
+#             * Update.
+# 16.02-1:   21/jul/2016 by Eric Hameleers <alien@slackware.com>
+#             * Update.
+# 
+# Run 'sh p7zip.SlackBuild' to build a Slackware package.
+# The package (.tgz) plus descriptive .txt file are created in /tmp .
+# Install using 'installpkg'. 
+#
+# -----------------------------------------------------------------------------
+
+# Set initial variables:
+
+PRGNAM=p7zip
+VERSION=${VERSION:-16.02}
+BUILD=${BUILD:-1}
+TAG=${TAG:-alien}
+
+GUI=${GUI:-YES}  # build the GUI: YES or NO (the CLI is built always)
+
+DOCS="ChangeLog README* TODO DOC/*"
+
+# Where do we look for sources?
+SRCDIR=$(cd $(dirname $0); pwd)
+
+# Place to build (TMP) package (PKG) and output (OUTPUT) the program:
+TMP=${TMP:-/tmp/build}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+SOURCE="$SRCDIR/${PRGNAM}_${VERSION}_src_all.tar.bz2"
+SRCURL="http://downloads.sourceforge.net/${PRGNAM}/${PRGNAM}_${VERSION}_src_all.tar.bz2"
+
+##
+## --- with a little luck, you won't have to edit below this point --- ##
+##
+
+# Automatically determine the architecture we're building on:
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) export ARCH=i486 ;;
+    arm*) export ARCH=arm ;;
+    # Unless $ARCH is already set, use uname -m for all other archs:
+       *) export ARCH=$( uname -m ) ;;
+  esac
+fi
+
+case "$ARCH" in
+  i486)      SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ARCHSUFFIX="x86_asm_gcc_4.X"
+             ;;
+  x86_64)    SLKCFLAGS="-O2 -fPIC"
+             SLKLDFLAGS="-L/usr/lib64"; LIBDIRSUFFIX="64"
+             ARCHSUFFIX="amd64"
+             ;;
+  aarch64)   SLKCFLAGS="-O2"
+             SLKLDFLAGS="-L/usr/lib64"; LIBDIRSUFFIX="64"
+             ARCHSUFFIX="any_cpu"
+             ;;
+  *)         SLKCFLAGS="-O2"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ARCHSUFFIX="any_cpu"
+             ;;
+esac
+
+# Exit the script on errors:
+set -e
+trap 'echo "$0 FAILED at line ${LINENO}" | tee $OUTPUT/error-${PRGNAM}.log' ERR
+# Catch unitialized variables:
+set -u
+P1=${1:-1}
+
+# Save old umask and set to 0022:
+_UMASK_=$(umask)
+umask 0022
+
+# Create working directories:
+mkdir -p $OUTPUT          # place for the package to be saved
+mkdir -p $TMP/tmp-$PRGNAM # location to build the source
+mkdir -p $PKG             # place for the package to be built
+rm -rf $PKG/*             # always erase old package's contents
+rm -rf $TMP/tmp-$PRGNAM/* # remove the remnants of previous build
+rm -rf $OUTPUT/{configure,make,install,error,makepkg}-$PRGNAM.log
+                          # remove old log files
+
+# Source file availability:
+if ! [ -f ${SOURCE} ]; then
+  echo "Source '$(basename ${SOURCE})' not available yet..."
+  # Check if the $SRCDIR is writable at all - if not, download to $OUTPUT
+  [ -w "$SRCDIR" ] || SOURCE="$OUTPUT/$(basename $SOURCE)"
+  if [ -f ${SOURCE} ]; then echo "Ah, found it!"; continue; fi
+  if ! [ "x${SRCURL}" == "x" ]; then
+    echo "Will download file to $(dirname $SOURCE)"
+    wget -nv -T 20 -O "${SOURCE}" "${SRCURL}" || true
+    if [ $? -ne 0 -o ! -s "${SOURCE}" ]; then
+      echo "Downloading '$(basename ${SOURCE})' failed... aborting the build."
+      mv -f "${SOURCE}" "${SOURCE}".FAIL
+      exit 1
+    fi
+  else
+    echo "File '$(basename ${SOURCE})' not available... aborting the build."
+    exit 1
+  fi
+fi
+
+if [ "$P1" == "--download" ]; then
+  echo "Download complete."
+  exit 0
+fi
+
+# --- PACKAGE BUILDING ---
+
+echo "++"
+echo "|| $PRGNAM-$VERSION"
+echo "++"
+
+cd $TMP/tmp-$PRGNAM
+echo "Extracting the source archive(s) for $PRGNAM..."
+tar -xvf ${SOURCE}
+cd ${PRGNAM}_${VERSION}
+
+# Patches borrowed from Gentoo:
+touch $OUTPUT/patch-${PRGNAM}.log
+#cat $SRCDIR/patches/p7zip_CVE-2015-1038.patch | patch -p1 --verbose \
+#  2>&1 | tee -a $OUTPUT/patch-${PRGNAM}.log
+cat $SRCDIR/patches/p7zip_osversion.patch | patch -p1 --verbose \
+  2>&1 | tee -a $OUTPUT/patch-${PRGNAM}.log
+
+chown -R root:root .
+chmod -R u+w,go+r-w,a+X-s .
+
+echo Building ...
+# Some moving around for the benefit of my DOCS variable:
+mv contrib/gzip-like_CLI_wrapper_for_7z/README README.p7zip_wrapper
+
+cp -f makefile.linux_${ARCHSUFFIX} makefile.machine
+sed -i -e "s#/lib/#/lib${LIBDIRSUFFIX}/#g" $(grep -rl /lib/ .)
+sed -i -e 's/chmod 555/chmod 755/' -e 's/chmod 444/chmod 644/' install.sh
+sed -i -e "s#7zFM_do_not_use#7zFM#g" $(grep -rl 7zFM_do_not_use .)
+
+# First, build the commandline tools:
+if [ "$GUI" = "YES" ]; then
+  TARGETS=all5
+  make depend \
+  2>&1 | tee $OUTPUT/makedepend-${PRGNAM}.log
+else
+  TARGETS=all4
+fi
+
+make $TARGETS \
+  OPTFLAGS="$SLKCFLAGS" \
+  DEST_HOME=/usr \
+  DEST_SHARE=/usr/lib${LIBDIRSUFFIX}/p7zip \
+  DEST_SHARE_DOC=/usr/doc/${PRGNAM}-${VERSION} \
+  2>&1 | tee $OUTPUT/make-${PRGNAM}.log
+
+# Install the commandline utils:
+make install \
+  DEST_HOME=/usr \
+  DEST_SHARE=/usr/lib${LIBDIRSUFFIX}/p7zip \
+  DEST_SHARE_DOC=/usr/doc/${PRGNAM}-${VERSION} \
+  DEST_DIR=$PKG \
+  2>&1 |tee $OUTPUT/install-${PRGNAM}.log
+
+# Install the RAR decoder library:
+mkdir -p  $PKG/usr/lib${LIBDIRSUFFIX}/p7zip
+install -m 0644 bin/Codecs/*.so $PKG/usr/lib${LIBDIRSUFFIX}/p7zip/
+
+# Add a wrapper that allows p7z to be used as a compressor for tar:
+install -m 0755 contrib/gzip-like_CLI_wrapper_for_7z/p7zip $PKG/usr/bin/
+install -m 0644 contrib/gzip-like_CLI_wrapper_for_7z/man1/p7zip.1 $PKG/usr/man/man1/
+
+if [ "$GUI" = "YES" ]; then
+  # Install the gui program plus support files:
+  cp -a GUI/p7zipForFilemanager  $PKG/usr/bin/p7zipForFilemanager
+  cp -a GUI/Lang $PKG/usr/lib${LIBDIRSUFFIX}/p7zip/
+  #cp -a GUI/help $PKG/usr/lib${LIBDIRSUFFIX}/p7zip/
+  #cp -a bin/Client7z $PKG/usr/lib${LIBDIRSUFFIX}/p7zip/
+  cp -a bin/LzmaCon $PKG/usr/lib${LIBDIRSUFFIX}/p7zip/
+  cp -a bin/7zFM $PKG/usr/lib${LIBDIRSUFFIX}/p7zip/
+  cp -a bin/7zG $PKG/usr/lib${LIBDIRSUFFIX}/p7zip/
+  
+  # The binaries can not be called through symlinks.
+  # We have to create wrapper shell scripts:
+  sed -e "s#/usr/lib${LIBDIRSUFFIX}/p7zip/7z#/usr/lib${LIBDIRSUFFIX}/p7zip/7zG#" $PKG/usr/bin/7z > $PKG/usr/bin/7zG
+  sed -e "s#/usr/lib${LIBDIRSUFFIX}/p7zip/7z#/usr/lib${LIBDIRSUFFIX}/p7zip/Client7z#" $PKG/usr/bin/7z > $PKG/usr/bin/Client7z
+  sed -e "s#/usr/lib${LIBDIRSUFFIX}/p7zip/7z#/usr/lib${LIBDIRSUFFIX}/p7zip/LzmaCon#" $PKG/usr/bin/7z > $PKG/usr/bin/LzmaCon
+  # We need to treat this with care so that the menu entry works but
+  # the dolphin "open with..." menu too:
+  cat <<EOT > $PKG/usr/bin/7zFM
+#!/bin/sh
+[ -z "\$1" ] && ARGS=\$HOME || ARGS="\$@"
+"/usr/lib${LIBDIRSUFFIX}/p7zip/7zFM" "\$ARGS"
+EOT
+  chmod 755 $PKG/usr/bin/{7zFM,7zG,Client7z,LzmaCon}
+  
+  # Add a menu entry for the file manager:
+  mkdir -p $PKG/usr/share/applications
+  cat <<EOT > $PKG/usr/share/applications/p7zip.desktop
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=P7ZIP File Manager
+MimeType=application/x-gzip;application/x-tar;application/x-compressed-tar;application/x-bzip-compressed-tar;application/zip;application/x-bzip;application/x-rar;application/x-tarz;application/x-bzip2;application/x-java-archive;application/x-deb;application/x-7z-compressed;application/x-compress;application/x-zip-compressed;application/x-lzma;application/x-servicepack;application/x-xz-compressed-tar;application/x-lzma-compressed-tar;application/x-cd-image;
+GenericName=Archiving Tool
+Exec=7zFM %F
+Icon=p7zip
+Type=Application
+Terminal=false
+X-KDE-HasTempFileOption=true
+Categories=GTK;KDE;Utility;System;Archiving;
+EOT
+
+  # Icons for the menu entry:
+  mkdir -p $PKG/usr/share/pixmaps
+  cp -a GUI/p7zip_32.png $PKG/usr/share/pixmaps/p7zip.png
+  for i in 16 32 ; do
+    mkdir -p $PKG/usr/share/icons/hicolor/${i}x${i}/apps/
+    cp -a GUI/p7zip_${i}.png $PKG/usr/share/icons/hicolor/${i}x${i}/apps/p7zip.png
+  done
+  
+  # Add KDE4 service menus, and make them actually KDE4-compliant:
+  mkdir -p $PKG/usr/share/kde4/services/ServiceMenus
+  install -m 644 GUI/kde4/*.desktop  $PKG/usr/share/kde4/services/ServiceMenus/
+  sed -i \
+    -e "s#ServiceTypes=application/#MimeType=application/#" \
+    -e "s#application/x-7z#application/x-7z-compressed,application/x-7z-compressed-tar#" \
+    -e "/MimeType=/s#,#;#g" \
+    $PKG/usr/share/kde4/services/ServiceMenus/*.desktop
+fi
+
+# Add a post-install script:
+mkdir -p $PKG/install
+cat <<EOT > $PKG/install/doinst.sh
+# Update the desktop database:
+if [ -x usr/bin/update-desktop-database ]; then
+  chroot . /usr/bin/update-desktop-database usr/share/applications >/dev/null 2>&1
+fi
+
+# Update hicolor theme cache:
+if [ -d usr/share/icons/hicolor ]; then
+  if [ -x /usr/bin/gtk-update-icon-cache ]; then
+    chroot . /usr/bin/gtk-update-icon-cache -f -t usr/share/icons/hicolor >/dev/null 2> /dev/null
+  fi
+fi
+
+# Update the mime database:
+if [ -x usr/bin/update-mime-database ]; then
+  chroot . /usr/bin/update-mime-database usr/share/mime >/dev/null 2>&1
+fi
+
+EOT
+
+# Add documentation:
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION || true
+# Why oh why:
+rm -rf $PKG/usr/doc/$PRGNAM-$VERSION/{DOC,MANUAL}
+cat $SRCDIR/$(basename $0) > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+find $PKG/usr/doc -type f -exec chmod 644 {} \;
+
+# Compress the man page(s):
+if [ -d $PKG/usr/man ]; then
+  find $PKG/usr/man -type f -name "*.?" -exec gzip -9f {} \;
+  for i in $(find $PKG/usr/man -type l -name "*.?") ; do ln -s $( readlink $i ).gz $i.gz ; rm $i ; done
+fi
+
+# Strip binaries:
+find $PKG | xargs file | grep -e "executable" -e "shared object" \
+  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+
+# Add a package description:
+mkdir -p $PKG/install
+cat $SRCDIR/slack-desc > $PKG/install/slack-desc
+#cat $SRCDIR/slack-required > $PKG/install/slack-required
+
+# Build the package:
+cd $PKG
+makepkg --linkadd y --chown n $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.tgz 2>&1 | tee $OUTPUT/makepkg-${PRGNAM}.log
+cd $OUTPUT
+md5sum ${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.tgz > ${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.tgz.md5
+cd -
+cat $PKG/install/slack-desc | grep "^${PRGNAM}" > $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.txt
+#cat $PKG/install/slack-required > $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.dep
+
+# Restore the original umask:
+umask ${_UMASK_}
+
