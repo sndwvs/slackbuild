@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="iperf"
+NAME="mpp"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -65,17 +65,16 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-[[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
-
 # Configuration
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
-./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --mandir=/usr/man \
-  --docdir=/usr/doc/$NAME-$VERSION \
-  --build=$TARGET
+cmake \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DMAN_INSTALL_DIR=/usr/man \
+    -DCMAKE_INSTALL_LIBDIR=lib$LIBDIRSUFFIX \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DRKPLATFORM=ON \
+    -DHAVE_DRM=ON
 
 # Compilation
 make $NUMJOBS || exit 1
