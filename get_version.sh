@@ -14,7 +14,7 @@ get_ver() {
     printf "r%s.%s" "$(hg identify -n)" "$(hg identify -i)"
   elif [[ -d .git ]];then
     ( set -o pipefail
-        git describe --long 2>/dev/null | sed 's/\([^-]*-g\)/r\1/;s/-/./g' ||
+#        git describe --long 2>/dev/null | sed 's/\([^-]*-g\)/r\1/;s/-/./g' ||
         printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
     )
   elif [[ -d .svn ]];then
