@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="axiom"
-VERSION="0.1"
+VERSION=$(date '+%Y%m%d')
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
