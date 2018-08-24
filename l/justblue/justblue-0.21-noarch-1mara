@@ -1,0 +1,52 @@
+PACKAGE NAME:     justblue-0.21-noarch-1mara
+COMPRESSED PACKAGE SIZE:     88K
+UNCOMPRESSED PACKAGE SIZE:     350K
+PACKAGE LOCATION: justblue-0.21-noarch-1mara.txz
+PACKAGE DESCRIPTION:
+FILE LIST:
+./
+install/
+install/doinst.sh
+install/slack-desc
+usr/
+usr/share/
+usr/share/icons/
+usr/share/icons/justblue/
+usr/share/icons/justblue/cursors/
+usr/share/icons/justblue/cursors/X_cursor
+usr/share/icons/justblue/cursors/bd_double_arrow
+usr/share/icons/justblue/cursors/bottom_left_corner
+usr/share/icons/justblue/cursors/bottom_right_corner
+usr/share/icons/justblue/cursors/bottom_side
+usr/share/icons/justblue/cursors/circle
+usr/share/icons/justblue/cursors/copy
+usr/share/icons/justblue/cursors/cross
+usr/share/icons/justblue/cursors/crossed_circle
+usr/share/icons/justblue/cursors/dotbox
+usr/share/icons/justblue/cursors/draped_box
+usr/share/icons/justblue/cursors/fd_double_arrow
+usr/share/icons/justblue/cursors/fleur
+usr/share/icons/justblue/cursors/h_double_arrow
+usr/share/icons/justblue/cursors/hand
+usr/share/icons/justblue/cursors/left_ptr
+usr/share/icons/justblue/cursors/left_ptr_watch
+usr/share/icons/justblue/cursors/left_side
+usr/share/icons/justblue/cursors/link
+usr/share/icons/justblue/cursors/move
+usr/share/icons/justblue/cursors/pirate
+usr/share/icons/justblue/cursors/question_arrow
+usr/share/icons/justblue/cursors/right_ptr
+usr/share/icons/justblue/cursors/right_side
+usr/share/icons/justblue/cursors/sb_h_double_arrow
+usr/share/icons/justblue/cursors/sb_right_arrow
+usr/share/icons/justblue/cursors/sb_up_arrow
+usr/share/icons/justblue/cursors/sb_v_double_arrow
+usr/share/icons/justblue/cursors/top_left_corner
+usr/share/icons/justblue/cursors/top_right_corner
+usr/share/icons/justblue/cursors/top_side
+usr/share/icons/justblue/cursors/v_double_arrow
+usr/share/icons/justblue/cursors/watch
+usr/share/icons/justblue/cursors/xterm
+usr/share/icons/justblue/index.theme
+usr/share/icons/justblue/sshot/
+usr/share/icons/justblue/sshot/snapshot.jpg

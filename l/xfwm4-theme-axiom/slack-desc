@@ -5,15 +5,15 @@
 # You must make exactly 11 lines for the formatting to be correct.  It's also
 # customary to leave one space after the ':' except on otherwise blank lines.
 
-     |-----handy-ruler------------------------------------------------------|
-axiom: axiom (XFCE/XFWM4 Themes)
-axiom:
-axiom: https://www.gnome-look.org/p/1016679/
-axiom:
-axiom:
-axiom:
-axiom:
-axiom:
-axiom:
-axiom:
-axiom:
+                |-----handy-ruler------------------------------------------------------|
+xfwm4-theme-axiom: xfwm4-theme-axiom (XFCE/XFWM4 Themes)
+xfwm4-theme-axiom:
+xfwm4-theme-axiom: https://www.gnome-look.org/p/1016679/
+xfwm4-theme-axiom:
+xfwm4-theme-axiom:
+xfwm4-theme-axiom:
+xfwm4-theme-axiom:
+xfwm4-theme-axiom:
+xfwm4-theme-axiom:
+xfwm4-theme-axiom:
+xfwm4-theme-axiom:

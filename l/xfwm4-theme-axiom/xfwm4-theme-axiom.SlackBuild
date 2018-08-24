@@ -70,25 +70,12 @@ find . \
 install -d $PKG/usr/share/themes
 mv * $PKG/usr/share/themes/
 
-# Don't ship .la files:
-rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
-
-# Strip binaries:
-find $PKG | xargs file | grep -e "executable" -e "shared object" \
-  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-
 # Compress manual pages:
 find $PKG/usr/man -type f -exec gzip -9 {} \;
 for i in $( find $PKG/usr/man -type l ) ; do
   ln -s $( readlink $i ).gz $i.gz
   rm $i
 done
-
-# Copy docs
-mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
-cp -fav \
-  LICENSE README \
-  $PKG/usr/doc/$NAME-$VERSION/
 
 # Description and installation script
 mkdir -p $PKG/install
@@ -97,4 +84,4 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/${NAME}-${VERSION}-noarch-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/xfwm4-theme-${NAME}-${VERSION}-noarch-${BUILD}${PACKAGER}.txz
