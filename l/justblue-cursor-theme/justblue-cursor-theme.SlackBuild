@@ -2,8 +2,8 @@
 
 CWD=$(pwd)
 
-NAME="Aurora-Nuevo"
-VERSION=$(date '+%Y%m%d')
+NAME="justblue"
+VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -56,9 +56,8 @@ mkdir -p $PKG
 # Delete a directory previous build / create new and change rights
 cd $TMP
 rm -rf $NAME-$VERSION
-mkdir $NAME-$VERSION
+tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
 cd $NAME-$VERSION
-tar xvf $CWD/$NAME.tar.?z* || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -67,9 +66,9 @@ find . \
  -exec chmod 644 {} \;
 
 # Configuration
-rm -rf *-$(echo $NAME | cut -f1 -d '-')/debian || exit 1
-install -d $PKG/usr/share/themes/
-mv *-$(echo $NAME | cut -f1 -d '-')/* $PKG/usr/share/themes/ || exit 1
+rm install.sh || exit 1
+install -d $PKG/usr/share/icons/$NAME
+mv * $PKG/usr/share/icons/$NAME/ || exit 1
 
 # Compress manual pages:
 find $PKG/usr/man -type f -exec gzip -9 {} \;
@@ -85,4 +84,4 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/gtk-theme-${NAME,,}-${VERSION}-noarch-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/${NAME,,}-cursor-theme-${VERSION}-noarch-${BUILD}${PACKAGER}.txz
