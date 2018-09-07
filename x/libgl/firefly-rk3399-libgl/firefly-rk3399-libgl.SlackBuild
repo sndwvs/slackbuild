@@ -5,7 +5,7 @@ CWD=$(pwd)
 NAME="libmali"
 _NAME="firefly-rk3399-libgl"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
-_VERSION=${_VERSION:-r13p0}
+_VERSION=${_VERSION:-r14p0}
 SUFFIX="midgard-t86x"
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -106,10 +106,6 @@ cd $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/ || exit 1
 for l in $LINKS; do
     ln -sf libmali-$SUFFIX-${_VERSION}${GBM_SUFFIX}.so $l
 done
-
-# Workaround: libMali.so provided by rk having no SONAME field in itroot
-# so add it to fix rdepends problems
-patchelf --set-soname "libEGL.so.1" ${PKG}/usr/lib${LIBDIRSUFFIX}/mali-egl/libMali.so
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
