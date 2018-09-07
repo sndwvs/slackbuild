@@ -6,7 +6,7 @@
 # customary to leave one space after the ':'.
 
                     |-----handy-ruler------------------------------------------------------|
-firefly-rk3399-libgl: firefly-rk3399-libgl ( Proprietary firefly Mali driver X11 )
+firefly-rk3399-libgl: firefly-rk3399-libgl ( proprietary firefly Mali driver X11 )
 firefly-rk3399-libgl:
 firefly-rk3399-libgl: url: https://github.com/rockchip-linux/libmal
 firefly-rk3399-libgl:
