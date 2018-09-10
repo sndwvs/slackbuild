@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="iperf"
+NAME="medit"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -65,6 +65,13 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
+# This is probably overkill
+export LANG=C
+export PYTHON=python
+export PYTHON_VERSION=2.7
+export PYTHON_INCLUDES=$(python-config --includes)
+export PYTHON_LIBS=$(python-config --libs)
+ 
 [[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
 
 # Configuration
@@ -78,11 +85,14 @@ CXXFLAGS="$SLKCFLAGS" \
   --build=$TARGET
 
 # Compilation
+find . -name Makefile | xargs sed -i 's/-Werror//g'
 make $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
+
+rm -rf $PKG/usr/share/icons/hicolor/icon-theme.cache || exit 1
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
@@ -98,7 +108,7 @@ done
 # Copy docs
 mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
 cp -fav \
-  LICENSE README \
+  LICENSE README $CWD/$0 \
   $PKG/usr/doc/$NAME-$VERSION/
 
 # Description and installation script
