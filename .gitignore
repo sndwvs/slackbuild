@@ -4,11 +4,11 @@
 # git has its own built in compression methods
 *.7z
 *.dmg
-*.gz
+*.tar.gz
 *.iso
 *.jar
 *.rar
 *.tar
 *.zip
-*.bz2
-*.xz
+*.tar.bz2
+*.tar.xz
