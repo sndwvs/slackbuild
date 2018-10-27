@@ -6,11 +6,11 @@
 # customary to leave one space after the ':'.
 
                  |-----handy-ruler------------------------------------------------------|
-xf86-video-armsoc: xf86-video-fbdev (X.Org graphics driver for ARM graphics - Rockchip)
+xf86-video-armsoc: xf86-video-armsoc (X.Org graphics driver for ARM graphics - Rockchip)
 xf86-video-armsoc:
-xf86-video-armsoc: xf86-video-fbdev is the generic framebuffer video driver for X.Org,
-xf86-video-armsoc: designed to draw into a video framebuffer provided by the
-xf86-video-armsoc: underlying operating system.
+xf86-video-armsoc:
+xf86-video-armsoc:
+xf86-video-armsoc:
 xf86-video-armsoc:
 xf86-video-armsoc:
 xf86-video-armsoc:
