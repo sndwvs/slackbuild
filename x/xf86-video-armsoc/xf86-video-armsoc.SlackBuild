@@ -89,7 +89,7 @@ rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
   | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
-install -m644 -d $CWD/20-armsoc.conf $PKG/etc/X11/xorg.conf.d/20-armsoc.conf.new
+install -m644 -D $CWD/20-armsoc.conf $PKG/etc/X11/xorg.conf.d/20-armsoc.conf.new
 cp -a $CWD/udev $PKG/etc/
 
 # Compress manual pages:
