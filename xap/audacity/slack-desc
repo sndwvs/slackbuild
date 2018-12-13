@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description. Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in. You must
+# make exactly 11 lines for the formatting to be correct. It's also
+# customary to leave one space after the ':'.
+
+        |-----handy-ruler------------------------------------------------------|
+audacity: audacity (program that lets you manipulate digital audio waveforms)
+audacity:
+audacity: Audacity is a free, easy-to-use, multi-track audio editor and recorder
+audacity: for Windows, Mac OS X, GNU/Linux and other operating systems.
+audacity: The interface is translated into many languages.
+audacity:
+audacity:
+audacity:
+audacity:
+audacity:
+audacity:
