@@ -1,0 +1,10 @@
+--- a/files/slackpkg.conf.new	2019-01-28 18:47:46.408536921 +0200
++++ b/files/slackpkg.conf.new	2019-01-28 18:52:56.035293101 +0200
+@@ -38,6 +38,7 @@
+ #	x86_64
+ #	s390
+ #	arm* (* can be v4, v5tejl, and other ARM versions) 
++#	aarch64
+ #	powerpc
+ #
+ # The line is commented because slackpkg will try to find your 

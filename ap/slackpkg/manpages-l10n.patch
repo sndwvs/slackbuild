@@ -1,0 +1,320 @@
+diff -Naur a/files/manpages-l10n/de.slackpkg.conf b/files/manpages-l10n/de.slackpkg.conf
+--- a/files/manpages-l10n/de.slackpkg.conf	2019-01-28 19:09:16.992310244 +0200
++++ b/files/manpages-l10n/de.slackpkg.conf	2019-01-28 19:50:14.110224139 +0200
+@@ -37,6 +37,7 @@
+ korrekten Wert durch Verwendung von "uname \-m". Erlaubte Werte sind:
+ 
+ .ds title MASCHINE\t\tERLAUBTE WERTE FÜR ARCH
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 and i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -45,6 +46,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/el.slackpkg.conf b/files/manpages-l10n/el.slackpkg.conf
+--- a/files/manpages-l10n/el.slackpkg.conf	2019-01-28 19:09:47.417684035 +0200
++++ b/files/manpages-l10n/el.slackpkg.conf	2019-01-28 19:52:05.055592633 +0200
+@@ -38,6 +38,7 @@
+ βρει τη σωστή τιμή χρησιμοποιώντας το "uname \-m". Έγκυρες τιμές είναι οι:
+ 
+ .ds title ΜΗΧΑΝΗΜΑ\t\tΕΓΚΥΡΕΣ ΤΙΜΕΣ ΑΡΧΙΤΕΚΤΟΝΙΚΗΣ
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 and i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -46,6 +47,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/es.slackpkg.conf b/files/manpages-l10n/es.slackpkg.conf
+--- a/files/manpages-l10n/es.slackpkg.conf	2019-01-28 19:09:53.320756519 +0200
++++ b/files/manpages-l10n/es.slackpkg.conf	2019-01-28 19:57:51.987887804 +0200
+@@ -38,6 +38,7 @@
+ el valor correcto utilizando "uname \-m". Los valores aceptados son:
+ 
+ .ds title MÁQUINA\t\tVALORES VÁLIDOS DE ARCH
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 y i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -46,6 +47,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/fa.slackpkg.conf b/files/manpages-l10n/fa.slackpkg.conf
+--- a/files/manpages-l10n/fa.slackpkg.conf	2019-01-28 19:10:02.275866456 +0200
++++ b/files/manpages-l10n/fa.slackpkg.conf	2019-01-28 19:57:36.449695866 +0200
+@@ -37,6 +37,7 @@
+ طریق "uname \-m" بفهمد. مقادیر معتبر عبارتند از:
+ 
+ .ds title MACHINE\t\tVALID ARCH VALUES
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 and i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -45,6 +46,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/fr.slackpkg.conf b/files/manpages-l10n/fr.slackpkg.conf
+--- a/files/manpages-l10n/fr.slackpkg.conf	2019-01-28 19:10:10.967973138 +0200
++++ b/files/manpages-l10n/fr.slackpkg.conf	2019-01-28 19:57:16.376447830 +0200
+@@ -38,6 +38,7 @@
+ bonne valeur avec la commande "uname \-m". Les valeurs acceptables sont :
+ 
+ .ds title MACHINE\t\tVALEURS ACCEPTABLES DE ARCH
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 and i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -46,6 +47,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/id.slackpkg.conf b/files/manpages-l10n/id.slackpkg.conf
+--- a/files/manpages-l10n/id.slackpkg.conf	2019-01-28 19:10:18.279062850 +0200
++++ b/files/manpages-l10n/id.slackpkg.conf	2019-01-28 19:57:02.115271555 +0200
+@@ -38,6 +38,7 @@
+ dengan "uname \-m". Nilai yang valid adalah:
+ 
+ .ds title MESIN\t\tNILAI ARSITEKTUR YANG VALID
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bit)\ti386, i486, i586 dan i686
+ .ds x86_64 x86 (64bit)\tx86_64
+@@ -46,6 +47,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/it.slackpkg.conf b/files/manpages-l10n/it.slackpkg.conf
+--- a/files/manpages-l10n/it.slackpkg.conf	2019-01-28 19:10:28.436187457 +0200
++++ b/files/manpages-l10n/it.slackpkg.conf	2019-01-28 19:56:22.903786643 +0200
+@@ -39,6 +39,7 @@
+ valore corretto usando "uname \-m". I valori validi sono:
+ 
+ .ds title MACCHINA\t\tVALORE ARCHITETTURA VALIDA
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 and i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -47,6 +48,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/nb.slackpkg.conf b/files/manpages-l10n/nb.slackpkg.conf
+--- a/files/manpages-l10n/nb.slackpkg.conf	2019-01-28 19:10:34.487261675 +0200
++++ b/files/manpages-l10n/nb.slackpkg.conf	2019-01-28 19:56:09.460620313 +0200
+@@ -37,6 +37,7 @@
+ å bruke "uname \-m". Gyldige verdier er:
+ 
+ .ds title MASKIN\t\tARKITEKTUR VERDIER
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 and i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -45,6 +46,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/nl.slackpkg.conf b/files/manpages-l10n/nl.slackpkg.conf
+--- a/files/manpages-l10n/nl.slackpkg.conf	2019-01-28 19:10:40.136330951 +0200
++++ b/files/manpages-l10n/nl.slackpkg.conf	2019-01-28 19:55:55.985453544 +0200
+@@ -37,6 +37,7 @@
+ waarde vinden middels "uname \-m". Geldige waardes zijn:
+ 
+ .ds title MACHINE\t\tGELDIGE ARCH WAARDEN
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 en i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -45,6 +46,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/pl.slackpkg.conf b/files/manpages-l10n/pl.slackpkg.conf
+--- a/files/manpages-l10n/pl.slackpkg.conf	2019-01-28 19:10:46.186405134 +0200
++++ b/files/manpages-l10n/pl.slackpkg.conf	2019-01-28 19:55:39.313247147 +0200
+@@ -38,6 +38,7 @@
+ wartość przy użyciu "uname \-m". Dopuszczalne wartości to:
+ 
+ .ds title KOMPUTER\t\tDOPUSZCZALNE WARTOŚCI ARCH
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 and i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -46,6 +47,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/pt_BR.slackpkg.conf b/files/manpages-l10n/pt_BR.slackpkg.conf
+--- a/files/manpages-l10n/pt_BR.slackpkg.conf	2019-01-28 19:10:51.824474255 +0200
++++ b/files/manpages-l10n/pt_BR.slackpkg.conf	2019-01-28 19:55:14.795943504 +0200
+@@ -37,6 +37,7 @@
+ valor correto usando "uname\-m". Os valores válidos são:
+ 
+ .ds title MACHINE\t\tVALID ARCH VALUES
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 e i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -45,6 +46,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/pt_PT.slackpkg.conf b/files/manpages-l10n/pt_PT.slackpkg.conf
+--- a/files/manpages-l10n/pt_PT.slackpkg.conf	2019-01-28 19:10:58.644557855 +0200
++++ b/files/manpages-l10n/pt_PT.slackpkg.conf	2019-01-28 19:54:52.813671127 +0200
+@@ -37,6 +37,7 @@
+ valor correto usando "uname \-m". Os valores válidos são:
+ 
+ .ds title MACHINE\t\tVALORES DE ARQUITETURA VÁLIDOS
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 e i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -45,6 +46,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/ru.slackpkg.conf b/files/manpages-l10n/ru.slackpkg.conf
+--- a/files/manpages-l10n/ru.slackpkg.conf	2019-01-28 19:11:12.918732779 +0200
++++ b/files/manpages-l10n/ru.slackpkg.conf	2019-01-28 19:54:37.336479278 +0200
+@@ -38,6 +38,7 @@
+ при помощи команды "uname \-m". Допустимые значения:
+ 
+ .ds title МАШИНА\t\tДОПУСТИМЫЕ ЗНАЧЕНИЯ ARCH
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32 бита)\ti386, i486, i586 и i686
+ .ds x86_64 x86 (64 бита)\tx86_64
+@@ -46,6 +47,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/sv.slackpkg.conf b/files/manpages-l10n/sv.slackpkg.conf
+--- a/files/manpages-l10n/sv.slackpkg.conf	2019-01-28 19:11:18.106796341 +0200
++++ b/files/manpages-l10n/sv.slackpkg.conf	2019-01-28 19:54:17.511233440 +0200
+@@ -37,6 +37,7 @@
+ "uname \-m". Giltiga värden är:
+ 
+ .ds title MASKIN\t\GILTIG ARCH VÄRDE
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 och i686
+ .ds x86_64 x86 (64bitars)\tx86_64
+@@ -45,6 +46,8 @@
+ .in +5
+ \fB\*[titel]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/tr.slackpkg.conf b/files/manpages-l10n/tr.slackpkg.conf
+--- a/files/manpages-l10n/tr.slackpkg.conf	2019-01-28 19:11:23.126857838 +0200
++++ b/files/manpages-l10n/tr.slackpkg.conf	2019-01-28 19:54:01.756037997 +0200
+@@ -37,6 +37,7 @@
+ değeri bulabilir. Geçerli değerler şunlardır:
+ 
+ .ds title MAKİNA\t\tGEÇERLİ MİMARİ DEĞERLERİ
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 ve i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -45,6 +46,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]
+diff -Naur a/files/manpages-l10n/uk.slackpkg.conf b/files/manpages-l10n/uk.slackpkg.conf
+--- a/files/manpages-l10n/uk.slackpkg.conf	2019-01-28 19:11:30.783951625 +0200
++++ b/files/manpages-l10n/uk.slackpkg.conf	2019-01-28 19:53:40.658776179 +0200
+@@ -37,6 +37,7 @@
+ правильне значення використовуючи команду "uname \-m". Припустимі значення:
+ 
+ .ds title АРХІТЕКТУРА\t\tПРИПУСТИМІ ЗНАЧЕННЯ
++.ds aarch64 ARM\t\t\taarch64
+ .ds arm ARM\t\t\tarm
+ .ds x86 x86 (32bits)\ti386, i486, i586 and i686
+ .ds x86_64 x86 (64bits)\tx86_64
+@@ -45,6 +46,8 @@
+ .in +5
+ \fB\*[title]\fP
+ .br
++\*[aarch64]
++.br
+ \*[arm]
+ .br
+ \*[x86]

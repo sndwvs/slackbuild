@@ -1,0 +1,14 @@
+--- a/files/core-functions.sh	2019-01-28 18:47:45.145521561 +0200
++++ b/files/core-functions.sh	2019-01-28 18:50:10.058281711 +0200
+@@ -132,6 +132,11 @@
+ 			SLACKKEY=${SLACKKEY:-"Slackware ARM (Slackware ARM Linux Project) <mozes@slackware.com>"}
+ 			PKGMAIN=${PKGMAIN:-slackware}
+ 		;;
++		aarch64|arm64|AArch64)
++			ARCH=aarch64
++			SLACKKEY=${SLACKKEY:-"slarm64 AArch64 <mara@fail.pp.ua>"}
++			PKGMAIN=${PKGMAIN:-slarm64}
++		;;
+ 		powerpc|ppc)
+ 			ARCH=powerpc
+ 			SLACKKEY=${SLACKKEY:-"Slackintosh-Project Sign <slackdev@workaround.ch>"}
