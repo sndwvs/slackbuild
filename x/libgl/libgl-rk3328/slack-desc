@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description. Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in. You must
+# make exactly 11 lines for the formatting to be correct. It's also
+# customary to leave one space after the ':'.
+
+            |-----handy-ruler------------------------------------------------------|
+libgl-rk3328: libgl-rk3328 ( proprietary rk3328 Mali driver X11 )
+libgl-rk3328:
+libgl-rk3328: url: https://github.com/rockchip-linux/libmal
+libgl-rk3328:
+libgl-rk3328:
+libgl-rk3328:
+libgl-rk3328:
+libgl-rk3328:
+libgl-rk3328:
+libgl-rk3328:
+libgl-rk3328:

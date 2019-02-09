@@ -3,10 +3,10 @@
 CWD=$(pwd)
 
 NAME="libmali"
-_NAME="rockpro64-rk3399-libgl"
+_NAME="libgl-rk3328"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
-_VERSION=${_VERSION:-r14p0}
-SUFFIX="midgard-t86x"
+_VERSION=${_VERSION:-r7p0}
+SUFFIX="utgard-450"
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
