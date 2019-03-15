@@ -85,8 +85,8 @@ rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 install -Dm644 $CWD/rc.hostapd $PKG/etc/rc.d/rc.hostapd.new
 
 # Binaries
-install -d $PKG/usr/bin
-install -t $PKG/usr/bin hostapd hostapd_cli
+install -d $PKG/usr/sbin
+install -t $PKG/usr/sbin hostapd hostapd_cli
 
 # Configuration
 install -d $PKG/etc/hostapd
@@ -124,4 +124,3 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 # Package creation
 cd $PKG
 makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
-
