@@ -1,0 +1,18 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+       |-----handy-ruler------------------------------------------------------|
+openjre: Java(TM) Platform Standard Edition Runtime Environment.
+openjre:
+openjre: The Java SE Runtime Environment (JRE) is intended for software
+openjre: developers and vendors to redistribute with their applications.
+openjre: It contains the Java virtual machine, runtime class libraries, and
+openjre: Java application launcher that are necessary to run programs written
+openjre: in the Java programming language.
+openjre:
+openjre: If you need development tools, install openjdk instead, or see the
+openjre: web page:   http://openjdk.java.net/
+openjre:
