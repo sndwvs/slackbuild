@@ -65,7 +65,8 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-[[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
+sed -i s/keepassx/keepassx2/g CMakeLists.txt
+sed -i -e s/keepassx/keepassx2/g -e s/KeePassX/KeePassX2/g share/linux/keepassx.desktop
 
 # Configuration
 cmake \
@@ -80,6 +81,10 @@ make install DESTDIR=$PKG
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
+
+mv $PKG/usr/share/applications/keepassx.desktop $PKG/usr/share/applications/keepassx2.desktop
+mv $PKG/usr/share/icons/hicolor/32x32/apps/keepassx.png $PKG/usr/share/icons/hicolor/32x32/apps/keepassx2.png
+mv $PKG/usr/share/mime/packages/keepassx.xml $PKG/usr/share/mime/packages/keepassx2.xml
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
@@ -105,4 +110,4 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/${NAME}2-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
