@@ -2,13 +2,14 @@
 
 CWD=$(pwd)
 
-NAME="iperf"
+NAME="qemu"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
 
+KVMGROUP=${KVMGROUP:-users}
 
 # Automatically determine the architecture we're building on:
 MARCH=$( uname -m )
@@ -67,6 +68,9 @@ find . \
 
 [[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
 
+# Remove double CFLAGS
+sed -i "s|^\ \ CFLAGS=\"-O2\ |  CFLAGS=\"|" configure
+
 # Configuration
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
@@ -74,15 +78,39 @@ CXXFLAGS="$SLKCFLAGS" \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --mandir=/usr/man \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
   --docdir=/usr/doc/$NAME-$VERSION \
-  --build=$TARGET
+  --enable-gtk \
+  --enable-system \
+  --enable-kvm \
+  --disable-debug-info \
+  --enable-virtfs \
+  --enable-sdl \
+  --enable-jemalloc \
+  --enable-nettle \
+  --audio-drv-list=pa,alsa,oss,sdl \
+  --enable-vnc \
+  --enable-vnc-sasl \
+  --enable-vnc-jpeg
 
 # Compilation
-make $NUMJOBS || exit 1
+# Make these first; otherwise make won't run in parallel.
+make config-all-devices.mak config-all-disas.mak
+make V=1 $NUMJOBS || exit 1
 make install DESTDIR=$PKG
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
+
+# Remove empty /var
+rm -rf $PKG/var/run
+# install some udev rules for /dev/kvm
+# Note: no udev rules for usb pasthrough when running qemu as non-root on linux hosts. See Section 2.11.2
+# https://qemu.weilnetz.de/doc/qemu-doc.html
+mkdir -p $PKG/lib/udev/rules.d/
+sed "s/@GROUP@/$KVMGROUP/" $CWD/65-kvm.rules \
+  > $PKG/lib/udev/rules.d/65-kvm.rules
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
