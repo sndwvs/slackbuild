@@ -7,7 +7,7 @@ _NAME="libgl-rk3328"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 _VERSION=${_VERSION:-r7p0}
 SUFFIX="utgard-450"
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 PACKAGER=${PACKAGER:-mara}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
@@ -89,17 +89,20 @@ sed -i "s|lib${LIBDIRSUFFIX}$|lib${LIBDIRSUFFIX}/mali-egl|g" $PKG/usr/lib${LIBDI
 mkdir -p $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl
 
 rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/*.so || exit 1
+rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/{aarch64,arm}-linux-* || exit 1
+
 if [[ $ARCH == aarch64 ]]; then
     cp lib/aarch64-linux-gnu/libmali-$SUFFIX-${_VERSION}${GBM_SUFFIX}.so $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/
 else
     cp lib/arm-linux-gnueabihf/libmali-$SUFFIX-${_VERSION}${GBM_SUFFIX}.so $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/
 fi
 
-LINKS="libEGL.so libEGL.so.1 libEGL.so.1.0.0 \
-        libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 \
-        libgbm.so libgbm.so.1 libgbm.so.1.0.0 \
-        libMali.so libmali.so \
-        libMaliOpenCL.so libOpenCL.so"
+LINKS="libEGL.so libEGL.so.1 libEGL.so.1.0.0 libEGL.so.1.4 \
+       libgbm.so libgbm.so.1 libgbm.so.1.0.0 \
+       libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0 libGLESv2.so.2.0.0 \
+       libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1 \
+       libMali.so libmali.so \
+       libMaliOpenCL.so libOpenCL.so"
 
 cd $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/ || exit 1
 
