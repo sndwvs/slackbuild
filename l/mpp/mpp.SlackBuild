@@ -74,7 +74,8 @@ cmake \
     -DCMAKE_INSTALL_LIBDIR=lib$LIBDIRSUFFIX \
     -DCMAKE_BUILD_TYPE=Release \
     -DRKPLATFORM=ON \
-    -DHAVE_DRM=ON
+    -DHAVE_DRM=ON \
+    -DARM_MIX_32_64=ON
 
 # Compilation
 make $NUMJOBS || exit 1
