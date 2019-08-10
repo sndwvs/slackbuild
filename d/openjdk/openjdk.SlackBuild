@@ -4,7 +4,7 @@ CWD=$(pwd)
 
 NAME1="openjdk"
 NAME2="openjre"
-VERSION="8u202"
+VERSION="8u222"
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 URL="https://github.com/bell-sw/Liberica/releases/download/$VERSION"
@@ -75,16 +75,26 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
+fix_interpreter() {
+    patchelf --set-interpreter /lib64/ld-linux-aarch64.so.1 $1 || exit 1
+}
+
 # create jdk package
 (
     install -m755 -d $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION
     install -m755 -d $PKG1/etc/profile.d
     cp -a * $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION
     ln -sf -r $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION $PKG1/usr/lib${LIBDIRSUFFIX}/java
-    ln -sf java/jre/lib/$ARCH/server/libjvm.so $PKG1/usr/lib${LIBDIRSUFFIX}/libjvm.so
+    rm -rf $PKG1/usr/lib${LIBDIRSUFFIX}/java/jre || exit 1
+#    ln -sf java/jre/lib/$ARCH/server/libjvm.so $PKG1/usr/lib${LIBDIRSUFFIX}/libjvm.so
     install -m755 -D $CWD/openjdk.{csh,sh} $PKG1/etc/profile.d/
     # fix lib patch
     sed -i "s/\/lib/\/lib${LIBDIRSUFFIX}/g" $PKG1/etc/profile.d/*
+    # fix interpreter /lib64/ld-linux-aarch64.so.1
+    for prog in $(find $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/bin -type f | grep -v java-rmi.cgi); do
+        fix_interpreter $prog
+    done
+    fix_interpreter $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/lib/jexec
 )
 
 # create jre package
@@ -103,10 +113,15 @@ find . \
     install -m755 -D $CWD/openjre.{csh,sh} $PKG2/etc/profile.d/
     # fix lib patch
     sed -i "s/\/lib/\/lib${LIBDIRSUFFIX}/g" $PKG2/etc/profile.d/*
+    # fix interpreter /lib64/ld-linux-aarch64.so.1
+    for prog in $(find $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/bin -type f); do
+        fix_interpreter $prog
+    done
+    fix_interpreter $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/lib/jexec
 )
 
 # Compress manual pages:
-find $PKG1/usr/lib${LIBDIRSUFFIX}/java/jdk/man  -type f -exec gzip -9 {} \;
+find $PKG1/usr/lib${LIBDIRSUFFIX}/java/man  -type f -exec gzip -9 {} \;
 find $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre/man  -type f -exec gzip -9 {} \;
 
 # Description and installation script
