@@ -85,8 +85,7 @@ fix_interpreter() {
     install -m755 -d $PKG1/etc/profile.d
     cp -a * $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION
     ln -sf -r $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION $PKG1/usr/lib${LIBDIRSUFFIX}/java
-    rm -rf $PKG1/usr/lib${LIBDIRSUFFIX}/java/jre || exit 1
-#    ln -sf java/jre/lib/$ARCH/server/libjvm.so $PKG1/usr/lib${LIBDIRSUFFIX}/libjvm.so
+    ln -sf java/jre/lib/$ARCH/server/libjvm.so $PKG1/usr/lib${LIBDIRSUFFIX}/libjvm.so
     install -m755 -D $CWD/openjdk.{csh,sh} $PKG1/etc/profile.d/
     # fix lib patch
     sed -i "s/\/lib/\/lib${LIBDIRSUFFIX}/g" $PKG1/etc/profile.d/*
