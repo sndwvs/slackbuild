@@ -1,0 +1,147 @@
+#!/bin/bash
+
+CWD=$(pwd)
+
+NAME1="openjdk"
+NAME2="openjre"
+VERSION="8u222"
+BUILD=${BUILD:-1}
+PACKAGER=${PACKAGER:-mara}
+URL="https://github.com/bell-sw/Liberica/releases/download/$VERSION"
+BIN_PKG="bellsoft-jdk$VERSION-linux-ARCH.tar.gz"
+MD5="65fa0441a55d381fcca069ca40b9ad97"
+
+NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
+
+
+
+# Automatically determine the architecture we're building on:
+MARCH=$( uname -m )
+if [ -z "$ARCH" ]; then
+  case "$MARCH" in
+    i?86)    export ARCH=i586 ;;
+    armv7hl) export ARCH=$MARCH ;;
+    arm*)    export ARCH=arm ;;
+    # Unless $ARCH is already set, use uname -m for all other archs:
+    *)       export ARCH=$MARCH ;;
+  esac
+fi
+
+if [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O3 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O3 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "armv7hl" ]; then
+  SLKCFLAGS="-O3 -march=armv7-a -mfpu=vfpv3-d16"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "arm" ]; then
+  SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "aarch64" ]; then
+  SLKCFLAGS="-O3"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+case "$ARCH" in
+    arm*) TARGET=$ARCH-slackware-linux-gnueabihf ;;
+    *)    TARGET=$ARCH-slackware-linux ;;
+esac
+
+# add ARCH in binary package
+BIN_PKG=${BIN_PKG/ARCH/$ARCH}
+[[ $(echo $MD5 $BIN_PKG | md5sum --quiet -c) ]] && wget --no-check-certificate -c $URL/$BIN_PKG
+
+# Establishment tmp directory for
+TMP=${TMP:-/tmp}
+PKG1=$TMP/package-$NAME1
+PKG2=$TMP/package-$NAME2
+rm -rf $PKG1 $PKG2
+mkdir -p $PKG1 $PKG2
+
+# Delete a directory previous build / create new and change rights
+cd $TMP
+rm -rf jdk$VERSION
+tar xvf $CWD/$BIN_PKG || exit 1
+cd jdk$VERSION || exit 1
+chown -R root:root .
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+fix_interpreter() {
+    patchelf --set-interpreter /lib64/ld-linux-aarch64.so.1 $1 || exit 1
+}
+
+# create jdk package
+(
+    install -m755 -d $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION
+    install -m755 -d $PKG1/etc/profile.d
+    cp -a * $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION
+    ln -sf -r $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION $PKG1/usr/lib${LIBDIRSUFFIX}/java
+    ln -sf java/jre/lib/$ARCH/server/libjvm.so $PKG1/usr/lib${LIBDIRSUFFIX}/libjvm.so
+    install -m755 -D $CWD/openjdk.{csh,sh} $PKG1/etc/profile.d/
+    # fix lib patch
+    sed -i "s/\/lib/\/lib${LIBDIRSUFFIX}/g" $PKG1/etc/profile.d/*
+    # fix interpreter /lib64/ld-linux-aarch64.so.1
+    # jdk
+    for prog in $(find $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/bin -type f | grep -v java-rmi.cgi); do
+        fix_interpreter $prog
+    done
+    fix_interpreter $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/lib/jexec
+    # jre
+    for prog in $(find $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/jre/bin -type f); do
+        fix_interpreter $prog
+    done
+    fix_interpreter $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/jre/lib/jexec
+)
+
+# create jre package
+(
+    install -m755 -d $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION
+    install -m755 -d $PKG2/etc/profile.d
+    cp -a jre/* $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION
+    ln -sf -r $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre
+    ln -sf java/jre/lib/$ARCH/server/libjvm.so $PKG2/usr/lib${LIBDIRSUFFIX}/libjvm.so
+    for m in "java.1" "jjs.1" "keytool.1" "orbd.1" "pack200.1" "policytool.1" \
+             "rmid.1" "rmiregistry.1" "servertool.1" "tnameserv.1" "unpack200.1"; do
+        find man -name $m -exec install -m644 -D {} $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre/{} \;
+    done
+    # fix japan man pages
+    ln -sf -r $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/man/ja_* $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/man/ja
+    install -m755 -D $CWD/openjre.{csh,sh} $PKG2/etc/profile.d/
+    # fix lib patch
+    sed -i "s/\/lib/\/lib${LIBDIRSUFFIX}/g" $PKG2/etc/profile.d/*
+    # fix interpreter /lib64/ld-linux-aarch64.so.1
+    # jre
+    for prog in $(find $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/bin -type f); do
+        fix_interpreter $prog
+    done
+    fix_interpreter $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/lib/jexec
+)
+
+# Compress manual pages:
+find $PKG1/usr/lib${LIBDIRSUFFIX}/java/man  -type f -exec gzip -9 {} \;
+find $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre/man  -type f -exec gzip -9 {} \;
+
+# Description and installation script
+mkdir -p $PKG1/install
+mkdir -p $PKG2/install
+zcat $CWD/doinst.sh.gz > $PKG1/install/doinst.sh
+cat $CWD/slack-desc.jdk > $PKG1/install/slack-desc
+
+zcat $CWD/doinst.sh.gz > $PKG2/install/doinst.sh
+cat $CWD/slack-desc.jre > $PKG2/install/slack-desc
+
+# Package creation
+cd $PKG1
+makepkg -l n -c n $TMP/${NAME1}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+
+cd $PKG2
+makepkg -l n -c n $TMP/${NAME2}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
