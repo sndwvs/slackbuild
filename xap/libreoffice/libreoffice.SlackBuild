@@ -170,9 +170,9 @@ touch {sources.ver,src.downloaded}
 echo "lo_sources_ver=${VERSION}" > sources.ver
 make build-nocheck || exit 1
 
-pushd workdir/installation/LibreOffice/archive/install/en-US
-tar xf *.tar.gz
-popd
+#pushd workdir/installation/LibreOffice/archive/install/en-US
+#tar xf *.tar.gz
+#popd
 
 make DESTDIR=$PKG distro-pack-install
 
