@@ -1,0 +1,36 @@
+diff -Naur external/libfreehand/UnpackedTarball_libfreehand.mk external/libfreehand/UnpackedTarball_libfreehand.mk
+--- a/external/libfreehand/UnpackedTarball_libfreehand.mk	2019-10-09 20:27:32.277412742 +0300
++++ b/external/libfreehand/UnpackedTarball_libfreehand.mk	2019-10-09 20:31:08.477142903 +0300
+@@ -15,6 +15,10 @@
+ 
+ $(eval $(call gb_UnpackedTarball_update_autoconf_configs,libfreehand))
+ 
++$(eval $(call gb_UnpackedTarball_add_patches,libfreehand, \
++    external/libfreehand/libfreehand-icu-65.1.patch \
++))
++
+ ifeq ($(NEED_CLANG_LINUX_UBSAN_RTTI_VISIBILITY),TRUE)
+ $(eval $(call gb_UnpackedTarball_add_patches,libfreehand, \
+     external/libfreehand/ubsan-visibility.patch \
+diff -Naur external/libfreehand/libfreehand-icu-65.1.patch external/libfreehand.1/libfreehand-icu-65.1.patch
+--- a/external/libfreehand/libfreehand-icu-65.1.patch	1970-01-01 03:00:00.000000000 +0300
++++ b/external/libfreehand/libfreehand-icu-65.1.patch	2019-10-09 20:34:44.000871183 +0300
+@@ -0,0 +1,18 @@
++Add missing semicolon to fix build with icu 65.1
++
++Change-Id: I7a0b0d600e9f7770245a7485813a944bfac4f088
++Reviewed-on: https://gerrit.libreoffice.org/80224
++Reviewed-by: Miklos Vajna <vmiklos@collabora.com>
++Tested-by: Miklos Vajna <vmiklos@collabora.com>
++
++--- src/lib/libfreehand_utils.cpp	2019-10-08 23:16:38.271662017 +0300
+++++ src/lib/libfreehand_utils.cpp	2019-10-08 23:18:25.247438680 +0300
++@@ -162,7 +162,7 @@
++   while (j < length)
++   {
++     UChar32 c;
++-    U16_NEXT(s, j, length, c)
+++    U16_NEXT(s, j, length, c);
++     unsigned char outbuf[U8_MAX_LENGTH+1];
++     int i = 0;
++     U8_APPEND_UNSAFE(&outbuf[0], i, c);

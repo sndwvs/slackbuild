@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="libreoffice"
-VERSION=6.3.0.4
+VERSION=6.3.2.2
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -15,7 +15,7 @@ SOURCE_URL3="https://dev-www.libreoffice.org/extern"
 
 DOWNLOADS+=( ${SOURCE_URL}/libreoffice{,-help,-translations,-dictionaries}-${VERSION}.tar.xz{,.asc} )
 DOWNLOADS+=( ${SOURCE_URL2}/0168229624cfac409e766913506961a8-ucpp-1.3.2.tar.gz )
-DOWNLOADS+=( ${SOURCE_URL2}/libabw-0.1.2.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/libabw-0.1.3.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libcdr-0.1.5.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libcmis-0.5.2.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/cppunit-1.14.0.tar.gz )
@@ -102,8 +102,6 @@ rm -rf $NAME || exit 1
 mkdir $NAME || exit 1
 cd $NAME || exit 1
 tar xvf $CWD/sources/$NAME-${VERSION}.tar.?z || exit 1
-#tar xvf $CWD/sources/$NAME-help-${_VERSION}.tar.?z || exit 1
-#tar xvf $CWD/sources/$NAME-translations-${_VERSION}.tar.?z || exit 1
 cd $NAME-${VERSION} || exit 1
 chown -R root:root .
 find . \
@@ -113,14 +111,21 @@ find . \
  -exec chmod 644 {} \;
 
 # move external sources into place
-mkdir $TMP/$NAME/ext_sources && pushd $TMP/$NAME/ext_sources
+mkdir $TMP/$NAME/ext_sources && pushd $TMP/$NAME/ext_sources || exit 1
 for _source in ${DOWNLOADS[*]}; do
-    source=${_source##*/}
-echo ${CWD}/sources/$source .
-    ln -s ${CWD}/sources/$source .
+    src=${_source##*/}
+    ln -s $CWD/sources/$src .
 done
 popd
 
+# unowinreg.dll must be a file not a symlink or the result will become a broken symlink
+# /usr/share/libreoffice/sdk/classes/win/unowinreg.dll -> /build/libreoffice/src/185d60944ea767075d27247c3162b3bc-unowinreg.dll
+rm $TMP/$NAME/ext_sources/185d60944ea767075d27247c3162b3bc-unowinreg.dll
+cp -f $CWD/sources/185d60944ea767075d27247c3162b3bc-unowinreg.dll $TMP/$NAME/ext_sources
+
+patch -p1 -i $CWD/libfreehand-icu-65.1.patch || exit 1
+
+# remove check-if-root
 patch -Np0 -i $CWD/makefile.in.patch || exit 1
 
 # determine configure options based on installed packages on the system
