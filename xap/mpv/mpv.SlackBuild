@@ -78,10 +78,8 @@ find . \
   --enable-dvb \
   --enable-dvdnav \
   --enable-libsmbclient \
-  --enable-tv \
   --enable-libarchive \
   --enable-libmpv-shared \
-  --enable-zsh-comp \
   --enable-egl-x11 \
   --disable-rpi
 
