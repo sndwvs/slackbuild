@@ -1,43 +1,44 @@
 #!/bin/sh
 
-# start/stop/restart the httptunnel
+# start/stop/restart the hts (httptunnel server)
 
 SERVICE_PORT="2022"
 TUNNEL_PORT="5000"
 
-httptunnel_start() {
-  if test -r /var/run/httptunnel.pid && ps $(cat /var/run/httptunnel.pid) >& /dev/null; then
-    echo "httptunnel already running!"
+hts_start() {
+  if test -r /var/run/hts.pid && ps $(cat /var/run/hts.pid) >& /dev/null; then
+    echo "hts already running!"
   else
-    CMD="/usr/bin/httptunnel -p /var/run/httptunnel.pid -F localhost:${SERVICE_PORT} ${TUNNEL_PORT}"
-    echo "Starting httptunnel:  $CMD"
+    CMD="/usr/bin/hts -p /var/run/hts.pid -F localhost:${SERVICE_PORT} ${TUNNEL_PORT}"
+    echo "Starting hts:  $CMD"
     $CMD
   fi
 }
 
-httptunnel_stop() {
-  if [ -r /var/run/httptunnel.pid ]; then
-    echo -n "Stopping httptunnel ..."
-    kill -INT $(cat /var/run/httptunnel.pid)
+hts_stop() {
+  if [ -r /var/run/hts.pid ]; then
+    echo -n "Stopping hts ..."
+    kill -INT $(cat /var/run/hts.pid)
+    rm -f /var/run/hts.pid
     echo " done."
   fi
 }
 
-httptunnel_restart() {
-  httptunnel_stop
+hts_restart() {
+  hts_stop
   sleep 3
-  httptunnel_start
+  hts_start
 }
 
 case "$1" in
 'start')
-  httptunnel_start
+  hts_start
   ;;
 'stop')
-  httptunnel_stop
+  hts_stop
   ;;
 'restart')
-  httptunnel_restart
+  hts_restart
   ;;
 *)
   echo "usage $0 start|stop|restart"
