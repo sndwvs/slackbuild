@@ -35,7 +35,7 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O3 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
