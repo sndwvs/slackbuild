@@ -55,9 +55,11 @@ mkdir -p $PKG
 
 # Delete a directory previous build / create new and change rights
 cd $TMP
-rm -rf $NAME
-tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
-cd $NAME || exit 1
+rm -rf $NAME-$VERSION
+mkdir $NAME-$VERSION
+#tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
+tar xvf $CWD/$NAME-$VERSION.tar.?z* -C $NAME-$VERSION --strip-components 1 || exit 1
+cd $NAME-$VERSION || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -70,7 +72,9 @@ sed -i 's|etc/bash_completion.d|share/bash-completion/completions|' setup.py
 sed -i 's|etc/fish/completions|share/fish/completions|' setup.py
 
 # Compilation
-python setup.py install --root="${PKG}/" --optimize=1
+python setup.py install --root="${PKG}/" --optimize=1 || exit 1
+
+python3 setup.py install --root="${PKG}/" --optimize=1 || exit 1
 
 # Don't ship .la files:
 rm -f ${PKG}/{,usr/}lib${LIBDIRSUFFIX}/*.la
