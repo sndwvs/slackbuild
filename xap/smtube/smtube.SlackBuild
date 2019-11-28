@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="smplayer"
+NAME="smtube"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -76,9 +76,6 @@ make PREFIX=/usr \
 # Compilation
 make DOC_PATH="/usr/doc/$NAME-$VERSION" \
      DESTDIR=$PKG PREFIX=/usr install
-
-# fix man
-mv $PKG/usr/share/man $PKG/usr/
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
