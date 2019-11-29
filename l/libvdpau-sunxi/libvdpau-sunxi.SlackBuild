@@ -75,18 +75,23 @@ make install DESTDIR=$PKG
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 
 install $CWD/50-${NAME}.rules -m644 -D $PKG/etc/udev/rules.d/50-${NAME}.rules
+install -d $PKG/etc/profile.d
 
-cat <<EOF >> $PKG/etc/profile/vdpau.csh
+cat <<EOF >> $PKG/etc/profile.d/vdpau.csh
+!#/bin/csh
 
 # Use the vdpau backend of the allwinner driver
 setenv VDPAU_DRIVER "sunxi"
 EOF
 
-cat <<EOF >> $PKG/etc/profile/vdpau.sh
+cat <<EOF >> $PKG/etc/profile.d/vdpau.sh
+!#/bin/sh
 
 # Use the vdpau backend of the allwinner driver
 export VDPAU_DRIVER=sunxi
 EOF
+
+chmod +x -R $PKG/etc/profile.d/
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
