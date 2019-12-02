@@ -1,0 +1,6 @@
+# This causes problems when building the X server:
+#     checking for glproto >= 1.4.17 gl >= 9.2.0... no
+#     configure: error: Package requirements (glproto >= 1.4.17 gl >= 9.2.0) were not met:
+#     Requested 'gl >= 9.2.0' but version of gl is 1.2
+# Lower the version requirement to 1.2 to allow building against libglvnd provided libraries
+zcat $CWD/patch/xorg-server/glvnd.patch.gz | patch -p1 --verbose || { touch ${SLACK_X_BUILD_DIR}/${PKGNAME}.failed ; continue ; }
