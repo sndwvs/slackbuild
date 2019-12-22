@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="qt5"
-VERSION=${VERSION:-$(echo ${NAME//5/}-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
+VERSION=${VERSION:-$(echo ${NAME//5/}-*.tar.?z* | cut -d - -f4 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -94,7 +94,7 @@ sed -e "s|^\(QMAKE_LFLAGS_RELEASE.*\)|\1 ${SLKLDFLAGS}|" \
 export CFLAGS="$SLKCFLAGS"
 export CXXFLAGS="$SLKCFLAGS"
 export OPENSOURCE_CXXFLAGS="$SLKCFLAGS"
-export QTDIR="${TMP}/qt-everywhere-src-$VARSION"
+export QTDIR="${TMP}/qt-everywhere-src-$VERSION"
 export LD_LIBRARY_PATH="${QTDIR}/qtbase/lib:${QTDIR}/qttools/lib:${LD_LIBRARY_PATH}"
 export QT_PLUGIN_PATH="${QTDIR}/qtbase/plugins"
 ./configure -v \
@@ -107,34 +107,24 @@ export QT_PLUGIN_PATH="${QTDIR}/qtbase/plugins"
   -headerdir /usr/include/qt5 \
   -datadir /usr/share/qt5 \
   -archdatadir /usr/lib${LIBDIRSUFFIX}/qt5 \
-  -docdir /usr/doc/qt5-$VARSION \
-  -examplesdir /usr/doc/qt5-$VARSION/examples \
-  -proprietary-codecs \
+  -docdir /usr/doc/qt5-$VERSION \
+  -examplesdir /usr/doc/qt5-$VERSION/examples \
+  -plugin-sql-{mysql,sqlite} \
   -system-libpng \
   -system-libjpeg \
-  -system-sqlite \
+    -system-sqlite \
   -system-zlib \
-  -plugin-sql-mysql \
-  -plugin-sql-sqlite \
-  -accessibility \
+    -system-harfbuzz \
   -alsa \
-  -dbus \
-  -glib \
-  -icu \
-  -opengl \
-  -openssl-linked \
-  -optimized-qmake \
-  -qpa xcb \
-  -qt-harfbuzz \
+   -openssl-linked \
+   -optimized-qmake \
   -verbose \
-  -xcb \
-  -nomake examples \
+    -nomake examples \
   -nomake tests \
-  -no-mimetype-database \
+    -no-mimetype-database \
   -no-separate-debug-info \
   -no-strip \
-  -no-use-gold-linker \
-  -webengine-proprietary-codecs \
+    -no-use-gold-linker \
     -no-reduce-relocations \
     -no-sse2 \
     -no-sse3 \
@@ -144,8 +134,7 @@ export QT_PLUGIN_PATH="${QTDIR}/qtbase/plugins"
     -no-avx \
     -no-avx2 \
     -no-feature-getentropy \
-  -no-pch \
-  # No-precompiled-headers is ccache-friendly.
+#    -no-rpath \
 
 # Compilation
 # Sometimes a failure happens when parallelizing make.  Try again if make fails,
