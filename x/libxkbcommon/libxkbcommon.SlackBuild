@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="openal"
+NAME="libxkbcommon"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -65,24 +65,19 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-# Fix building some things with our old SDL_sound (and SDL1)
-xzcat $CWD/sdl_sound.patch.xz | patch -p1 --verbose || exit 1
-
 # Configuration
-cmake -Bbuild \
-  -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
-  -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
-  -DCMAKE_BUILD_TYPE=none \
-  -DCMAKE_INSTALL_PREFIX=/usr \
-  -DSYSCONF_INSTALL_DIR=/etc \
-  -DMAN_INSTALL_DIR=/usr/man \
-  -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
-  -DALSOFT_EXAMPLES=OFF \
-  -DALSOFT_CPUEXT_NEON=OFF
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+meson \
+  --prefix /usr \
+  --libdir lib${LIBDIRSUFFIX} \
+  --mandir /usr/man \
+  -Denable-docs=false \
+  -Denable-wayland=false \
+build || exit 1
 
 # Compilation
-cmake --build build || exit 1
-DESTDIR=$PKG cmake --build build --target install
+DESTDIR=$PKG ninja -C build all install
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
@@ -103,6 +98,7 @@ mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
 cp -fav \
   LICENSE README \
   $PKG/usr/doc/$NAME-$VERSION/
+cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
 
 # Description and installation script
 mkdir -p $PKG/install
