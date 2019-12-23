@@ -23,23 +23,23 @@ if [ -z "$ARCH" ]; then
 fi
 
 if [ "$ARCH" = "i686" ]; then
-  SLKCFLAGS="-O3 -march=i686 -mtune=i686"
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
   LIBDIRSUFFIX=""
   SLKLDFLAGS=""
 elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O3 -fPIC"
+  SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX="64"
   SLKLDFLAGS="-L/usr/lib64"
 elif [ "$ARCH" = "armv7hl" ]; then
-  SLKCFLAGS="-O3 -march=armv7-a -mfpu=vfpv3-d16"
+  SLKCFLAGS="-O2 -march=armv7-a -mfpu=vfpv3-d16"
   LIBDIRSUFFIX=""
   SLKLDFLAGS=""
 elif [ "$ARCH" = "arm" ]; then
-  SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+  SLKCFLAGS="-O2 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
   SLKLDFLAGS=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O2"
   LIBDIRSUFFIX="64"
   SLKLDFLAGS="-L/usr/lib64"
 else
@@ -83,6 +83,9 @@ cd qtbase
     | patch -p1 --verbose || exit 1
 cd - 1>/dev/null
 
+# fix toolchain in webengine
+cat $CWD/0001-ARM-toolchain-fixes.patch | patch -p1 --verbose || exit 1
+
 # Build qmake using Arch {C,LD}FLAGS
 # This also sets default {C,CXX,LD}FLAGS for projects built using qmake
 sed -e "s|^\(QMAKE_CFLAGS_RELEASE.*\)|\1 ${SLKCFLAGS}|" \
@@ -109,22 +112,31 @@ export QT_PLUGIN_PATH="${QTDIR}/qtbase/plugins"
   -archdatadir /usr/lib${LIBDIRSUFFIX}/qt5 \
   -docdir /usr/doc/qt5-$VERSION \
   -examplesdir /usr/doc/qt5-$VERSION/examples \
-  -plugin-sql-{mysql,sqlite} \
+  -proprietary-codecs \
   -system-libpng \
   -system-libjpeg \
-    -system-sqlite \
+  -system-sqlite \
   -system-zlib \
     -system-harfbuzz \
+  -plugin-sql-{mysql,sqlite} \
+  -accessibility \
   -alsa \
-   -openssl-linked \
-   -optimized-qmake \
+  -dbus \
+  -glib \
+  -icu \
+  -opengl \
+  -openssl-linked \
+  -optimized-qmake \
   -verbose \
-    -nomake examples \
+  -xcb \
+    -webengine-icu \
+  -webengine-proprietary-codecs \
+  -nomake examples \
   -nomake tests \
-    -no-mimetype-database \
+  -no-mimetype-database \
   -no-separate-debug-info \
   -no-strip \
-    -no-use-gold-linker \
+  -no-use-gold-linker \
     -no-reduce-relocations \
     -no-sse2 \
     -no-sse3 \
@@ -134,6 +146,8 @@ export QT_PLUGIN_PATH="${QTDIR}/qtbase/plugins"
     -no-avx \
     -no-avx2 \
     -no-feature-getentropy \
+  -no-pch \
+  # No-precompiled-headers is ccache-friendly.
 #    -no-rpath \
 
 # Compilation
