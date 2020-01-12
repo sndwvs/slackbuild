@@ -74,11 +74,11 @@ python setup.py install --root=$PKG || exit 1
 # install is like this because of dist-info related bug report
 # pip actually doesn't do much and is remarkably slow
 #pip install --compile --no-deps --ignore-installed --root="$pkgdir" *.whl
-install -Dm644 entrypoints.py $PKG/usr/lib${LIBDIRSUFFIX}/python3.7/site-packages/entrypoints.py
+install -Dm644 entrypoints.py $PKG/usr/lib${LIBDIRSUFFIX}/python3.8/site-packages/entrypoints.py
 _dist="$NAME-$VERSION.dist-info"
 cd $_dist
 for _i in ./*; do
-    install -Dm644 $_i $PKG/usr/lib${LIBDIRSUFFIX}/python3.7/site-packages/$_dist/$_i
+    install -Dm644 $_i $PKG/usr/lib${LIBDIRSUFFIX}/python3.8/site-packages/$_dist/$_i
 done
 cd ..
 

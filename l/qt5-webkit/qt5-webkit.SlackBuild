@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="qt5-webkit"
-VERSION=${VERSION:-$(echo ${NAME//5-/}-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
+VERSION=${VERSION:-$(echo ${NAME//5-/}-*.tar.?z* | cut -d - -f2- | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -93,7 +93,7 @@ cd build
     -DPORT=Qt \
     -DQt5_DIR=$QTDIR \
     -DENABLE_TOOLS=OFF \
-    $CONFIG
+    $CONFIG \
   || exit 1
   # Compilation
   make ${NUMJOBS} || make || exit 1
