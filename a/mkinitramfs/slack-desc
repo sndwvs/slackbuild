@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description. Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in. You must make
+# exactly 11 lines for the formatting to be correct. It's also customary to
+# leave one space after the ':'.
+
+           |-----handy-ruler------------------------------------------------------|
+mkinitramfs: mkinitramfs (make the root filesystem)
+mkinitramfs:
+mkinitramfs: the initramfs is a complete set of directories that you would find
+mkinitramfs: on a normal root filesystem. It is bundled into a single cpio archive
+mkinitramfs: and compressed with one of several compression algorithms.
+mkinitramfs:
+mkinitramfs: home: http://www.linuxfromscratch.org/blfs/view/svn/postlfs/initramfs.html
+mkinitramfs:
+mkinitramfs:
+mkinitramfs:
+mkinitramfs:

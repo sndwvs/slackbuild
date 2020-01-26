@@ -80,6 +80,7 @@ find . \
   --enable-libsmbclient \
   --enable-libarchive \
   --enable-libmpv-shared \
+  --enable-egl-drm
 
 # Compilation
 ./waf build || exit 1
