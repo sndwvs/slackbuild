@@ -72,7 +72,7 @@ sed -i 's|etc/bash_completion.d|share/bash-completion/completions|' setup.py
 sed -i 's|etc/fish/completions|share/fish/completions|' setup.py
 
 # Compilation
-python setup.py install --root="${PKG}/" --optimize=1 || exit 1
+#python setup.py install --root="${PKG}/" --optimize=1 || exit 1
 
 python3 setup.py install --root="${PKG}/" --optimize=1 || exit 1
 
