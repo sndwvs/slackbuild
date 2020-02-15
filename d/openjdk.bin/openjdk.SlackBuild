@@ -4,7 +4,7 @@ CWD=$(pwd)
 
 NAME1="openjdk"
 NAME2="openjre"
-VERSION="8u222"
+VERSION="8u242+7"
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 URL="https://github.com/bell-sw/Liberica/releases/download/$VERSION"
@@ -65,9 +65,9 @@ mkdir -p $PKG1 $PKG2
 
 # Delete a directory previous build / create new and change rights
 cd $TMP
-rm -rf jdk$VERSION
+rm -rf jdk${VERSION%%+*}
 tar xvf $CWD/$BIN_PKG || exit 1
-cd jdk$VERSION || exit 1
+cd jdk${VERSION%%+*} || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -75,55 +75,44 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-fix_interpreter() {
-    patchelf --set-interpreter /lib64/ld-linux-aarch64.so.1 $1 || exit 1
-}
-
 # create jdk package
 (
-    install -m755 -d $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION
+    install -m755 -d $PKG1/usr/lib${LIBDIRSUFFIX}/jdk${VERSION//+/_}
     install -m755 -d $PKG1/etc/profile.d
-    cp -a * $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION
-    ln -sf -r $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION $PKG1/usr/lib${LIBDIRSUFFIX}/java
+    cp -a * $PKG1/usr/lib${LIBDIRSUFFIX}/jdk${VERSION//+/_}
+    ln -sf -r $PKG1/usr/lib${LIBDIRSUFFIX}/jdk${VERSION//+/_} $PKG1/usr/lib${LIBDIRSUFFIX}/java
     ln -sf java/jre/lib/$ARCH/server/libjvm.so $PKG1/usr/lib${LIBDIRSUFFIX}/libjvm.so
     install -m755 -D $CWD/openjdk.{csh,sh} $PKG1/etc/profile.d/
     # fix lib patch
     sed -i "s/\/lib/\/lib${LIBDIRSUFFIX}/g" $PKG1/etc/profile.d/*
     # fix interpreter /lib64/ld-linux-aarch64.so.1
     # jdk
-    for prog in $(find $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/bin -type f | grep -v java-rmi.cgi); do
-        fix_interpreter $prog
-    done
-    fix_interpreter $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/lib/jexec
-    # jre
-    for prog in $(find $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/jre/bin -type f); do
-        fix_interpreter $prog
-    done
-    fix_interpreter $PKG1/usr/lib${LIBDIRSUFFIX}/jdk$VERSION/jre/lib/jexec
+    find "$PKG1" | xargs file | grep -e "executable\(.*\)interpreter" \
+    | grep ELF | cut -f1 -d ':' \
+    | xargs -I '{}' patchelf --set-interpreter /lib64/ld-linux-aarch64.so.1 '{}'
 )
 
 # create jre package
 (
-    install -m755 -d $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION
+    install -m755 -d $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre${VERSION//+/_}
     install -m755 -d $PKG2/etc/profile.d
-    cp -a jre/* $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION
-    ln -sf -r $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre
+    cp -a jre/* $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre${VERSION//+/_}
+    ln -sf -r $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre${VERSION//+/_} $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre
     ln -sf java/jre/lib/$ARCH/server/libjvm.so $PKG2/usr/lib${LIBDIRSUFFIX}/libjvm.so
     for m in "java.1" "jjs.1" "keytool.1" "orbd.1" "pack200.1" "policytool.1" \
              "rmid.1" "rmiregistry.1" "servertool.1" "tnameserv.1" "unpack200.1"; do
         find man -name $m -exec install -m644 -D {} $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre/{} \;
     done
     # fix japan man pages
-    ln -sf -r $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/man/ja_* $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/man/ja
+    ln -sf -r $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre${VERSION//+/_}/man/ja_* $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre${VERSION//+/_}/man/ja
     install -m755 -D $CWD/openjre.{csh,sh} $PKG2/etc/profile.d/
     # fix lib patch
     sed -i "s/\/lib/\/lib${LIBDIRSUFFIX}/g" $PKG2/etc/profile.d/*
     # fix interpreter /lib64/ld-linux-aarch64.so.1
     # jre
-    for prog in $(find $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/bin -type f); do
-        fix_interpreter $prog
-    done
-    fix_interpreter $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre$VERSION/lib/jexec
+    find "$PKG2" | xargs file | grep -e "executable\(.*\)interpreter" \
+    | grep ELF | cut -f1 -d ':' \
+    | xargs -I '{}' patchelf --set-interpreter /lib64/ld-linux-aarch64.so.1 '{}'
 )
 
 # Compress manual pages:
@@ -141,7 +130,7 @@ cat $CWD/slack-desc.jre > $PKG2/install/slack-desc
 
 # Package creation
 cd $PKG1
-makepkg -l n -c n $TMP/${NAME1}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/${NAME1}-${VERSION//+/_}-${ARCH}-${BUILD}${PACKAGER}.txz
 
 cd $PKG2
-makepkg -l n -c n $TMP/${NAME2}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/${NAME2}-${VERSION//+/_}-${ARCH}-${BUILD}${PACKAGER}.txz
