@@ -1,0 +1,14 @@
+--- a/openjdk.SlackBuild	2020-01-22 12:12:48.000000000 +0200
++++ b/openjdk.SlackBuild	2020-02-16 03:43:12.366608644 +0200
+@@ -99,6 +99,11 @@
+   LIBDIRSUFFIX=""
+   LIB_ARCH=arm
+   ARCH_OPTS="--enable-jamvm --with-jamvm-src-zip=$CWD/sources/${SRC_JAMVM}"
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
++  LIB_ARCH=$ARCH
++  ARCH_OPTS=" --disable-jamvm "
+ else
+   SLKCFLAGS="-O2"
+   LIBDIRSUFFIX=""
