@@ -1,0 +1,1552 @@
+info: 
+        https://github.com/bootlin/libva-v4l2-request/pulls
+        https://forum.pine64.org/showthread.php?tid=9171
+
+diff --git a/configure.ac b/configure.ac
+index c5d9e4b..4a43d23 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -36,6 +36,11 @@ AM_PROG_AS
+ PKG_CHECK_MODULES([LIBVA], [libva >= 1.1.0])
+ PKG_CHECK_MODULES([DRM], [libdrm >= 2.4.52])
+ 
++PKG_CHECK_VAR([DRM_LIBDIR], [libdrm], [libdir],
++              [],
++              [AC_MSG_FAILURE([Unable to detect DRM libdir path.])]
++)
++
+ #LIBS="$LIBS $DRM_LIBS"
+ #CFLAGS="$CFLAGS $DRM_CFLAGS $LIBVA_CFLAGS"
+ 
+diff --git a/include/h264-ctrls.h b/include/h264-ctrls.h
+index e1404d7..e877bf1 100644
+--- a/include/h264-ctrls.h
++++ b/include/h264-ctrls.h
+@@ -14,7 +14,7 @@
+ #include <linux/videodev2.h>
+ 
+ /* Our pixel format isn't stable at the moment */
+-#define V4L2_PIX_FMT_H264_SLICE_RAW v4l2_fourcc('S', '2', '6', '4') /* H264 parsed slices */
++#define V4L2_PIX_FMT_H264_SLICE v4l2_fourcc('S', '2', '6', '4') /* H264 parsed slices */
+ 
+ /*
+  * This is put insanely high to avoid conflicting with controls that
+@@ -26,6 +26,8 @@
+ #define V4L2_CID_MPEG_VIDEO_H264_SCALING_MATRIX	(V4L2_CID_MPEG_BASE+1002)
+ #define V4L2_CID_MPEG_VIDEO_H264_SLICE_PARAMS	(V4L2_CID_MPEG_BASE+1003)
+ #define V4L2_CID_MPEG_VIDEO_H264_DECODE_PARAMS	(V4L2_CID_MPEG_BASE+1004)
++#define V4L2_CID_MPEG_VIDEO_H264_DECODE_MODE	(V4L2_CID_MPEG_BASE+1005)
++#define V4L2_CID_MPEG_VIDEO_H264_START_CODE	(V4L2_CID_MPEG_BASE+1006)
+ 
+ /* enum v4l2_ctrl_type type values */
+ #define V4L2_CTRL_TYPE_H264_SPS			0x0110
+@@ -34,6 +36,16 @@
+ #define V4L2_CTRL_TYPE_H264_SLICE_PARAMS	0x0113
+ #define V4L2_CTRL_TYPE_H264_DECODE_PARAMS	0x0114
+ 
++enum v4l2_mpeg_video_h264_decode_mode {
++	V4L2_MPEG_VIDEO_H264_DECODE_MODE_SLICE_BASED,
++	V4L2_MPEG_VIDEO_H264_DECODE_MODE_FRAME_BASED,
++};
++
++enum v4l2_mpeg_video_h264_start_code {
++	V4L2_MPEG_VIDEO_H264_START_CODE_NONE,
++	V4L2_MPEG_VIDEO_H264_START_CODE_ANNEX_B,
++};
++
+ #define V4L2_H264_SPS_CONSTRAINT_SET0_FLAG			0x01
+ #define V4L2_H264_SPS_CONSTRAINT_SET1_FLAG			0x02
+ #define V4L2_H264_SPS_CONSTRAINT_SET2_FLAG			0x04
+@@ -125,6 +137,10 @@ struct v4l2_h264_pred_weight_table {
+ struct v4l2_ctrl_h264_slice_params {
+ 	/* Size in bytes, including header */
+ 	__u32 size;
++
++	/* Offset in bytes to the start of slice in the OUTPUT buffer. */
++	__u32 start_byte_offset;
++
+ 	/* Offset in bits to slice_data() from the beginning of this slice. */
+ 	__u32 header_bit_size;
+ 
+@@ -186,9 +202,6 @@ struct v4l2_ctrl_h264_decode_params {
+ 	struct v4l2_h264_dpb_entry dpb[16];
+ 	__u16 num_slices;
+ 	__u16 nal_ref_idc;
+-	__u8 ref_pic_list_p0[32];
+-	__u8 ref_pic_list_b0[32];
+-	__u8 ref_pic_list_b1[32];
+ 	__s32 top_field_order_cnt;
+ 	__s32 bottom_field_order_cnt;
+ 	__u32 flags; /* V4L2_H264_DECODE_PARAM_FLAG_* */
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 6448884..ea9a826 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -62,6 +62,6 @@ v4l2_request_drv_video_la_LDFLAGS = -module -avoid-version -no-undefined \
+ 				    -Wl,--no-undefined
+ v4l2_request_drv_video_la_LIBADD = $(DRM_LIBS) $(LIBVA_LIBS)
+ v4l2_request_drv_video_la_LTLIBRARIES = v4l2_request_drv_video.la
+-v4l2_request_drv_video_ladir = /usr/lib/dri/
++v4l2_request_drv_video_ladir = $(exec_prefix)$(LIBVA_DRIVER_PATH)
+ 
+ MAINTAINERCLEANFILES = Makefile.in autoconfig.h.in
+diff --git a/src/buffer.c b/src/buffer.c
+index d9a1152..a94eb85 100644
+--- a/src/buffer.c
++++ b/src/buffer.c
+@@ -199,16 +199,12 @@ VAStatus RequestAcquireBufferHandle(VADriverContextP context,
+ 	struct object_buffer *buffer_object;
+ 	struct object_surface *surface_object;
+ 	struct video_format *video_format;
+-	unsigned int capture_type;
+ 	int export_fd;
+-	int rc;
+ 
+ 	video_format = driver_data->video_format;
+ 	if (video_format == NULL)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-	capture_type = v4l2_type_video_capture(video_format->v4l2_mplane);
+-
+ 	if (buffer_info->mem_type != VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME ||
+ 	    !video_format_is_linear(driver_data->video_format))
+ 		return VA_STATUS_ERROR_UNSUPPORTED_MEMORY_TYPE;
+@@ -227,10 +223,11 @@ VAStatus RequestAcquireBufferHandle(VADriverContextP context,
+ 	if (surface_object->destination_buffers_count > 1)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-	rc = v4l2_export_buffer(driver_data->video_fd, capture_type,
+-				surface_object->destination_index, O_RDONLY,
+-				&export_fd, 1);
+-	if (rc < 0)
++	if (surface_object->destination_dmabuf_fds[0] == -1)
++		return VA_STATUS_ERROR_OPERATION_FAILED;
++
++	export_fd = dup(surface_object->destination_dmabuf_fds[0]);
++	if (export_fd == -1)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+ 	buffer_info->handle = (uintptr_t) export_fd;
+diff --git a/src/config.c b/src/config.c
+index e396268..0aad725 100644
+--- a/src/config.c
++++ b/src/config.c
+@@ -33,6 +33,7 @@
+ #include <sys/ioctl.h>
+ 
+ #include <linux/videodev2.h>
++#include <h264-ctrls.h>
+ 
+ #include <mpeg2-ctrls.h>
+ #include <h264-ctrls.h>
+@@ -115,20 +116,19 @@ VAStatus RequestQueryConfigProfiles(VADriverContextP context,
+ 				    VAProfile *profiles, int *profiles_count)
+ {
+ 	struct request_data *driver_data = context->pDriverData;
++	unsigned int type = v4l2_type_video_output(driver_data->mplane);
+ 	unsigned int index = 0;
+ 	bool found;
+ 
+-	found = v4l2_find_format(driver_data->video_fd,
+-				 V4L2_BUF_TYPE_VIDEO_OUTPUT,
++	found = v4l2_find_format(driver_data->video_fd, type,
+ 				 V4L2_PIX_FMT_MPEG2_SLICE);
+ 	if (found && index < (V4L2_REQUEST_MAX_CONFIG_ATTRIBUTES - 2)) {
+ 		profiles[index++] = VAProfileMPEG2Simple;
+ 		profiles[index++] = VAProfileMPEG2Main;
+ 	}
+ 
+-	found = v4l2_find_format(driver_data->video_fd,
+-				 V4L2_BUF_TYPE_VIDEO_OUTPUT,
+-				 V4L2_PIX_FMT_H264_SLICE_RAW);
++	found = v4l2_find_format(driver_data->video_fd, type,
++				 V4L2_PIX_FMT_H264_SLICE);
+ 	if (found && index < (V4L2_REQUEST_MAX_CONFIG_ATTRIBUTES - 5)) {
+ 		profiles[index++] = VAProfileH264Main;
+ 		profiles[index++] = VAProfileH264High;
+@@ -137,11 +137,12 @@ VAStatus RequestQueryConfigProfiles(VADriverContextP context,
+ 		profiles[index++] = VAProfileH264StereoHigh;
+ 	}
+ 
+-	found = v4l2_find_format(driver_data->video_fd,
+-				 V4L2_BUF_TYPE_VIDEO_OUTPUT,
++#if 1
++	found = v4l2_find_format(driver_data->video_fd, type,
+ 				 V4L2_PIX_FMT_HEVC_SLICE);
+ 	if (found && index < (V4L2_REQUEST_MAX_CONFIG_ATTRIBUTES - 1))
+ 		profiles[index++] = VAProfileHEVCMain;
++#endif
+ 
+ 	*profiles_count = index;
+ 
+diff --git a/src/context.c b/src/context.c
+index 04ba9a6..8a213a5 100644
+--- a/src/context.c
++++ b/src/context.c
+@@ -34,10 +34,13 @@
+ 
+ #include <assert.h>
+ 
++#include <fcntl.h>
+ #include <sys/ioctl.h>
+ #include <sys/mman.h>
++#include <unistd.h>
+ 
+ #include <linux/videodev2.h>
++#include <h264-ctrls.h>
+ 
+ #include <mpeg2-ctrls.h>
+ #include <h264-ctrls.h>
+@@ -66,17 +69,19 @@ VAStatus RequestCreateContext(VADriverContextP context, VAConfigID config_id,
+ 	VAStatus status;
+ 	unsigned int output_type, capture_type;
+ 	unsigned int pixelformat;
+-	unsigned int index_base;
++	unsigned int dmabuf_index_base;
++	unsigned int dmabuf_index;
+ 	unsigned int index;
+ 	unsigned int i;
++	int video_fd;
+ 	int rc;
+ 
+ 	video_format = driver_data->video_format;
+ 	if (video_format == NULL)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-	output_type = v4l2_type_video_output(video_format->v4l2_mplane);
+-	capture_type = v4l2_type_video_capture(video_format->v4l2_mplane);
++	output_type = v4l2_type_video_output(driver_data->mplane);
++	capture_type = v4l2_type_video_capture(driver_data->mplane);
+ 
+ 	config_object = CONFIG(driver_data, config_id);
+ 	if (config_object == NULL) {
+@@ -92,6 +97,15 @@ VAStatus RequestCreateContext(VADriverContextP context, VAConfigID config_id,
+ 	}
+ 	memset(&context_object->dpb, 0, sizeof(context_object->dpb));
+ 
++	/* Open a new file descriptor to get a new in-kernel context */
++	video_fd = open(driver_data->video_path, O_RDWR | O_NONBLOCK);
++	if (video_fd < 0) {
++		status = VA_STATUS_ERROR_OPERATION_FAILED;
++		goto error;
++	}
++
++	context_object->video_fd = video_fd;
++
+ 	switch (config_object->profile) {
+ 
+ 	case VAProfileMPEG2Simple:
+@@ -104,27 +118,37 @@ VAStatus RequestCreateContext(VADriverContextP context, VAConfigID config_id,
+ 	case VAProfileH264ConstrainedBaseline:
+ 	case VAProfileH264MultiviewHigh:
+ 	case VAProfileH264StereoHigh:
+-		pixelformat = V4L2_PIX_FMT_H264_SLICE_RAW;
++		pixelformat = V4L2_PIX_FMT_H264_SLICE;
++		/* Query decode mode and start code */
++		h264_get_controls(driver_data, context_object);
+ 		break;
+ 
++#if 1
+ 	case VAProfileHEVCMain:
+ 		pixelformat = V4L2_PIX_FMT_HEVC_SLICE;
+ 		break;
++#endif
+ 
+ 	default:
+ 		status = VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
+ 		goto error;
+ 	}
+ 
+-	rc = v4l2_set_format(driver_data->video_fd, output_type, pixelformat,
+-			     picture_width, picture_height);
++	rc = v4l2_set_format(video_fd, output_type, pixelformat, picture_width,
++			     picture_height);
+ 	if (rc < 0) {
+ 		status = VA_STATUS_ERROR_OPERATION_FAILED;
+ 		goto error;
+ 	}
+ 
+-	rc = v4l2_create_buffers(driver_data->video_fd, output_type,
+-				 surfaces_count, &index_base);
++	rc = v4l2_request_buffers(video_fd, output_type, surfaces_count);
++	if (rc < 0) {
++		status = VA_STATUS_ERROR_ALLOCATION_FAILED;
++		goto error;
++	}
++
++	rc = v4l2_create_buffers(video_fd, capture_type, V4L2_MEMORY_DMABUF,
++				 surfaces_count, &dmabuf_index_base);
+ 	if (rc < 0) {
+ 		status = VA_STATUS_ERROR_ALLOCATION_FAILED;
+ 		goto error;
+@@ -144,7 +168,8 @@ VAStatus RequestCreateContext(VADriverContextP context, VAConfigID config_id,
+ 	memcpy(ids, surfaces_ids, surfaces_count * sizeof(VASurfaceID));
+ 
+ 	for (i = 0; i < surfaces_count; i++) {
+-		index = index_base + i;
++		index = i;
++		dmabuf_index = dmabuf_index_base + i;
+ 
+ 		surface_object = SURFACE(driver_data, surfaces_ids[i]);
+ 		if (surface_object == NULL) {
+@@ -152,15 +177,15 @@ VAStatus RequestCreateContext(VADriverContextP context, VAConfigID config_id,
+ 			goto error;
+ 		}
+ 
+-		rc = v4l2_query_buffer(driver_data->video_fd, output_type,
+-				       index, &length, &offset, 1);
++		rc = v4l2_query_buffer(video_fd, output_type, index, &length,
++				       &offset, 1);
+ 		if (rc < 0) {
+ 			status = VA_STATUS_ERROR_ALLOCATION_FAILED;
+ 			goto error;
+ 		}
+ 
+ 		source_data = mmap(NULL, length, PROT_READ | PROT_WRITE,
+-				   MAP_SHARED, driver_data->video_fd, offset);
++				   MAP_SHARED, video_fd, offset);
+ 		if (source_data == MAP_FAILED) {
+ 			status = VA_STATUS_ERROR_ALLOCATION_FAILED;
+ 			goto error;
+@@ -169,15 +194,17 @@ VAStatus RequestCreateContext(VADriverContextP context, VAConfigID config_id,
+ 		surface_object->source_index = index;
+ 		surface_object->source_data = source_data;
+ 		surface_object->source_size = length;
++
++		surface_object->destination_index = dmabuf_index;
+ 	}
+ 
+-	rc = v4l2_set_stream(driver_data->video_fd, output_type, true);
++	rc = v4l2_set_stream(video_fd, output_type, true);
+ 	if (rc < 0) {
+ 		status = VA_STATUS_ERROR_OPERATION_FAILED;
+ 		goto error;
+ 	}
+ 
+-	rc = v4l2_set_stream(driver_data->video_fd, capture_type, true);
++	rc = v4l2_set_stream(video_fd, capture_type, true);
+ 	if (rc < 0) {
+ 		status = VA_STATUS_ERROR_OPERATION_FAILED;
+ 		goto error;
+@@ -218,24 +245,27 @@ VAStatus RequestDestroyContext(VADriverContextP context, VAContextID context_id)
+ 	struct video_format *video_format;
+ 	unsigned int output_type, capture_type;
+ 	VAStatus status;
++	int video_fd;
+ 	int rc;
+ 
+ 	video_format = driver_data->video_format;
+ 	if (video_format == NULL)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-	output_type = v4l2_type_video_output(video_format->v4l2_mplane);
+-	capture_type = v4l2_type_video_capture(video_format->v4l2_mplane);
++	output_type = v4l2_type_video_output(driver_data->mplane);
++	capture_type = v4l2_type_video_capture(driver_data->mplane);
+ 
+ 	context_object = CONTEXT(driver_data, context_id);
+ 	if (context_object == NULL)
+ 		return VA_STATUS_ERROR_INVALID_CONTEXT;
+ 
+-	rc = v4l2_set_stream(driver_data->video_fd, output_type, false);
++	video_fd = context_object->video_fd;
++
++	rc = v4l2_set_stream(video_fd, output_type, false);
+ 	if (rc < 0)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-	rc = v4l2_set_stream(driver_data->video_fd, capture_type, false);
++	rc = v4l2_set_stream(video_fd, capture_type, false);
+ 	if (rc < 0)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+@@ -251,13 +281,15 @@ VAStatus RequestDestroyContext(VADriverContextP context, VAContextID context_id)
+ 	object_heap_free(&driver_data->context_heap,
+ 			 (struct object_base *)context_object);
+ 
+-	rc = v4l2_request_buffers(driver_data->video_fd, output_type, 0);
++	rc = v4l2_request_buffers(video_fd, output_type, 0);
+ 	if (rc < 0)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-	rc = v4l2_request_buffers(driver_data->video_fd, capture_type, 0);
++	rc = v4l2_request_buffers(video_fd, capture_type, 0);
+ 	if (rc < 0)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
++	close(video_fd);
++
+ 	return VA_STATUS_SUCCESS;
+ }
+diff --git a/src/context.h b/src/context.h
+index cd0910a..168cfb5 100644
+--- a/src/context.h
++++ b/src/context.h
+@@ -38,6 +38,7 @@
+ 
+ struct object_context {
+ 	struct object_base base;
++	int video_fd;
+ 
+ 	VAConfigID config_id;
+ 	VASurfaceID render_surface_id;
+@@ -50,6 +51,7 @@ struct object_context {
+ 
+ 	/* H264 only */
+ 	struct h264_dpb dpb;
++	bool h264_start_code;
+ };
+ 
+ VAStatus RequestCreateContext(VADriverContextP context, VAConfigID config_id,
+diff --git a/src/h264.c b/src/h264.c
+index 25bc8cb..46122aa 100644
+--- a/src/h264.c
++++ b/src/h264.c
+@@ -197,6 +197,7 @@ static void h264_fill_dpb(struct request_data *data,
+ 		}
+ 
+ 		dpb->frame_num = entry->pic.frame_idx;
++		dpb->pic_num = entry->pic.picture_id;
+ 		dpb->top_field_order_cnt = entry->pic.TopFieldOrderCnt;
+ 		dpb->bottom_field_order_cnt = entry->pic.BottomFieldOrderCnt;
+ 
+@@ -218,9 +219,23 @@ static void h264_va_picture_to_v4l2(struct request_data *driver_data,
+ 				    struct v4l2_ctrl_h264_pps *pps,
+ 				    struct v4l2_ctrl_h264_sps *sps)
+ {
++	unsigned char *b;
++	unsigned char nal_ref_idc;
++	unsigned char nal_unit_type;
++
++	/* Extract missing nal_ref_idc and nal_unit_type */
++	b = surface->source_data;
++	if (context->h264_start_code)
++		b += 3;
++	nal_ref_idc = (b[0] >> 5) & 0x3;
++	nal_unit_type = b[0] & 0x1f;
++
+ 	h264_fill_dpb(driver_data, context, decode);
+ 
+ 	decode->num_slices = surface->slices_count;
++	decode->nal_ref_idc = nal_ref_idc;
++	if (nal_unit_type == 5)
++		decode->flags = V4L2_H264_DECODE_PARAM_FLAG_IDR_PIC;
+ 	decode->top_field_order_cnt = VAPicture->CurrPic.TopFieldOrderCnt;
+ 	decode->bottom_field_order_cnt = VAPicture->CurrPic.BottomFieldOrderCnt;
+ 
+@@ -231,6 +246,10 @@ static void h264_va_picture_to_v4l2(struct request_data *driver_data,
+ 	pps->chroma_qp_index_offset = VAPicture->chroma_qp_index_offset;
+ 	pps->second_chroma_qp_index_offset =
+ 		VAPicture->second_chroma_qp_index_offset;
++	pps->num_ref_idx_l0_default_active_minus1 =
++		VAPicture->num_ref_idx_l0_default_active_minus1;
++	pps->num_ref_idx_l1_default_active_minus1 =
++		VAPicture->num_ref_idx_l1_default_active_minus1;
+ 
+ 	if (VAPicture->pic_fields.bits.entropy_coding_mode_flag)
+ 		pps->flags |= V4L2_H264_PPS_FLAG_ENTROPY_CODING_MODE;
+@@ -255,6 +274,7 @@ static void h264_va_picture_to_v4l2(struct request_data *driver_data,
+ 	if (VAPicture->pic_fields.bits.redundant_pic_cnt_present_flag)
+ 		pps->flags |= V4L2_H264_PPS_FLAG_REDUNDANT_PIC_CNT_PRESENT;
+ 
++	sps->max_num_ref_frames = VAPicture->num_ref_frames;
+ 	sps->chroma_format_idc = VAPicture->seq_fields.bits.chroma_format_idc;
+ 	sps->bit_depth_luma_minus8 = VAPicture->bit_depth_luma_minus8;
+ 	sps->bit_depth_chroma_minus8 = VAPicture->bit_depth_chroma_minus8;
+@@ -297,6 +317,10 @@ static void h264_va_matrix_to_v4l2(struct request_data *driver_data,
+ 	 */
+ 	memcpy(v4l2_matrix->scaling_list_8x8[0], &VAMatrix->ScalingList8x8[0],
+ 	       sizeof(v4l2_matrix->scaling_list_8x8[0]));
++	/* FIXME --> */
++	memcpy(v4l2_matrix->scaling_list_8x8[1], &VAMatrix->ScalingList8x8[1],
++	       sizeof(v4l2_matrix->scaling_list_8x8[1]));
++	/* <-- FIXME */
+ 	memcpy(v4l2_matrix->scaling_list_8x8[3], &VAMatrix->ScalingList8x8[1],
+ 	       sizeof(v4l2_matrix->scaling_list_8x8[3]));
+ }
+@@ -330,9 +354,15 @@ static void h264_va_slice_to_v4l2(struct request_data *driver_data,
+ 				  struct v4l2_ctrl_h264_slice_params *slice)
+ {
+ 	slice->size = VASlice->slice_data_size;
++	if (context->h264_start_code)
++		slice->size += 3;
+ 	slice->header_bit_size = VASlice->slice_data_bit_offset;
+ 	slice->first_mb_in_slice = VASlice->first_mb_in_slice;
+ 	slice->slice_type = VASlice->slice_type;
++	slice->frame_num = VAPicture->frame_num;
++	slice->idr_pic_id = VASlice->idr_pic_id;
++	slice->dec_ref_pic_marking_bit_size = VASlice->dec_ref_pic_marking_bit_size;
++	slice->pic_order_cnt_bit_size = VASlice->pic_order_cnt_bit_size;
+ 	slice->cabac_init_idc = VASlice->cabac_init_idc;
+ 	slice->slice_qp_delta = VASlice->slice_qp_delta;
+ 	slice->disable_deblocking_filter_idc =
+@@ -405,8 +435,67 @@ static void h264_va_slice_to_v4l2(struct request_data *driver_data,
+ 				     VASlice->chroma_offset_l1);
+ }
+ 
++int h264_get_controls(struct request_data *driver_data,
++		      struct object_context *context)
++{
++	struct v4l2_ext_control controls[2] = {
++		{
++			.id = V4L2_CID_MPEG_VIDEO_H264_DECODE_MODE,
++		}, {
++			.id = V4L2_CID_MPEG_VIDEO_H264_START_CODE,
++		}
++	};
++	int rc;
++
++	rc = v4l2_get_controls(context->video_fd, -1, controls, 2);
++	if (rc < 0)
++		return VA_STATUS_ERROR_OPERATION_FAILED;
++
++	switch (controls[0].value) {
++	case V4L2_MPEG_VIDEO_H264_DECODE_MODE_SLICE_BASED:
++		break;
++	case V4L2_MPEG_VIDEO_H264_DECODE_MODE_FRAME_BASED:
++		break;
++	default:
++		request_log("Unsupported decode mode\n");
++		return VA_STATUS_ERROR_OPERATION_FAILED;
++	}
++
++	switch (controls[1].value) {
++	case V4L2_MPEG_VIDEO_H264_START_CODE_NONE:
++		break;
++	case V4L2_MPEG_VIDEO_H264_START_CODE_ANNEX_B:
++		context->h264_start_code = true;
++		break;
++	default:
++		request_log("Unsupported start code\n");
++		return VA_STATUS_ERROR_OPERATION_FAILED;
++	}
++
++	return VA_STATUS_SUCCESS;
++}
++
++static inline __u8 h264_profile_to_idc(VAProfile profile)
++{
++	switch (profile) {
++	case VAProfileH264Main:
++		return 77;
++	case VAProfileH264High:
++		return 100;
++	case VAProfileH264ConstrainedBaseline:
++		return 66;
++	case VAProfileH264MultiviewHigh:
++		return 118;
++	case VAProfileH264StereoHigh:
++		return 128;
++	default:
++		return 0;
++	}
++}
++
+ int h264_set_controls(struct request_data *driver_data,
+ 		      struct object_context *context,
++		      VAProfile profile,
+ 		      struct object_surface *surface)
+ {
+ 	struct v4l2_ctrl_h264_scaling_matrix matrix = { 0 };
+@@ -435,31 +524,34 @@ int h264_set_controls(struct request_data *driver_data,
+ 			      &surface->params.h264.slice,
+ 			      &surface->params.h264.picture, &slice);
+ 
+-	rc = v4l2_set_control(driver_data->video_fd, surface->request_fd,
+-			      V4L2_CID_MPEG_VIDEO_H264_DECODE_PARAMS, &decode,
+-			      sizeof(decode));
+-	if (rc < 0)
+-		return VA_STATUS_ERROR_OPERATION_FAILED;
+-
+-	rc = v4l2_set_control(driver_data->video_fd, surface->request_fd,
+-			      V4L2_CID_MPEG_VIDEO_H264_SLICE_PARAMS, &slice,
+-			      sizeof(slice));
+-	if (rc < 0)
+-		return VA_STATUS_ERROR_OPERATION_FAILED;
+-
+-	rc = v4l2_set_control(driver_data->video_fd, surface->request_fd,
+-			      V4L2_CID_MPEG_VIDEO_H264_PPS, &pps, sizeof(pps));
+-	if (rc < 0)
+-		return VA_STATUS_ERROR_OPERATION_FAILED;
+-
+-	rc = v4l2_set_control(driver_data->video_fd, surface->request_fd,
+-			      V4L2_CID_MPEG_VIDEO_H264_SPS, &sps, sizeof(sps));
+-	if (rc < 0)
+-		return VA_STATUS_ERROR_OPERATION_FAILED;
++	sps.profile_idc = h264_profile_to_idc(profile);
++
++	struct v4l2_ext_control controls[5] = {
++		{
++			.id = V4L2_CID_MPEG_VIDEO_H264_SPS,
++			.ptr = &sps,
++			.size = sizeof(sps),
++		}, {
++			.id = V4L2_CID_MPEG_VIDEO_H264_PPS,
++			.ptr = &pps,
++			.size = sizeof(pps),
++		}, {
++			.id = V4L2_CID_MPEG_VIDEO_H264_SCALING_MATRIX,
++			.ptr = &matrix,
++			.size = sizeof(matrix),
++		}, {
++			.id = V4L2_CID_MPEG_VIDEO_H264_SLICE_PARAMS,
++			.ptr = &slice,
++			.size = sizeof(slice),
++		}, {
++			.id = V4L2_CID_MPEG_VIDEO_H264_DECODE_PARAMS,
++			.ptr = &decode,
++			.size = sizeof(decode),
++		}
++	};
+ 
+-	rc = v4l2_set_control(driver_data->video_fd, surface->request_fd,
+-			      V4L2_CID_MPEG_VIDEO_H264_SCALING_MATRIX, &matrix,
+-			      sizeof(matrix));
++	rc = v4l2_set_controls(context->video_fd, surface->request_fd,
++			       controls, 5);
+ 	if (rc < 0)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+diff --git a/src/h264.h b/src/h264.h
+index 35ef31d..da0b87f 100644
+--- a/src/h264.h
++++ b/src/h264.h
+@@ -51,8 +51,11 @@ struct h264_dpb {
+ 	unsigned int age;
+ };
+ 
++int h264_get_controls(struct request_data *driver_data,
++		      struct object_context *context);
+ int h264_set_controls(struct request_data *data,
+ 		      struct object_context *context,
++		      VAProfile profile,
+ 		      struct object_surface *surface);
+ 
+ #endif
+diff --git a/src/h265.c b/src/h265.c
+index 4650a51..5da2d9b 100644
+--- a/src/h265.c
++++ b/src/h265.c
+@@ -382,14 +382,16 @@ int h265_set_controls(struct request_data *driver_data,
+ 
+ 	h265_fill_pps(picture, slice, &pps);
+ 
+-	rc = v4l2_set_control(driver_data->video_fd, surface_object->request_fd,
++	rc = v4l2_set_control(context_object->video_fd,
++			      surface_object->request_fd,
+ 			      V4L2_CID_MPEG_VIDEO_HEVC_PPS, &pps, sizeof(pps));
+ 	if (rc < 0)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+ 	h265_fill_sps(picture, &sps);
+ 
+-	rc = v4l2_set_control(driver_data->video_fd, surface_object->request_fd,
++	rc = v4l2_set_control(context_object->video_fd,
++			      surface_object->request_fd,
+ 			      V4L2_CID_MPEG_VIDEO_HEVC_SPS, &sps, sizeof(sps));
+ 	if (rc < 0)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+@@ -397,7 +399,8 @@ int h265_set_controls(struct request_data *driver_data,
+ 	h265_fill_slice_params(picture, slice, &driver_data->surface_heap,
+ 			       surface_object->source_data, &slice_params);
+ 
+-	rc = v4l2_set_control(driver_data->video_fd, surface_object->request_fd,
++	rc = v4l2_set_control(context_object->video_fd,
++			      surface_object->request_fd,
+ 			      V4L2_CID_MPEG_VIDEO_HEVC_SLICE_PARAMS,
+ 			      &slice_params, sizeof(slice_params));
+ 	if (rc < 0)
+diff --git a/src/image.c b/src/image.c
+index fa8b0ea..5ea8135 100644
+--- a/src/image.c
++++ b/src/image.c
+@@ -60,7 +60,7 @@ VAStatus RequestCreateImage(VADriverContextP context, VAImageFormat *format,
+ 	if (video_format == NULL)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-	capture_type = v4l2_type_video_capture(video_format->v4l2_mplane);
++	capture_type = v4l2_type_video_capture(driver_data->mplane);
+ 
+ 	/*
+ 	 * FIXME: This should be replaced by per-pixelformat hadling to
+@@ -155,13 +155,16 @@ static VAStatus copy_surface_to_image (struct request_data *driver_data,
+ 		return VA_STATUS_ERROR_INVALID_BUFFER;
+ 
+ 	for (i = 0; i < surface_object->destination_planes_count; i++) {
++#if 0
+ 		if (!video_format_is_linear(driver_data->video_format))
+ 			tiled_to_planar(surface_object->destination_data[i],
+ 					buffer_object->data + image->offsets[i],
+ 					image->pitches[i], image->width,
+ 					i == 0 ? image->height :
+ 						 image->height / 2);
+-		else {
++		else
++#endif
++		{
+ 			memcpy(buffer_object->data + image->offsets[i],
+ 			       surface_object->destination_data[i],
+ 			       surface_object->destination_sizes[i]);
+diff --git a/src/mpeg2.c b/src/mpeg2.c
+index 9297fc5..239dc37 100644
+--- a/src/mpeg2.c
++++ b/src/mpeg2.c
+@@ -117,7 +117,8 @@ int mpeg2_set_controls(struct request_data *driver_data,
+ 	timestamp = v4l2_timeval_to_ns(&backward_reference_surface->timestamp);
+ 	slice_params.backward_ref_ts = timestamp;
+ 
+-	rc = v4l2_set_control(driver_data->video_fd, surface_object->request_fd,
++	rc = v4l2_set_control(context_object->video_fd,
++			      surface_object->request_fd,
+ 			      V4L2_CID_MPEG_VIDEO_MPEG2_SLICE_PARAMS,
+ 			      &slice_params, sizeof(slice_params));
+ 	if (rc < 0)
+@@ -144,7 +145,7 @@ int mpeg2_set_controls(struct request_data *driver_data,
+ 				iqmatrix->chroma_non_intra_quantiser_matrix[i];
+ 		}
+ 
+-		rc = v4l2_set_control(driver_data->video_fd,
++		rc = v4l2_set_control(context_object->video_fd,
+ 				      surface_object->request_fd,
+ 				      V4L2_CID_MPEG_VIDEO_MPEG2_QUANTIZATION,
+ 				      &quantization, sizeof(quantization));
+diff --git a/src/picture.c b/src/picture.c
+index aa86265..b68969c 100644
+--- a/src/picture.c
++++ b/src/picture.c
+@@ -51,6 +51,7 @@
+ #include "autoconfig.h"
+ 
+ static VAStatus codec_store_buffer(struct request_data *driver_data,
++				   struct object_context *context,
+ 				   VAProfile profile,
+ 				   struct object_surface *surface_object,
+ 				   struct object_buffer *buffer_object)
+@@ -63,6 +64,14 @@ static VAStatus codec_store_buffer(struct request_data *driver_data,
+ 		 * RenderPicture), we can't use a V4L2 buffer directly
+ 		 * and have to copy from a regular buffer.
+ 		 */
++		if (context->h264_start_code) {
++			static const char start_code[3] = { 0x00, 0x00, 0x01 };
++
++			memcpy(surface_object->source_data +
++			       surface_object->slices_size,
++			       start_code, sizeof(start_code));
++			surface_object->slices_size += sizeof(start_code);
++		}
+ 		memcpy(surface_object->source_data +
+ 			       surface_object->slices_size,
+ 		       buffer_object->data,
+@@ -184,16 +193,19 @@ static VAStatus codec_set_controls(struct request_data *driver_data,
+ 	case VAProfileH264ConstrainedBaseline:
+ 	case VAProfileH264MultiviewHigh:
+ 	case VAProfileH264StereoHigh:
+-		rc = h264_set_controls(driver_data, context, surface_object);
++		rc = h264_set_controls(driver_data, context, profile,
++				       surface_object);
+ 		if (rc < 0)
+ 			return VA_STATUS_ERROR_OPERATION_FAILED;
+ 		break;
+ 
++#if 1
+ 	case VAProfileHEVCMain:
+ 		rc = h265_set_controls(driver_data, context, surface_object);
+ 		if (rc < 0)
+ 			return VA_STATUS_ERROR_OPERATION_FAILED;
+ 		break;
++#endif
+ 
+ 	default:
+ 		return VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
+@@ -221,6 +233,7 @@ VAStatus RequestBeginPicture(VADriverContextP context, VAContextID context_id,
+ 		RequestSyncSurface(context, surface_id);
+ 
+ 	surface_object->status = VASurfaceRendering;
++	surface_object->context_id = context_id;
+ 	context_object->render_surface_id = surface_id;
+ 
+ 	return VA_STATUS_SUCCESS;
+@@ -255,7 +268,8 @@ VAStatus RequestRenderPicture(VADriverContextP context, VAContextID context_id,
+ 		if (buffer_object == NULL)
+ 			return VA_STATUS_ERROR_INVALID_BUFFER;
+ 
+-		rc = codec_store_buffer(driver_data, config_object->profile,
++		rc = codec_store_buffer(driver_data, context_object,
++					config_object->profile,
+ 					surface_object, buffer_object);
+ 		if (rc != VA_STATUS_SUCCESS)
+ 			return rc;
+@@ -280,8 +294,8 @@ VAStatus RequestEndPicture(VADriverContextP context, VAContextID context_id)
+ 	if (video_format == NULL)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-	output_type = v4l2_type_video_output(video_format->v4l2_mplane);
+-	capture_type = v4l2_type_video_capture(video_format->v4l2_mplane);
++	output_type = v4l2_type_video_output(driver_data->mplane);
++	capture_type = v4l2_type_video_capture(driver_data->mplane);
+ 
+ 	context_object = CONTEXT(driver_data, context_id);
+ 	if (context_object == NULL)
+@@ -312,13 +326,14 @@ VAStatus RequestEndPicture(VADriverContextP context, VAContextID context_id)
+ 	if (rc != VA_STATUS_SUCCESS)
+ 		return rc;
+ 
+-	rc = v4l2_queue_buffer(driver_data->video_fd, -1, capture_type, NULL,
+-			       surface_object->destination_index, 0,
++	rc = v4l2_queue_dmabuf(context_object->video_fd, -1, capture_type, NULL,
++			       surface_object->destination_index,
++			       surface_object->destination_dmabuf_fds,
+ 			       surface_object->destination_buffers_count);
+ 	if (rc < 0)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-	rc = v4l2_queue_buffer(driver_data->video_fd, request_fd, output_type,
++	rc = v4l2_queue_buffer(context_object->video_fd, request_fd, output_type,
+ 			       &surface_object->timestamp,
+ 			       surface_object->source_index,
+ 			       surface_object->slices_size, 1);
+diff --git a/src/request.c b/src/request.c
+index b54c0f5..8a85064 100644
+--- a/src/request.c
++++ b/src/request.c
+@@ -64,6 +64,7 @@ VAStatus VA_DRIVER_INIT_FUNC(VADriverContextP context)
+ 	VAStatus status;
+ 	unsigned int capabilities;
+ 	unsigned int capabilities_required;
++	unsigned int capture_type;
+ 	int video_fd = -1;
+ 	int media_fd = -1;
+ 	char *video_path;
+@@ -154,6 +155,8 @@ VAStatus VA_DRIVER_INIT_FUNC(VADriverContextP context)
+ 	if (video_fd < 0)
+ 		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
++	driver_data->video_path = video_path;
++
+ 	rc = v4l2_query_capabilities(video_fd, &capabilities);
+ 	if (rc < 0) {
+ 		status = VA_STATUS_ERROR_OPERATION_FAILED;
+@@ -168,6 +171,33 @@ VAStatus VA_DRIVER_INIT_FUNC(VADriverContextP context)
+ 		goto error;
+ 	}
+ 
++	if (capabilities & V4L2_CAP_VIDEO_M2M_MPLANE) {
++		driver_data->mplane = true;
++	} else if (!(capabilities & V4L2_CAP_VIDEO_M2M)) {
++		request_log("Missing memory to memory interface\n");
++		status = VA_STATUS_ERROR_OPERATION_FAILED;
++		goto error;
++	}
++
++	capabilities_required = V4L2_BUF_CAP_SUPPORTS_MMAP |
++				V4L2_BUF_CAP_SUPPORTS_DMABUF |
++				V4L2_BUF_CAP_SUPPORTS_ORPHANED_BUFS;
++
++	capture_type = v4l2_type_video_capture(driver_data->mplane);
++
++	rc = v4l2_query_buffer_capabilities(video_fd, capture_type,
++					    &capabilities);
++	if (rc < 0) {
++		status = VA_STATUS_ERROR_OPERATION_FAILED;
++		goto error;
++	}
++
++	if ((capabilities & capabilities_required) != capabilities_required) {
++		request_log("Missing required buffer capabilities\n");
++		status = VA_STATUS_ERROR_OPERATION_FAILED;
++		goto error;
++	}
++
+ 	media_path = getenv("LIBVA_V4L2_REQUEST_MEDIA_PATH");
+ 	if (media_path == NULL)
+ 		media_path = "/dev/media0";
+diff --git a/src/request.h b/src/request.h
+index 1fb593b..4fd72df 100644
+--- a/src/request.h
++++ b/src/request.h
+@@ -51,8 +51,10 @@ struct request_data {
+ 	struct object_heap surface_heap;
+ 	struct object_heap buffer_heap;
+ 	struct object_heap image_heap;
++	const char *video_path;
+ 	int video_fd;
+ 	int media_fd;
++	bool mplane;
+ 
+ 	struct video_format *video_format;
+ };
+diff --git a/src/surface.c b/src/surface.c
+index a6abb9b..e3e5a74 100644
+--- a/src/surface.c
++++ b/src/surface.c
+@@ -41,6 +41,9 @@
+ #include <drm_fourcc.h>
+ #include <linux/videodev2.h>
+ 
++#include <h264-ctrls.h>
++
++#include "context.h"
+ #include "media.h"
+ #include "utils.h"
+ #include "v4l2.h"
+@@ -61,85 +64,149 @@ VAStatus RequestCreateSurfaces2(VADriverContextP context, unsigned int format,
+ 	unsigned int destination_planes_count;
+ 	unsigned int format_width, format_height;
+ 	unsigned int capture_type;
++	unsigned int output_type;
+ 	unsigned int index_base;
+ 	unsigned int index;
+ 	unsigned int i, j;
++	VAStatus status;
+ 	VASurfaceID id;
++	int video_fd;
+ 	bool found;
+ 	int rc;
+ 
+ 	if (format != VA_RT_FORMAT_YUV420)
+ 		return VA_STATUS_ERROR_UNSUPPORTED_RT_FORMAT;
+ 
++	capture_type = v4l2_type_video_capture(driver_data->mplane);
++	output_type = v4l2_type_video_output(driver_data->mplane);
++
++	video_fd = open(driver_data->video_path, O_RDWR | O_NONBLOCK);
++	if (video_fd < 0)
++		return VA_STATUS_ERROR_OPERATION_FAILED;
+ 
+-        if (!driver_data->video_format) {
+-		found = v4l2_find_format(driver_data->video_fd,
+-					 V4L2_BUF_TYPE_VIDEO_CAPTURE,
++	if (!driver_data->video_format) {
++		found = v4l2_find_format(driver_data->video_fd, capture_type,
+ 					 V4L2_PIX_FMT_SUNXI_TILED_NV12);
+ 		if (found)
+ 			video_format = video_format_find(V4L2_PIX_FMT_SUNXI_TILED_NV12);
+ 
+-		found = v4l2_find_format(driver_data->video_fd,
+-					 V4L2_BUF_TYPE_VIDEO_CAPTURE,
++		found = v4l2_find_format(driver_data->video_fd, capture_type,
+ 					 V4L2_PIX_FMT_NV12);
+ 		if (found)
+ 			video_format = video_format_find(V4L2_PIX_FMT_NV12);
+ 
+-		if (video_format == NULL)
+-			return VA_STATUS_ERROR_OPERATION_FAILED;
++		if (video_format == NULL) {
++			status = VA_STATUS_ERROR_OPERATION_FAILED;
++			goto error;
++		}
+ 
+ 		driver_data->video_format = video_format;
+ 
+-		capture_type = v4l2_type_video_capture(video_format->v4l2_mplane);
++		/* Set output format in case driver limits capture format to
++		 * output format dimensions.
++		*/
++
++		unsigned int format = V4L2_PIX_FMT_H264_SLICE;
++		rc = v4l2_set_format(driver_data->video_fd, output_type,
++				     format, width, height);
++		if (rc < 0) {
++			status = VA_STATUS_ERROR_OPERATION_FAILED;
++			goto error;
++		}
+ 
+ 		rc = v4l2_set_format(driver_data->video_fd, capture_type,
+ 				     video_format->v4l2_format, width, height);
+-		if (rc < 0)
+-			return VA_STATUS_ERROR_OPERATION_FAILED;
++		if (rc < 0) {
++			status = VA_STATUS_ERROR_OPERATION_FAILED;
++			goto error;
++		}
+         } else {
+ 		video_format = driver_data->video_format;
+-		capture_type = v4l2_type_video_capture(video_format->v4l2_mplane);
+ 	}
+ 
+-	rc = v4l2_get_format(driver_data->video_fd, capture_type, &format_width,
++	/* Set output format in case driver limits capture format to output
++	 * format dimensions.
++	 */
++	rc = v4l2_set_format(video_fd, output_type, V4L2_PIX_FMT_H264_SLICE,
++			     width, height);
++	if (rc < 0) {
++		status = VA_STATUS_ERROR_OPERATION_FAILED;
++		goto error;
++	}
++
++	rc = v4l2_set_format(video_fd, capture_type, video_format->v4l2_format,
++			     width, height);
++	if (rc < 0) {
++		status = VA_STATUS_ERROR_OPERATION_FAILED;
++		goto error;
++	}
++
++	rc = v4l2_get_format(video_fd, capture_type, &format_width,
+ 			     &format_height, destination_bytesperlines,
+ 			     destination_sizes, NULL);
+-	if (rc < 0)
+-		return VA_STATUS_ERROR_OPERATION_FAILED;
++	if (rc < 0) {
++		status = VA_STATUS_ERROR_OPERATION_FAILED;
++		goto error;
++	}
++
++	if (format_width < width || format_height < height) {
++		status = VA_STATUS_ERROR_OPERATION_FAILED;
++		goto error;
++	}
+ 
+ 	destination_planes_count = video_format->planes_count;
+ 
+-	rc = v4l2_create_buffers(driver_data->video_fd, capture_type,
+-				 surfaces_count, &index_base);
+-	if (rc < 0)
+-		return VA_STATUS_ERROR_ALLOCATION_FAILED;
++	rc = v4l2_create_buffers(video_fd, capture_type,
++				 V4L2_MEMORY_MMAP, surfaces_count,
++				 &index_base);
++	if (rc < 0) {
++		status = VA_STATUS_ERROR_ALLOCATION_FAILED;
++		goto error;
++	}
+ 
+ 	for (i = 0; i < surfaces_count; i++) {
+ 		index = index_base + i;
+ 
+ 		id = object_heap_allocate(&driver_data->surface_heap);
+ 		surface_object = SURFACE(driver_data, id);
+-		if (surface_object == NULL)
+-			return VA_STATUS_ERROR_ALLOCATION_FAILED;
++		if (surface_object == NULL) {
++			status = VA_STATUS_ERROR_ALLOCATION_FAILED;
++			goto error;
++		}
++
++		for (j = 0; j < VIDEO_MAX_PLANES; j++)
++			surface_object->destination_dmabuf_fds[j] = -1;
+ 
+-		rc = v4l2_query_buffer(driver_data->video_fd, capture_type,
+-				       index,
++		rc = v4l2_query_buffer(video_fd, capture_type, index,
+ 				       surface_object->destination_map_lengths,
+ 				       surface_object->destination_map_offsets,
+ 				       video_format->v4l2_buffers_count);
+-		if (rc < 0)
+-			return VA_STATUS_ERROR_ALLOCATION_FAILED;
++		if (rc < 0) {
++			status = VA_STATUS_ERROR_ALLOCATION_FAILED;
++			goto error;
++		}
++
++		rc = v4l2_export_buffer(video_fd, capture_type, index,
++					O_RDONLY,
++					surface_object->destination_dmabuf_fds,
++					video_format->v4l2_buffers_count);
++		if (rc < 0) {
++			status = VA_STATUS_ERROR_ALLOCATION_FAILED;
++			goto error;
++		}
+ 
+ 		for (j = 0; j < video_format->v4l2_buffers_count; j++) {
+ 			surface_object->destination_map[j] =
+ 				mmap(NULL,
+ 				     surface_object->destination_map_lengths[j],
+ 				     PROT_READ | PROT_WRITE, MAP_SHARED,
+-				     driver_data->video_fd,
++				     video_fd,
+ 				     surface_object->destination_map_offsets[j]);
+ 
+-			if (surface_object->destination_map[j] == MAP_FAILED)
+-				return VA_STATUS_ERROR_ALLOCATION_FAILED;
++			if (surface_object->destination_map[j] == MAP_FAILED) {
++				status = VA_STATUS_ERROR_ALLOCATION_FAILED;
++				goto error;
++			}
+ 		}
+ 
+ 		/*
+@@ -177,9 +244,11 @@ VAStatus RequestCreateSurfaces2(VADriverContextP context, unsigned int format,
+ 					destination_bytesperlines[j];
+ 			}
+ 		} else {
+-			return VA_STATUS_ERROR_ALLOCATION_FAILED;
++			status = VA_STATUS_ERROR_ALLOCATION_FAILED;
++			goto error;
+ 		}
+ 
++		surface_object->context_id = VA_INVALID_ID;
+ 		surface_object->status = VASurfaceReady;
+ 		surface_object->width = width;
+ 		surface_object->height = height;
+@@ -188,7 +257,7 @@ VAStatus RequestCreateSurfaces2(VADriverContextP context, unsigned int format,
+ 		surface_object->source_data = NULL;
+ 		surface_object->source_size = 0;
+ 
+-		surface_object->destination_index = index;
++		surface_object->destination_index = 0;
+ 
+ 		surface_object->destination_planes_count =
+ 			destination_planes_count;
+@@ -205,7 +274,15 @@ VAStatus RequestCreateSurfaces2(VADriverContextP context, unsigned int format,
+ 		surfaces_ids[i] = id;
+ 	}
+ 
+-	return VA_STATUS_SUCCESS;
++	status = VA_STATUS_SUCCESS;
++	goto complete;
++
++error:
++	/* TODO */
++
++complete:
++	close(video_fd);
++	return status;
+ }
+ 
+ VAStatus RequestCreateSurfaces(VADriverContextP context, int width, int height,
+@@ -235,9 +312,12 @@ VAStatus RequestDestroySurfaces(VADriverContextP context,
+ 
+ 		for (j = 0; j < surface_object->destination_buffers_count; j++)
+ 			if (surface_object->destination_map[j] != NULL &&
+-			    surface_object->destination_map_lengths[j] > 0)
++			    surface_object->destination_map_lengths[j] > 0) {
+ 				munmap(surface_object->destination_map[j],
+ 				       surface_object->destination_map_lengths[j]);
++			if (surface_object->destination_dmabuf_fds[j] != -1)
++				close(surface_object->destination_dmabuf_fds[j]);
++		}
+ 
+ 		if (surface_object->request_fd > 0)
+ 			close(surface_object->request_fd);
+@@ -253,10 +333,12 @@ VAStatus RequestSyncSurface(VADriverContextP context, VASurfaceID surface_id)
+ {
+ 	struct request_data *driver_data = context->pDriverData;
+ 	struct object_surface *surface_object;
++	struct object_context *context_object;
+ 	VAStatus status;
+ 	struct video_format *video_format;
+ 	unsigned int output_type, capture_type;
+ 	int request_fd = -1;
++	int video_fd;
+ 	int rc;
+ 
+ 	video_format = driver_data->video_format;
+@@ -265,8 +347,8 @@ VAStatus RequestSyncSurface(VADriverContextP context, VASurfaceID surface_id)
+ 		goto error;
+ 	}
+ 
+-	output_type = v4l2_type_video_output(video_format->v4l2_mplane);
+-	capture_type = v4l2_type_video_capture(video_format->v4l2_mplane);
++	output_type = v4l2_type_video_output(driver_data->mplane);
++	capture_type = v4l2_type_video_capture(driver_data->mplane);
+ 
+ 	surface_object = SURFACE(driver_data, surface_id);
+ 	if (surface_object == NULL) {
+@@ -274,6 +356,12 @@ VAStatus RequestSyncSurface(VADriverContextP context, VASurfaceID surface_id)
+ 		goto error;
+ 	}
+ 
++	context_object = CONTEXT(driver_data, surface_object->context_id);
++	if (context_object == NULL)
++		return VA_STATUS_ERROR_INVALID_CONTEXT;
++
++	video_fd = context_object->video_fd;
++
+ 	if (surface_object->status != VASurfaceRendering) {
+ 		status = VA_STATUS_SUCCESS;
+ 		goto complete;
+@@ -303,14 +391,14 @@ VAStatus RequestSyncSurface(VADriverContextP context, VASurfaceID surface_id)
+ 		goto error;
+ 	}
+ 
+-	rc = v4l2_dequeue_buffer(driver_data->video_fd, -1, output_type,
++	rc = v4l2_dequeue_buffer(video_fd, -1, output_type,
+ 				 surface_object->source_index, 1);
+ 	if (rc < 0) {
+ 		status = VA_STATUS_ERROR_OPERATION_FAILED;
+ 		goto error;
+ 	}
+ 
+-	rc = v4l2_dequeue_buffer(driver_data->video_fd, -1, capture_type,
++	rc = v4l2_dequeue_dmabuf(video_fd, -1, capture_type,
+ 				 surface_object->destination_index,
+ 				 surface_object->destination_buffers_count);
+ 	if (rc < 0) {
+@@ -319,6 +407,7 @@ VAStatus RequestSyncSurface(VADriverContextP context, VASurfaceID surface_id)
+ 	}
+ 
+ 	surface_object->status = VASurfaceDisplaying;
++	surface_object->context_id = VA_INVALID_ID;
+ 
+ 	status = VA_STATUS_SUCCESS;
+ 	goto complete;
+@@ -463,11 +552,9 @@ VAStatus RequestExportSurfaceHandle(VADriverContextP context,
+ 	int *export_fds = NULL;
+ 	unsigned int export_fds_count;
+ 	unsigned int planes_count;
+-	unsigned int capture_type;
+ 	unsigned int size;
+ 	unsigned int i;
+ 	VAStatus status;
+-	int rc;
+ 
+ 	video_format = driver_data->video_format;
+ 	if (video_format == NULL)
+@@ -483,14 +570,22 @@ VAStatus RequestExportSurfaceHandle(VADriverContextP context,
+ 	export_fds_count = surface_object->destination_buffers_count;
+ 	export_fds = malloc(export_fds_count * sizeof(*export_fds));
+ 
+-	capture_type = v4l2_type_video_capture(video_format->v4l2_mplane);
+-
+-	rc = v4l2_export_buffer(driver_data->video_fd, capture_type,
+-				surface_object->destination_index, O_RDONLY,
+-				export_fds, export_fds_count);
+-	if (rc < 0) {
+-		status = VA_STATUS_ERROR_OPERATION_FAILED;
+-		goto error;
++	for (i = 0; i < export_fds_count; i++) {
++		if (surface_object->destination_dmabuf_fds[i] == -1) {
++			for (i = 0; i < export_fds_count; i++)
++				export_fds[i] = -1;
++			status = VA_STATUS_ERROR_OPERATION_FAILED;
++			goto error;
++		}
++	}
++	for (i = 0; i < export_fds_count; i++) {
++		export_fds[i] = dup(surface_object->destination_dmabuf_fds[i]);
++		if (export_fds[i] == -1) {
++			while (++i < export_fds_count)
++				export_fds[i] = -1;
++			status = VA_STATUS_ERROR_OPERATION_FAILED;
++			goto error;
++		}
+ 	}
+ 
+ 	planes_count = surface_object->destination_planes_count;
+diff --git a/src/surface.h b/src/surface.h
+index 41007f8..eb1a3da 100644
+--- a/src/surface.h
++++ b/src/surface.h
+@@ -39,8 +39,9 @@
+ 
+ struct object_surface {
+ 	struct object_base base;
++	VAContextID context_id;
+ 
+-	VAStatus status;
++	VASurfaceStatus status;
+ 	int width;
+ 	int height;
+ 
+@@ -58,6 +59,7 @@ struct object_surface {
+ 	unsigned int destination_bytesperlines[VIDEO_MAX_PLANES];
+ 	unsigned int destination_planes_count;
+ 	unsigned int destination_buffers_count;
++	int destination_dmabuf_fds[VIDEO_MAX_PLANES];
+ 
+ 	unsigned int slices_size;
+ 	unsigned int slices_count;
+diff --git a/src/v4l2.c b/src/v4l2.c
+index d5000ac..dde4ec8 100644
+--- a/src/v4l2.c
++++ b/src/v4l2.c
+@@ -235,7 +235,7 @@ int v4l2_get_format(int video_fd, unsigned int type, unsigned int *width,
+ 	return 0;
+ }
+ 
+-int v4l2_create_buffers(int video_fd, unsigned int type,
++int v4l2_create_buffers(int video_fd, unsigned int type, unsigned int memory,
+ 			unsigned int buffers_count, unsigned int *index_base)
+ {
+ 	struct v4l2_create_buffers buffers;
+@@ -243,7 +243,7 @@ int v4l2_create_buffers(int video_fd, unsigned int type,
+ 
+ 	memset(&buffers, 0, sizeof(buffers));
+ 	buffers.format.type = type;
+-	buffers.memory = V4L2_MEMORY_MMAP;
++	buffers.memory = memory;
+ 	buffers.count = buffers_count;
+ 
+ 	rc = ioctl(video_fd, VIDIOC_G_FMT, &buffers.format);
+@@ -266,6 +266,37 @@ int v4l2_create_buffers(int video_fd, unsigned int type,
+ 	return 0;
+ }
+ 
++int v4l2_query_buffer_capabilities(int video_fd, unsigned int type,
++				   unsigned int *capabilities)
++{
++	struct v4l2_create_buffers buffers;
++	int rc;
++
++	memset(&buffers, 0, sizeof(buffers));
++	buffers.format.type = type;
++	buffers.memory = V4L2_MEMORY_MMAP;
++	buffers.count = 0;
++
++	rc = ioctl(video_fd, VIDIOC_G_FMT, &buffers.format);
++	if (rc < 0) {
++		request_log("Unable to get format for type %d: %s\n", type,
++			    strerror(errno));
++		return -1;
++	}
++
++	rc = ioctl(video_fd, VIDIOC_CREATE_BUFS, &buffers);
++	if (rc < 0) {
++		request_log("Unable to query buffer capabilities for type %d: %s\n",
++			    type, strerror(errno));
++		return -1;
++	}
++
++	if (capabilities != NULL)
++		*capabilities = buffers.capabilities;
++
++	return 0;
++}
++
+ int v4l2_query_buffer(int video_fd, unsigned int type, unsigned int index,
+ 		      unsigned int *lengths, unsigned int *offsets,
+ 		      unsigned int buffers_count)
+@@ -370,6 +401,49 @@ int v4l2_queue_buffer(int video_fd, int request_fd, unsigned int type,
+ 	return 0;
+ }
+ 
++int v4l2_queue_dmabuf(int video_fd, int request_fd, unsigned int type,
++		      struct timeval *timestamp, unsigned int index,
++		      int *fds, unsigned int buffers_count)
++{
++	struct v4l2_plane planes[buffers_count];
++	struct v4l2_buffer buffer;
++	unsigned int i;
++	int rc;
++
++	memset(planes, 0, sizeof(planes));
++	memset(&buffer, 0, sizeof(buffer));
++
++	buffer.type = type;
++	buffer.memory = V4L2_MEMORY_DMABUF;
++	buffer.index = index;
++	buffer.length = buffers_count;
++	buffer.m.planes = planes;
++
++	if (v4l2_type_is_mplane(type)) {
++		for (i = 0; i < buffers_count; i++) {
++			buffer.m.planes[i].m.fd = fds[i];
++		}
++	} else {
++		buffer.m.fd = fds[0];
++	}
++
++	if (request_fd >= 0) {
++		buffer.flags = V4L2_BUF_FLAG_REQUEST_FD;
++		buffer.request_fd = request_fd;
++	}
++
++	if (timestamp != NULL)
++		buffer.timestamp = *timestamp;
++
++	rc = ioctl(video_fd, VIDIOC_QBUF, &buffer);
++	if (rc < 0) {
++		request_log("Unable to queue DMA buffer: %s\n", strerror(errno));
++		return -1;
++	}
++
++	return 0;
++}
++
+ int v4l2_dequeue_buffer(int video_fd, int request_fd, unsigned int type,
+ 			unsigned int index, unsigned int buffers_count)
+ {
+@@ -400,6 +474,36 @@ int v4l2_dequeue_buffer(int video_fd, int request_fd, unsigned int type,
+ 	return 0;
+ }
+ 
++int v4l2_dequeue_dmabuf(int video_fd, int request_fd, unsigned int type,
++			unsigned int index, unsigned int buffers_count)
++{
++	struct v4l2_plane planes[buffers_count];
++	struct v4l2_buffer buffer;
++	int rc;
++
++	memset(planes, 0, sizeof(planes));
++	memset(&buffer, 0, sizeof(buffer));
++
++	buffer.type = type;
++	buffer.memory = V4L2_MEMORY_DMABUF;
++	buffer.index = index;
++	buffer.length = buffers_count;
++	buffer.m.planes = planes;
++
++	if (request_fd >= 0) {
++		buffer.flags = V4L2_BUF_FLAG_REQUEST_FD;
++		buffer.request_fd = request_fd;
++	}
++
++	rc = ioctl(video_fd, VIDIOC_DQBUF, &buffer);
++	if (rc < 0) {
++		request_log("Unable to dequeue buffer: %s\n", strerror(errno));
++		return -1;
++	}
++
++	return 0;
++}
++
+ int v4l2_export_buffer(int video_fd, unsigned int type, unsigned int index,
+ 		       unsigned int flags, int *export_fds,
+ 		       unsigned int export_fds_count)
+@@ -428,37 +532,71 @@ int v4l2_export_buffer(int video_fd, unsigned int type, unsigned int index,
+ 	return 0;
+ }
+ 
+-int v4l2_set_control(int video_fd, int request_fd, unsigned int id, void *data,
+-		     unsigned int size)
++static int v4l2_ioctl_controls(int video_fd, int request_fd, unsigned long ioc,
++			       struct v4l2_ext_control *control_array,
++			       unsigned int num_controls)
+ {
+-	struct v4l2_ext_control control;
+ 	struct v4l2_ext_controls controls;
+-	int rc;
+ 
+-	memset(&control, 0, sizeof(control));
+ 	memset(&controls, 0, sizeof(controls));
+ 
+-	control.id = id;
+-	control.ptr = data;
+-	control.size = size;
+-
+-	controls.controls = &control;
+-	controls.count = 1;
++	controls.controls = control_array;
++	controls.count = num_controls;
+ 
+ 	if (request_fd >= 0) {
+ 		controls.which = V4L2_CTRL_WHICH_REQUEST_VAL;
+ 		controls.request_fd = request_fd;
+ 	}
+ 
+-	rc = ioctl(video_fd, VIDIOC_S_EXT_CTRLS, &controls);
++	return ioctl(video_fd, ioc, &controls);
++}
++
++int v4l2_get_controls(int video_fd, int request_fd,
++		      struct v4l2_ext_control *control_array,
++		      unsigned int num_controls)
++{
++	int rc;
++
++	rc = v4l2_ioctl_controls(video_fd, request_fd, VIDIOC_G_EXT_CTRLS,
++				 control_array, num_controls);
+ 	if (rc < 0) {
+-		request_log("Unable to set control: %s\n", strerror(errno));
++		request_log("Unable to get control(s): %s\n", strerror(errno));
+ 		return -1;
+ 	}
+ 
+ 	return 0;
+ }
+ 
++int v4l2_set_controls(int video_fd, int request_fd,
++		      struct v4l2_ext_control *control_array,
++		      unsigned int num_controls)
++{
++	int rc;
++
++	rc = v4l2_ioctl_controls(video_fd, request_fd, VIDIOC_S_EXT_CTRLS,
++				 control_array, num_controls);
++	if (rc < 0) {
++		request_log("Unable to set control(s): %s\n", strerror(errno));
++		return -1;
++	}
++
++	return 0;
++}
++
++int v4l2_set_control(int video_fd, int request_fd, unsigned int id, void *data,
++		     unsigned int size)
++{
++	struct v4l2_ext_control control;
++
++	memset(&control, 0, sizeof(control));
++
++	control.id = id;
++	control.ptr = data;
++	control.size = size;
++
++	return v4l2_set_controls(video_fd, request_fd, &control, 1);
++}
++
+ int v4l2_set_stream(int video_fd, unsigned int type, bool enable)
+ {
+ 	enum v4l2_buf_type buf_type = type;
+diff --git a/src/v4l2.h b/src/v4l2.h
+index 73e9a42..3f305a2 100644
+--- a/src/v4l2.h
++++ b/src/v4l2.h
+@@ -39,8 +39,10 @@ int v4l2_set_format(int video_fd, unsigned int type, unsigned int pixelformat,
+ int v4l2_get_format(int video_fd, unsigned int type, unsigned int *width,
+ 		    unsigned int *height, unsigned int *bytesperline,
+ 		    unsigned int *sizes, unsigned int *planes_count);
+-int v4l2_create_buffers(int video_fd, unsigned int type,
++int v4l2_create_buffers(int video_fd, unsigned int type, unsigned int memory,
+ 			unsigned int buffers_count, unsigned int *index_base);
++int v4l2_query_buffer_capabilities(int video_fd, unsigned int type,
++				   unsigned int *capabilities);
+ int v4l2_query_buffer(int video_fd, unsigned int type, unsigned int index,
+ 		      unsigned int *lengths, unsigned int *offsets,
+ 		      unsigned int buffers_count);
+@@ -49,11 +51,22 @@ int v4l2_request_buffers(int video_fd, unsigned int type,
+ int v4l2_queue_buffer(int video_fd, int request_fd, unsigned int type,
+ 		      struct timeval *timestamp, unsigned int index,
+ 		      unsigned int size, unsigned int buffers_count);
++int v4l2_queue_dmabuf(int video_fd, int request_fd, unsigned int type,
++		      struct timeval *timestamp, unsigned int index,
++		      int *fds, unsigned int buffers_count);
+ int v4l2_dequeue_buffer(int video_fd, int request_fd, unsigned int type,
+ 			unsigned int index, unsigned int buffers_count);
++int v4l2_dequeue_dmabuf(int video_fd, int request_fd, unsigned int type,
++			unsigned int index, unsigned int buffers_count);
+ int v4l2_export_buffer(int video_fd, unsigned int type, unsigned int index,
+ 		       unsigned int flags, int *export_fds,
+ 		       unsigned int export_fds_count);
++int v4l2_get_controls(int video_fd, int request_fd,
++		      struct v4l2_ext_control *controls,
++		      unsigned int num_controls);
++int v4l2_set_controls(int video_fd, int request_fd,
++		      struct v4l2_ext_control *controls,
++		      unsigned int num_controls);
+ int v4l2_set_control(int video_fd, int request_fd, unsigned int id, void *data,
+ 		     unsigned int size);
+ int v4l2_set_stream(int video_fd, unsigned int type, bool enable);
+diff --git a/src/video.c b/src/video.c
+index 3ccbb29..132bfec 100644
+--- a/src/video.c
++++ b/src/video.c
+@@ -39,7 +39,6 @@ static struct video_format formats[] = {
+ 		.description		= "NV12 YUV",
+ 		.v4l2_format		= V4L2_PIX_FMT_NV12,
+ 		.v4l2_buffers_count	= 1,
+-		.v4l2_mplane		= false,
+ 		.drm_format		= DRM_FORMAT_NV12,
+ 		.drm_modifier		= DRM_FORMAT_MOD_NONE,
+ 		.planes_count		= 2,
+@@ -49,7 +48,6 @@ static struct video_format formats[] = {
+ 		.description		= "Sunxi tiled NV12 YUV",
+ 		.v4l2_format		= V4L2_PIX_FMT_SUNXI_TILED_NV12,
+ 		.v4l2_buffers_count	= 1,
+-		.v4l2_mplane		= false,
+ 		.drm_format		= DRM_FORMAT_NV12,
+ 		.drm_modifier		= DRM_FORMAT_MOD_ALLWINNER_TILED,
+ 		.planes_count		= 2,
+diff --git a/src/video.h b/src/video.h
+index 1996fd5..491c346 100644
+--- a/src/video.h
++++ b/src/video.h
+@@ -31,7 +31,6 @@ struct video_format {
+ 	char *description;
+ 	unsigned int v4l2_format;
+ 	unsigned int v4l2_buffers_count;
+-	bool v4l2_mplane;
+ 	unsigned int drm_format;
+ 	uint64_t drm_modifier;
+ 	unsigned int planes_count;

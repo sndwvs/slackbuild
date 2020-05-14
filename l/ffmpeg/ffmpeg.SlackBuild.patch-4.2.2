@@ -1,0 +1,41 @@
+--- a/ffmpeg.SlackBuild	2019-09-30 07:33:52.983569909 +0300
++++ b/ffmpeg.SlackBuild	2020-04-24 00:05:13.666970569 +0300
+@@ -54,6 +54,12 @@
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
++elif [ "$ARCH" = "arm" ]; then
++  SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
++  LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O3"
++  LIBDIRSUFFIX="64"
+ else
+   SLKCFLAGS="-O2"
+   LIBDIRSUFFIX=""
+@@ -153,6 +159,12 @@
+ # No default patent encumbered features:
+ aac=""        ; [ "${AAC:-no}" = "no" ]           && aac="--disable-encoder=aac"
+ 
++# add support rockchip HW accelerate
++libdrm=""     ; [ "${LIBDRM:-yes}" != "no" ]      && libdrm="--enable-libdrm"
++v4l2request=""; [ "${V4L2REQUEST:-yes}" != "no" ] && v4l2request="--enable-v4l2-request"
++libudev=""    ; [ "${LIBUDEV:-yes}" != "no" ]     && libudev="--enable-libudev"
++pic=""        ; [ "${PIC:-yes}" != "no" ]         && pic="--enable-pic"
++
+ rm -rf $PKG
+ mkdir -p $TMP $PKG
+ cd $TMP
+@@ -241,7 +253,11 @@
+   $samba \
+   $ssl \
+   $tesseract \
+-  $wavpack || exit 1
++  $wavpack \
++  $libdrm \
++  $v4l2request \
++  $libudev \
++  $pic || exit 1
+ 
+ make $NUMJOBS || make || exit 1
+ make install DESTDIR=$PKG || exit 1
