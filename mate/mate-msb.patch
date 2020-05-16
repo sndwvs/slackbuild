@@ -1,5 +1,5 @@
 diff -Naur a/base/caja/caja.SlackBuild b/base/caja/caja.SlackBuild
---- a/base/caja/caja.SlackBuild	2020-05-16 22:03:52.118871923 +0000
+--- a/base/caja/caja.SlackBuild	2020-05-16 22:44:34.180492202 +0000
 +++ b/base/caja/caja.SlackBuild	2020-05-16 17:36:17.613764318 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -12,7 +12,7 @@ diff -Naur a/base/caja/caja.SlackBuild b/base/caja/caja.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/engrampa/engrampa.SlackBuild b/base/engrampa/engrampa.SlackBuild
---- a/base/engrampa/engrampa.SlackBuild	2020-05-16 22:03:52.118871923 +0000
+--- a/base/engrampa/engrampa.SlackBuild	2020-05-16 22:44:34.180492202 +0000
 +++ b/base/engrampa/engrampa.SlackBuild	2020-05-16 17:36:17.689766131 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -25,7 +25,7 @@ diff -Naur a/base/engrampa/engrampa.SlackBuild b/base/engrampa/engrampa.SlackBui
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/eom/eom.SlackBuild b/base/eom/eom.SlackBuild
---- a/base/eom/eom.SlackBuild	2020-05-16 22:03:52.118871923 +0000
+--- a/base/eom/eom.SlackBuild	2020-05-16 22:44:34.180492202 +0000
 +++ b/base/eom/eom.SlackBuild	2020-05-16 17:36:17.761767848 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -38,7 +38,7 @@ diff -Naur a/base/eom/eom.SlackBuild b/base/eom/eom.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/gtk-layer-shell/gtk-layer-shell.SlackBuild b/base/gtk-layer-shell/gtk-layer-shell.SlackBuild
---- a/base/gtk-layer-shell/gtk-layer-shell.SlackBuild	2020-05-16 22:03:52.118871923 +0000
+--- a/base/gtk-layer-shell/gtk-layer-shell.SlackBuild	2020-05-16 22:44:34.180492202 +0000
 +++ b/base/gtk-layer-shell/gtk-layer-shell.SlackBuild	2020-05-16 17:36:17.841769756 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -51,7 +51,7 @@ diff -Naur a/base/gtk-layer-shell/gtk-layer-shell.SlackBuild b/base/gtk-layer-sh
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/libmatekbd/libmatekbd.SlackBuild b/base/libmatekbd/libmatekbd.SlackBuild
---- a/base/libmatekbd/libmatekbd.SlackBuild	2020-05-16 22:03:52.118871923 +0000
+--- a/base/libmatekbd/libmatekbd.SlackBuild	2020-05-16 22:44:34.180492202 +0000
 +++ b/base/libmatekbd/libmatekbd.SlackBuild	2020-05-16 17:36:17.921771663 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -64,7 +64,7 @@ diff -Naur a/base/libmatekbd/libmatekbd.SlackBuild b/base/libmatekbd/libmatekbd.
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/libmatemixer/libmatemixer.SlackBuild b/base/libmatemixer/libmatemixer.SlackBuild
---- a/base/libmatemixer/libmatemixer.SlackBuild	2020-05-16 22:03:52.118871923 +0000
+--- a/base/libmatemixer/libmatemixer.SlackBuild	2020-05-16 22:44:34.180492202 +0000
 +++ b/base/libmatemixer/libmatemixer.SlackBuild	2020-05-16 17:36:17.997773476 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -77,7 +77,7 @@ diff -Naur a/base/libmatemixer/libmatemixer.SlackBuild b/base/libmatemixer/libma
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/libmateweather/libmateweather.SlackBuild b/base/libmateweather/libmateweather.SlackBuild
---- a/base/libmateweather/libmateweather.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/libmateweather/libmateweather.SlackBuild	2020-05-16 22:44:34.180492202 +0000
 +++ b/base/libmateweather/libmateweather.SlackBuild	2020-05-16 17:36:18.073775288 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -90,7 +90,7 @@ diff -Naur a/base/libmateweather/libmateweather.SlackBuild b/base/libmateweather
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/marco/marco.SlackBuild b/base/marco/marco.SlackBuild
---- a/base/marco/marco.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/marco/marco.SlackBuild	2020-05-16 22:44:34.184492297 +0000
 +++ b/base/marco/marco.SlackBuild	2020-05-16 17:36:18.153777196 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -103,7 +103,7 @@ diff -Naur a/base/marco/marco.SlackBuild b/base/marco/marco.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-backgrounds/mate-backgrounds.SlackBuild b/base/mate-backgrounds/mate-backgrounds.SlackBuild
---- a/base/mate-backgrounds/mate-backgrounds.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/mate-backgrounds/mate-backgrounds.SlackBuild	2020-05-16 22:44:34.184492297 +0000
 +++ b/base/mate-backgrounds/mate-backgrounds.SlackBuild	2020-05-16 17:36:18.225778913 +0000
 @@ -43,6 +43,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -116,7 +116,7 @@ diff -Naur a/base/mate-backgrounds/mate-backgrounds.SlackBuild b/base/mate-backg
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-common/mate-common.SlackBuild b/base/mate-common/mate-common.SlackBuild
---- a/base/mate-common/mate-common.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/mate-common/mate-common.SlackBuild	2020-05-16 22:44:34.184492297 +0000
 +++ b/base/mate-common/mate-common.SlackBuild	2020-05-16 17:36:18.309780917 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -129,7 +129,7 @@ diff -Naur a/base/mate-common/mate-common.SlackBuild b/base/mate-common/mate-com
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-control-center/mate-control-center.SlackBuild b/base/mate-control-center/mate-control-center.SlackBuild
---- a/base/mate-control-center/mate-control-center.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/mate-control-center/mate-control-center.SlackBuild	2020-05-16 22:44:34.184492297 +0000
 +++ b/base/mate-control-center/mate-control-center.SlackBuild	2020-05-16 17:36:18.381782634 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -142,7 +142,7 @@ diff -Naur a/base/mate-control-center/mate-control-center.SlackBuild b/base/mate
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-desktop/mate-desktop.SlackBuild b/base/mate-desktop/mate-desktop.SlackBuild
---- a/base/mate-desktop/mate-desktop.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/mate-desktop/mate-desktop.SlackBuild	2020-05-16 22:44:34.184492297 +0000
 +++ b/base/mate-desktop/mate-desktop.SlackBuild	2020-05-16 17:36:18.461784541 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -155,7 +155,7 @@ diff -Naur a/base/mate-desktop/mate-desktop.SlackBuild b/base/mate-desktop/mate-
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-media/mate-media.SlackBuild b/base/mate-media/mate-media.SlackBuild
---- a/base/mate-media/mate-media.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/mate-media/mate-media.SlackBuild	2020-05-16 22:44:34.184492297 +0000
 +++ b/base/mate-media/mate-media.SlackBuild	2020-05-16 17:36:18.625788452 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -168,7 +168,7 @@ diff -Naur a/base/mate-media/mate-media.SlackBuild b/base/mate-media/mate-media.
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-menus/mate-menus.SlackBuild b/base/mate-menus/mate-menus.SlackBuild
---- a/base/mate-menus/mate-menus.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/mate-menus/mate-menus.SlackBuild	2020-05-16 22:44:34.184492297 +0000
 +++ b/base/mate-menus/mate-menus.SlackBuild	2020-05-16 17:36:18.705790360 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -181,7 +181,7 @@ diff -Naur a/base/mate-menus/mate-menus.SlackBuild b/base/mate-menus/mate-menus.
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-notification-daemon/mate-notification-daemon.SlackBuild b/base/mate-notification-daemon/mate-notification-daemon.SlackBuild
---- a/base/mate-notification-daemon/mate-notification-daemon.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/mate-notification-daemon/mate-notification-daemon.SlackBuild	2020-05-16 22:44:34.188492392 +0000
 +++ b/base/mate-notification-daemon/mate-notification-daemon.SlackBuild	2020-05-16 17:36:18.781792173 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -194,7 +194,7 @@ diff -Naur a/base/mate-notification-daemon/mate-notification-daemon.SlackBuild b
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-panel/mate-panel.SlackBuild b/base/mate-panel/mate-panel.SlackBuild
---- a/base/mate-panel/mate-panel.SlackBuild	2020-05-16 22:03:52.122872017 +0000
+--- a/base/mate-panel/mate-panel.SlackBuild	2020-05-16 22:44:34.188492392 +0000
 +++ b/base/mate-panel/mate-panel.SlackBuild	2020-05-16 17:36:18.861794081 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -207,7 +207,7 @@ diff -Naur a/base/mate-panel/mate-panel.SlackBuild b/base/mate-panel/mate-panel.
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-polkit/mate-polkit.SlackBuild b/base/mate-polkit/mate-polkit.SlackBuild
---- a/base/mate-polkit/mate-polkit.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/base/mate-polkit/mate-polkit.SlackBuild	2020-05-16 22:44:34.188492392 +0000
 +++ b/base/mate-polkit/mate-polkit.SlackBuild	2020-05-16 17:36:18.937795893 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -220,7 +220,7 @@ diff -Naur a/base/mate-polkit/mate-polkit.SlackBuild b/base/mate-polkit/mate-pol
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-power-manager/mate-power-manager.SlackBuild b/base/mate-power-manager/mate-power-manager.SlackBuild
---- a/base/mate-power-manager/mate-power-manager.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/base/mate-power-manager/mate-power-manager.SlackBuild	2020-05-16 22:44:34.188492392 +0000
 +++ b/base/mate-power-manager/mate-power-manager.SlackBuild	2020-05-16 17:36:19.017797801 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -233,7 +233,7 @@ diff -Naur a/base/mate-power-manager/mate-power-manager.SlackBuild b/base/mate-p
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-screensaver/mate-screensaver.SlackBuild b/base/mate-screensaver/mate-screensaver.SlackBuild
---- a/base/mate-screensaver/mate-screensaver.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/base/mate-screensaver/mate-screensaver.SlackBuild	2020-05-16 22:44:34.188492392 +0000
 +++ b/base/mate-screensaver/mate-screensaver.SlackBuild	2020-05-16 17:36:19.093799613 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -246,7 +246,7 @@ diff -Naur a/base/mate-screensaver/mate-screensaver.SlackBuild b/base/mate-scree
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-session-manager/mate-session-manager.SlackBuild b/base/mate-session-manager/mate-session-manager.SlackBuild
---- a/base/mate-session-manager/mate-session-manager.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/base/mate-session-manager/mate-session-manager.SlackBuild	2020-05-16 22:44:34.188492392 +0000
 +++ b/base/mate-session-manager/mate-session-manager.SlackBuild	2020-05-16 17:36:19.169801426 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -259,7 +259,7 @@ diff -Naur a/base/mate-session-manager/mate-session-manager.SlackBuild b/base/ma
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-settings-daemon/mate-settings-daemon.SlackBuild b/base/mate-settings-daemon/mate-settings-daemon.SlackBuild
---- a/base/mate-settings-daemon/mate-settings-daemon.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/base/mate-settings-daemon/mate-settings-daemon.SlackBuild	2020-05-16 22:44:34.188492392 +0000
 +++ b/base/mate-settings-daemon/mate-settings-daemon.SlackBuild	2020-05-16 17:36:19.245803238 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -272,7 +272,7 @@ diff -Naur a/base/mate-settings-daemon/mate-settings-daemon.SlackBuild b/base/ma
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-system-monitor/mate-system-monitor.SlackBuild b/base/mate-system-monitor/mate-system-monitor.SlackBuild
---- a/base/mate-system-monitor/mate-system-monitor.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/base/mate-system-monitor/mate-system-monitor.SlackBuild	2020-05-16 22:44:34.192492487 +0000
 +++ b/base/mate-system-monitor/mate-system-monitor.SlackBuild	2020-05-16 17:36:19.321805051 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -285,7 +285,7 @@ diff -Naur a/base/mate-system-monitor/mate-system-monitor.SlackBuild b/base/mate
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-terminal/mate-terminal.SlackBuild b/base/mate-terminal/mate-terminal.SlackBuild
---- a/base/mate-terminal/mate-terminal.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/base/mate-terminal/mate-terminal.SlackBuild	2020-05-16 22:44:34.192492487 +0000
 +++ b/base/mate-terminal/mate-terminal.SlackBuild	2020-05-16 17:36:19.401806958 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -298,7 +298,7 @@ diff -Naur a/base/mate-terminal/mate-terminal.SlackBuild b/base/mate-terminal/ma
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/base/mate-themes/mate-themes.SlackBuild b/base/mate-themes/mate-themes.SlackBuild
---- a/base/mate-themes/mate-themes.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/base/mate-themes/mate-themes.SlackBuild	2020-05-16 22:44:34.192492487 +0000
 +++ b/base/mate-themes/mate-themes.SlackBuild	2020-05-16 17:36:19.477808771 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -311,7 +311,7 @@ diff -Naur a/base/mate-themes/mate-themes.SlackBuild b/base/mate-themes/mate-the
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/deps/autoconf-archive/autoconf-archive.SlackBuild b/deps/autoconf-archive/autoconf-archive.SlackBuild
---- a/deps/autoconf-archive/autoconf-archive.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/deps/autoconf-archive/autoconf-archive.SlackBuild	2020-05-16 22:44:34.196492583 +0000
 +++ b/deps/autoconf-archive/autoconf-archive.SlackBuild	2020-05-16 17:36:19.565810869 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -387,7 +387,7 @@ diff -Naur a/deps/gksu/config.sub-add-aarch64-support.patch b/deps/gksu/config.s
 +1.7.1
 +
 diff -Naur a/deps/gksu/gksu.SlackBuild b/deps/gksu/gksu.SlackBuild
---- a/deps/gksu/gksu.SlackBuild	2020-05-16 22:03:52.126872111 +0000
+--- a/deps/gksu/gksu.SlackBuild	2020-05-16 22:44:34.196492583 +0000
 +++ b/deps/gksu/gksu.SlackBuild	2020-05-16 22:14:03.581226232 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -412,7 +412,7 @@ diff -Naur a/deps/gksu/gksu.SlackBuild b/deps/gksu/gksu.SlackBuild
  
  CFLAGS="$SLKCFLAGS" \
 diff -Naur a/deps/glade/glade.SlackBuild b/deps/glade/glade.SlackBuild
---- a/deps/glade/glade.SlackBuild	2020-05-16 22:03:52.130872205 +0000
+--- a/deps/glade/glade.SlackBuild	2020-05-16 22:44:34.200492678 +0000
 +++ b/deps/glade/glade.SlackBuild	2020-05-16 17:36:19.717814494 +0000
 @@ -50,6 +50,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -425,7 +425,7 @@ diff -Naur a/deps/glade/glade.SlackBuild b/deps/glade/glade.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/deps/gssdp/gssdp.SlackBuild b/deps/gssdp/gssdp.SlackBuild
---- a/deps/gssdp/gssdp.SlackBuild	2020-05-16 22:03:52.130872205 +0000
+--- a/deps/gssdp/gssdp.SlackBuild	2020-05-16 22:44:34.200492678 +0000
 +++ b/deps/gssdp/gssdp.SlackBuild	2020-05-16 17:36:19.793816307 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -438,7 +438,7 @@ diff -Naur a/deps/gssdp/gssdp.SlackBuild b/deps/gssdp/gssdp.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/deps/gtk-engines/gtk-engines.SlackBuild b/deps/gtk-engines/gtk-engines.SlackBuild
---- a/deps/gtk-engines/gtk-engines.SlackBuild	2020-05-16 22:03:52.130872205 +0000
+--- a/deps/gtk-engines/gtk-engines.SlackBuild	2020-05-16 22:44:34.200492678 +0000
 +++ b/deps/gtk-engines/gtk-engines.SlackBuild	2020-05-16 17:36:19.865818024 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -451,7 +451,7 @@ diff -Naur a/deps/gtk-engines/gtk-engines.SlackBuild b/deps/gtk-engines/gtk-engi
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/deps/gtksourceview3/gtksourceview3.SlackBuild b/deps/gtksourceview3/gtksourceview3.SlackBuild
---- a/deps/gtksourceview3/gtksourceview3.SlackBuild	2020-05-16 22:03:52.130872205 +0000
+--- a/deps/gtksourceview3/gtksourceview3.SlackBuild	2020-05-16 22:44:34.200492678 +0000
 +++ b/deps/gtksourceview3/gtksourceview3.SlackBuild	2020-05-16 17:36:19.949820027 +0000
 @@ -51,6 +51,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -464,7 +464,7 @@ diff -Naur a/deps/gtksourceview3/gtksourceview3.SlackBuild b/deps/gtksourceview3
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/deps/gupnp/gupnp.SlackBuild b/deps/gupnp/gupnp.SlackBuild
---- a/deps/gupnp/gupnp.SlackBuild	2020-05-16 22:03:52.130872205 +0000
+--- a/deps/gupnp/gupnp.SlackBuild	2020-05-16 22:44:34.204492773 +0000
 +++ b/deps/gupnp/gupnp.SlackBuild	2020-05-16 17:36:20.033822030 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -540,7 +540,7 @@ diff -Naur a/deps/libgksu/config.sub-add-aarch64-support.patch b/deps/libgksu/co
 +1.7.1
 +
 diff -Naur a/deps/libgksu/libgksu.SlackBuild b/deps/libgksu/libgksu.SlackBuild
---- a/deps/libgksu/libgksu.SlackBuild	2020-05-16 22:03:52.130872205 +0000
+--- a/deps/libgksu/libgksu.SlackBuild	2020-05-16 22:44:34.204492773 +0000
 +++ b/deps/libgksu/libgksu.SlackBuild	2020-05-16 22:13:06.223880786 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -563,7 +563,7 @@ diff -Naur a/deps/libgksu/libgksu.SlackBuild b/deps/libgksu/libgksu.SlackBuild
  
  LDFLAGS="-lgtk -lX11" \
 diff -Naur a/deps/libgtop/libgtop.SlackBuild b/deps/libgtop/libgtop.SlackBuild
---- a/deps/libgtop/libgtop.SlackBuild	2020-05-16 22:03:52.130872205 +0000
+--- a/deps/libgtop/libgtop.SlackBuild	2020-05-16 22:44:34.204492773 +0000
 +++ b/deps/libgtop/libgtop.SlackBuild	2020-05-16 17:36:20.181825560 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -576,7 +576,7 @@ diff -Naur a/deps/libgtop/libgtop.SlackBuild b/deps/libgtop/libgtop.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/deps/libgxps/libgxps.SlackBuild b/deps/libgxps/libgxps.SlackBuild
---- a/deps/libgxps/libgxps.SlackBuild	2020-05-16 22:03:52.130872205 +0000
+--- a/deps/libgxps/libgxps.SlackBuild	2020-05-16 22:44:34.204492773 +0000
 +++ b/deps/libgxps/libgxps.SlackBuild	2020-05-16 17:36:20.261827468 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -589,7 +589,7 @@ diff -Naur a/deps/libgxps/libgxps.SlackBuild b/deps/libgxps/libgxps.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/deps/libpeas/libpeas.SlackBuild b/deps/libpeas/libpeas.SlackBuild
---- a/deps/libpeas/libpeas.SlackBuild	2020-05-16 22:03:52.130872205 +0000
+--- a/deps/libpeas/libpeas.SlackBuild	2020-05-16 22:44:34.204492773 +0000
 +++ b/deps/libpeas/libpeas.SlackBuild	2020-05-16 17:36:20.337829280 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -665,7 +665,7 @@ diff -Naur a/deps/libunique/config.sub-add-aarch64-support.patch b/deps/libuniqu
 +1.7.1
 +
 diff -Naur a/deps/libunique/libunique.SlackBuild b/deps/libunique/libunique.SlackBuild
---- a/deps/libunique/libunique.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/deps/libunique/libunique.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/deps/libunique/libunique.SlackBuild	2020-05-16 22:15:19.058996425 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -753,7 +753,7 @@ diff -Naur a/deps/libunique3/config.sub-add-aarch64-support.patch b/deps/libuniq
 +1.7.1
 +
 diff -Naur a/deps/libunique3/libunique3.SlackBuild b/deps/libunique3/libunique3.SlackBuild
---- a/deps/libunique3/libunique3.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/deps/libunique3/libunique3.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/deps/libunique3/libunique3.SlackBuild	2020-05-16 22:20:20.174055145 +0000
 @@ -53,6 +53,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -778,7 +778,7 @@ diff -Naur a/deps/libunique3/libunique3.SlackBuild b/deps/libunique3/libunique3.
  CXXFLAGS="$SLKCFLAGS" \
  ./configure \
 diff -Naur a/deps/libwnck3/libwnck3.SlackBuild b/deps/libwnck3/libwnck3.SlackBuild
---- a/deps/libwnck3/libwnck3.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/deps/libwnck3/libwnck3.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/deps/libwnck3/libwnck3.SlackBuild	2020-05-16 17:36:20.573834908 +0000
 @@ -51,6 +51,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -854,7 +854,7 @@ diff -Naur a/deps/murrine/config.sub-add-aarch64-support.patch b/deps/murrine/co
 +1.7.1
 +
 diff -Naur a/deps/murrine/murrine.SlackBuild b/deps/murrine/murrine.SlackBuild
---- a/deps/murrine/murrine.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/deps/murrine/murrine.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/deps/murrine/murrine.SlackBuild	2020-05-16 22:16:22.944494471 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -879,7 +879,7 @@ diff -Naur a/deps/murrine/murrine.SlackBuild b/deps/murrine/murrine.SlackBuild
  CXXFLAGS="$SLKCFLAGS" \
  ./configure \
 diff -Naur a/deps/pangox-compat/pangox-compat.SlackBuild b/deps/pangox-compat/pangox-compat.SlackBuild
---- a/deps/pangox-compat/pangox-compat.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/deps/pangox-compat/pangox-compat.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/deps/pangox-compat/pangox-compat.SlackBuild	2020-05-16 17:36:20.733838724 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "s390" ]; then
@@ -891,8 +891,71 @@ diff -Naur a/deps/pangox-compat/pangox-compat.SlackBuild b/deps/pangox-compat/pa
  elif [ "$ARCH" = "x86_64" ]; then
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
+diff -Naur a/deps/rarian/config.guess-add-aarch64-support.patch b/deps/rarian/config.guess-add-aarch64-support.patch
+--- a/deps/rarian/config.guess-add-aarch64-support.patch	1970-01-01 00:00:00.000000000 +0000
++++ b/deps/rarian/config.guess-add-aarch64-support.patch	2020-05-16 21:49:57.071315803 +0000
+@@ -0,0 +1,22 @@
++--- a/config.guess	2020-05-16 21:36:37.396768007 +0000
+++++ b/config.guess	2020-05-16 21:47:41.648176596 +0000
++@@ -162,6 +162,9 @@
++ 	    sh3eb) machine=sh-unknown ;;
++ 	    *) machine=${UNAME_MACHINE_ARCH}-unknown ;;
++ 	esac
+++	case "${UNAME_MACHINE_ARCH}" in
+++	    aarch64) machine=${UNAME_MACHINE_ARCH}-unknown ;;
+++	esac
++ 	# The Operating System including object format, if it has switched
++ 	# to ELF recently, or will in the future.
++ 	case "${UNAME_MACHINE_ARCH}" in
++@@ -831,6 +834,9 @@
++     arm*:Linux:*:*)
++ 	echo ${UNAME_MACHINE}-unknown-linux-gnu
++ 	exit ;;
+++    aarch64:Linux:*:*)
+++	echo ${UNAME_MACHINE}-unknown-linux-gnu
+++	exit ;;
++     cris:Linux:*:*)
++ 	echo cris-axis-linux-gnu
++ 	exit ;;
+diff -Naur a/deps/rarian/config.sub-add-aarch64-support.patch b/deps/rarian/config.sub-add-aarch64-support.patch
+--- a/deps/rarian/config.sub-add-aarch64-support.patch	1970-01-01 00:00:00.000000000 +0000
++++ b/deps/rarian/config.sub-add-aarch64-support.patch	2016-06-09 07:47:07.000000000 +0000
+@@ -0,0 +1,33 @@
++From 975ee34200109d3026310c69d6e465e0fecf1ab8 Mon Sep 17 00:00:00 2001
++From: Wladislav Wiebe <wladislav.kw@gmail.com>
++Date: Thu, 9 Jun 2016 09:19:29 +0200
++Subject: [PATCH] config.sub: add aarch64 support
++
++Signed-off-by: Wladislav Wiebe <wladislav.kw@gmail.com>
++---
++ config.sub |    2 ++
++ 1 files changed, 2 insertions(+), 0 deletions(-)
++
++diff --git a/config.sub b/config.sub
++index 320e303..548666c 100755
++--- a/config.sub
+++++ b/config.sub
++@@ -247,6 +247,7 @@ case $basic_machine in
++ 	# Some are omitted here because they have special meanings below.
++ 	1750a | 580 \
++ 	| a29k \
+++	| aarch64 \
++ 	| alpha | alphaev[4-8] | alphaev56 | alphaev6[78] | alphapca5[67] \
++ 	| alpha64 | alpha64ev[4-8] | alpha64ev56 | alpha64ev6[78] | alpha64pca5[67] \
++ 	| am33_2.0 \
++@@ -339,6 +340,7 @@ case $basic_machine in
++ 	# Recognize the basic CPU types with company name.
++ 	580-* \
++ 	| a29k-* \
+++	| aarch64-* \
++ 	| alpha-* | alphaev[4-8]-* | alphaev56-* | alphaev6[78]-* \
++ 	| alpha64-* | alpha64ev[4-8]-* | alpha64ev56-* | alpha64ev6[78]-* \
++ 	| alphapca5[67]-* | alpha64pca5[67]-* | arc-* \
++-- 
++1.7.1
++
 diff -Naur a/deps/rarian/rarian.SlackBuild b/deps/rarian/rarian.SlackBuild
---- a/deps/rarian/rarian.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/deps/rarian/rarian.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/deps/rarian/rarian.SlackBuild	2020-05-16 22:16:53.565212408 +0000
 @@ -50,6 +50,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -917,7 +980,7 @@ diff -Naur a/deps/rarian/rarian.SlackBuild b/deps/rarian/rarian.SlackBuild
  CXXFLAGS="$SLKCFLAGS" \
  ./configure \
 diff -Naur a/deps/yelp-tools/yelp-tools.SlackBuild b/deps/yelp-tools/yelp-tools.SlackBuild
---- a/deps/yelp-tools/yelp-tools.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/deps/yelp-tools/yelp-tools.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/deps/yelp-tools/yelp-tools.SlackBuild	2020-05-16 17:36:20.889842444 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -930,7 +993,7 @@ diff -Naur a/deps/yelp-tools/yelp-tools.SlackBuild b/deps/yelp-tools/yelp-tools.
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/deps/yelp-xsl/yelp-xsl.SlackBuild b/deps/yelp-xsl/yelp-xsl.SlackBuild
---- a/deps/yelp-xsl/yelp-xsl.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/deps/yelp-xsl/yelp-xsl.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/deps/yelp-xsl/yelp-xsl.SlackBuild	2020-05-16 17:36:20.965844256 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -943,7 +1006,7 @@ diff -Naur a/deps/yelp-xsl/yelp-xsl.SlackBuild b/deps/yelp-xsl/yelp-xsl.SlackBui
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/deps/zenity/zenity.SlackBuild b/deps/zenity/zenity.SlackBuild
---- a/deps/zenity/zenity.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/deps/zenity/zenity.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/deps/zenity/zenity.SlackBuild	2020-05-16 17:36:21.041846069 +0000
 @@ -30,6 +30,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -956,7 +1019,7 @@ diff -Naur a/deps/zenity/zenity.SlackBuild b/deps/zenity/zenity.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/atril/atril.SlackBuild b/extra/atril/atril.SlackBuild
---- a/extra/atril/atril.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/extra/atril/atril.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/extra/atril/atril.SlackBuild	2020-05-16 17:36:21.117847881 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -969,7 +1032,7 @@ diff -Naur a/extra/atril/atril.SlackBuild b/extra/atril/atril.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/caja-actions/caja-actions.SlackBuild b/extra/caja-actions/caja-actions.SlackBuild
---- a/extra/caja-actions/caja-actions.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/extra/caja-actions/caja-actions.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/extra/caja-actions/caja-actions.SlackBuild	2020-05-16 17:36:21.189849598 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -982,7 +1045,7 @@ diff -Naur a/extra/caja-actions/caja-actions.SlackBuild b/extra/caja-actions/caj
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/caja-dropbox/caja-dropbox.SlackBuild b/extra/caja-dropbox/caja-dropbox.SlackBuild
---- a/extra/caja-dropbox/caja-dropbox.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/extra/caja-dropbox/caja-dropbox.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/extra/caja-dropbox/caja-dropbox.SlackBuild	2020-05-16 17:36:21.269851506 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -995,7 +1058,7 @@ diff -Naur a/extra/caja-dropbox/caja-dropbox.SlackBuild b/extra/caja-dropbox/caj
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/caja-extensions/caja-extensions.SlackBuild b/extra/caja-extensions/caja-extensions.SlackBuild
---- a/extra/caja-extensions/caja-extensions.SlackBuild	2020-05-16 22:03:52.134872299 +0000
+--- a/extra/caja-extensions/caja-extensions.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/extra/caja-extensions/caja-extensions.SlackBuild	2020-05-16 17:36:21.349853414 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1008,7 +1071,7 @@ diff -Naur a/extra/caja-extensions/caja-extensions.SlackBuild b/extra/caja-exten
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/mate-applets/mate-applets.SlackBuild b/extra/mate-applets/mate-applets.SlackBuild
---- a/extra/mate-applets/mate-applets.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/extra/mate-applets/mate-applets.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/extra/mate-applets/mate-applets.SlackBuild	2020-05-16 17:36:21.425855226 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1021,7 +1084,7 @@ diff -Naur a/extra/mate-applets/mate-applets.SlackBuild b/extra/mate-applets/mat
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/mate-calc/mate-calc.SlackBuild b/extra/mate-calc/mate-calc.SlackBuild
---- a/extra/mate-calc/mate-calc.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/extra/mate-calc/mate-calc.SlackBuild	2020-05-16 22:44:34.208492868 +0000
 +++ b/extra/mate-calc/mate-calc.SlackBuild	2020-05-16 17:36:21.501857039 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1034,7 +1097,7 @@ diff -Naur a/extra/mate-calc/mate-calc.SlackBuild b/extra/mate-calc/mate-calc.Sl
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/mate-sensors-applet/mate-sensors-applet.SlackBuild b/extra/mate-sensors-applet/mate-sensors-applet.SlackBuild
---- a/extra/mate-sensors-applet/mate-sensors-applet.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/extra/mate-sensors-applet/mate-sensors-applet.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/extra/mate-sensors-applet/mate-sensors-applet.SlackBuild	2020-05-16 17:36:21.581858947 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1047,7 +1110,7 @@ diff -Naur a/extra/mate-sensors-applet/mate-sensors-applet.SlackBuild b/extra/ma
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/mate-utils/mate-utils.SlackBuild b/extra/mate-utils/mate-utils.SlackBuild
---- a/extra/mate-utils/mate-utils.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/extra/mate-utils/mate-utils.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/extra/mate-utils/mate-utils.SlackBuild	2020-05-16 17:36:21.661860854 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1060,7 +1123,7 @@ diff -Naur a/extra/mate-utils/mate-utils.SlackBuild b/extra/mate-utils/mate-util
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/mozo/mozo.SlackBuild b/extra/mozo/mozo.SlackBuild
---- a/extra/mozo/mozo.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/extra/mozo/mozo.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/extra/mozo/mozo.SlackBuild	2020-05-16 17:36:21.741862762 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1073,7 +1136,7 @@ diff -Naur a/extra/mozo/mozo.SlackBuild b/extra/mozo/mozo.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/extra/pluma/pluma.SlackBuild b/extra/pluma/pluma.SlackBuild
---- a/extra/pluma/pluma.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/extra/pluma/pluma.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/extra/pluma/pluma.SlackBuild	2020-05-16 17:36:21.813864479 +0000
 @@ -49,6 +49,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1086,7 +1149,7 @@ diff -Naur a/extra/pluma/pluma.SlackBuild b/extra/pluma/pluma.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/brisk-menu/brisk-menu.SlackBuild b/testing/brisk-menu/brisk-menu.SlackBuild
---- a/testing/brisk-menu/brisk-menu.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/testing/brisk-menu/brisk-menu.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/testing/brisk-menu/brisk-menu.SlackBuild	2020-05-16 17:36:21.885866196 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1099,7 +1162,7 @@ diff -Naur a/testing/brisk-menu/brisk-menu.SlackBuild b/testing/brisk-menu/brisk
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/ido/ido.SlackBuild b/testing/ido/ido.SlackBuild
---- a/testing/ido/ido.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/testing/ido/ido.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/testing/ido/ido.SlackBuild	2020-05-16 17:36:21.969868199 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1112,7 +1175,7 @@ diff -Naur a/testing/ido/ido.SlackBuild b/testing/ido/ido.SlackBuild
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/libindicator/libindicator.SlackBuild b/testing/libindicator/libindicator.SlackBuild
---- a/testing/libindicator/libindicator.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/testing/libindicator/libindicator.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/testing/libindicator/libindicator.SlackBuild	2020-05-16 17:36:22.049870107 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1125,7 +1188,7 @@ diff -Naur a/testing/libindicator/libindicator.SlackBuild b/testing/libindicator
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/mate-indicator-applet/mate-indicator-applet.SlackBuild b/testing/mate-indicator-applet/mate-indicator-applet.SlackBuild
---- a/testing/mate-indicator-applet/mate-indicator-applet.SlackBuild	2020-05-16 22:03:52.138872393 +0000
+--- a/testing/mate-indicator-applet/mate-indicator-applet.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/testing/mate-indicator-applet/mate-indicator-applet.SlackBuild	2020-05-16 17:36:22.129872015 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1138,7 +1201,7 @@ diff -Naur a/testing/mate-indicator-applet/mate-indicator-applet.SlackBuild b/te
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/mate-menu/mate-menu.SlackBuild b/testing/mate-menu/mate-menu.SlackBuild
---- a/testing/mate-menu/mate-menu.SlackBuild	2020-05-16 22:03:52.142872487 +0000
+--- a/testing/mate-menu/mate-menu.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/testing/mate-menu/mate-menu.SlackBuild	2020-05-16 17:36:22.213874018 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1151,7 +1214,7 @@ diff -Naur a/testing/mate-menu/mate-menu.SlackBuild b/testing/mate-menu/mate-men
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/mate-tweak/mate-tweak.SlackBuild b/testing/mate-tweak/mate-tweak.SlackBuild
---- a/testing/mate-tweak/mate-tweak.SlackBuild	2020-05-16 22:03:52.142872487 +0000
+--- a/testing/mate-tweak/mate-tweak.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/testing/mate-tweak/mate-tweak.SlackBuild	2020-05-16 17:36:22.289875831 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1164,7 +1227,7 @@ diff -Naur a/testing/mate-tweak/mate-tweak.SlackBuild b/testing/mate-tweak/mate-
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/mate-user-guide/mate-user-guide.SlackBuild b/testing/mate-user-guide/mate-user-guide.SlackBuild
---- a/testing/mate-user-guide/mate-user-guide.SlackBuild	2020-05-16 22:03:52.142872487 +0000
+--- a/testing/mate-user-guide/mate-user-guide.SlackBuild	2020-05-16 22:44:34.212492964 +0000
 +++ b/testing/mate-user-guide/mate-user-guide.SlackBuild	2020-05-16 17:36:22.369877739 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1177,7 +1240,7 @@ diff -Naur a/testing/mate-user-guide/mate-user-guide.SlackBuild b/testing/mate-u
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/mate-user-share/mate-user-share.SlackBuild b/testing/mate-user-share/mate-user-share.SlackBuild
---- a/testing/mate-user-share/mate-user-share.SlackBuild	2020-05-16 22:03:52.142872487 +0000
+--- a/testing/mate-user-share/mate-user-share.SlackBuild	2020-05-16 22:44:34.216493059 +0000
 +++ b/testing/mate-user-share/mate-user-share.SlackBuild	2020-05-16 17:36:22.453879742 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1190,7 +1253,7 @@ diff -Naur a/testing/mate-user-share/mate-user-share.SlackBuild b/testing/mate-u
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/numix-icon-theme/numix-icon-theme.SlackBuild b/testing/numix-icon-theme/numix-icon-theme.SlackBuild
---- a/testing/numix-icon-theme/numix-icon-theme.SlackBuild	2020-05-16 22:03:52.142872487 +0000
+--- a/testing/numix-icon-theme/numix-icon-theme.SlackBuild	2020-05-16 22:44:34.216493059 +0000
 +++ b/testing/numix-icon-theme/numix-icon-theme.SlackBuild	2020-05-16 17:36:22.609883462 +0000
 @@ -45,6 +45,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1203,7 +1266,7 @@ diff -Naur a/testing/numix-icon-theme/numix-icon-theme.SlackBuild b/testing/numi
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/numix-icon-theme-circle/numix-icon-theme-circle.SlackBuild b/testing/numix-icon-theme-circle/numix-icon-theme-circle.SlackBuild
---- a/testing/numix-icon-theme-circle/numix-icon-theme-circle.SlackBuild	2020-05-16 22:03:52.142872487 +0000
+--- a/testing/numix-icon-theme-circle/numix-icon-theme-circle.SlackBuild	2020-05-16 22:44:34.216493059 +0000
 +++ b/testing/numix-icon-theme-circle/numix-icon-theme-circle.SlackBuild	2020-05-16 17:36:22.525881459 +0000
 @@ -45,6 +45,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1216,7 +1279,7 @@ diff -Naur a/testing/numix-icon-theme-circle/numix-icon-theme-circle.SlackBuild 
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/setproctitle/setproctitle.SlackBuild b/testing/setproctitle/setproctitle.SlackBuild
---- a/testing/setproctitle/setproctitle.SlackBuild	2020-05-16 22:03:52.142872487 +0000
+--- a/testing/setproctitle/setproctitle.SlackBuild	2020-05-16 22:44:34.216493059 +0000
 +++ b/testing/setproctitle/setproctitle.SlackBuild	2020-05-16 17:36:22.693885465 +0000
 @@ -50,6 +50,9 @@
  elif [ "$ARCH" = "i686" ]; then
@@ -1229,7 +1292,7 @@ diff -Naur a/testing/setproctitle/setproctitle.SlackBuild b/testing/setproctitle
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
 diff -Naur a/testing/yelp/yelp.SlackBuild b/testing/yelp/yelp.SlackBuild
---- a/testing/yelp/yelp.SlackBuild	2020-05-16 22:03:52.142872487 +0000
+--- a/testing/yelp/yelp.SlackBuild	2020-05-16 22:44:34.216493059 +0000
 +++ b/testing/yelp/yelp.SlackBuild	2020-05-16 17:36:22.773887373 +0000
 @@ -48,6 +48,9 @@
  elif [ "$ARCH" = "i686" ]; then
