@@ -162,7 +162,6 @@ ln -s $TMP/chromium-build-deps/usr/bin/node third_party/node/linux/node-linux-x6
 # Remove bundled libraries for which we will use the system copies; this
 # *should* do what the remove_bundled_libraries.py script does, with the
 # added benefit of not having to list all the remaining libraries
-local _lib
 for _lib in ${_unwanted_bundled_libs[@]}; do
   find "third_party/$_lib" -type f \
     \! -path "third_party/$_lib/chromium/*" \
@@ -182,7 +181,7 @@ export CXX=clang++
 export AR=ar
 export NM=nm
 
-local _flags=(
+_flags=(
   'custom_toolchain="//build/toolchain/linux/unbundle:default"'
   'host_toolchain="//build/toolchain/linux/unbundle:default"'
   'clang_use_chrome_plugins=false'
