@@ -204,6 +204,7 @@ _flags=(
   'enable_widevine=true'
   'enable_nacl=false'
   'enable_swiftshader=false'
+  'symbol_level=0'
   "linux_sandbox_path=\"/usr/lib${LIBDIRSUFFIX}/${NAME}/chrome_sandbox\""
   "google_api_key=\"${_google_api_key}\""
   "google_default_client_id=\"${_google_default_client_id}\""
@@ -212,10 +213,6 @@ _flags=(
 
 if [[ -n ${_system_libs[icu]+set} ]]; then
   _flags+=('icu_use_data_file=false')
-fi
-
-if check_option strip y; then
-  _flags+=('symbol_level=0')
 fi
 
 CFLAGS+="$SLKCFLAGS"
@@ -232,7 +229,7 @@ CXXFLAGS+=' -Wno-unknown-warning-option'
 
 gn gen out/Release --args="${_flags[*]}" --script-executable=/usr/bin/python2
 ninja -C out/Release chrome chrome_sandbox chromedriver
-  
+
 install -D out/Release/chrome "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/chromium"
 install -Dm4755 out/Release/chrome_sandbox "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/chrome-sandbox"
 ln -s /usr/lib${LIBDIRSUFFIX}/chromium/chromedriver "$PKG/usr/bin/chromedriver"

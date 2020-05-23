@@ -31,6 +31,7 @@ PATH=$TMP/chromium-build-deps/usr/bin:$PATH
 if /bin/ls build-deps*.txz 1> /dev/null 2> /dev/null ; then # use prebuilt autoconf/nodejs
   ( cd $TMP/chromium-build-deps ; tar xf $CWD/build-deps*.txz )
 else
+  ( cd $CWD/build-deps/gn ; ./gn.build ) || exit 1
   # And node.js... WHY
   ( cd $CWD/build-deps/nodejs ; ./nodejs.build ) || exit 1
 fi
