@@ -67,7 +67,7 @@ TMP=${TMP:-/tmp}
 PKG=$TMP/chromium-build-deps/usr/bin
 
 mkdir -p $TMP
-mkdir -p $PKG/chromium-build-deps/usr
+mkdir -p $PKG
 
 cd $TMP
 rm -rf gn-$VERSION

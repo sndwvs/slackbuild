@@ -78,7 +78,7 @@ declare -gA _system_libs=(
   [fontconfig]=fontconfig
   [freetype]=freetype2
   [harfbuzz-ng]=harfbuzz
-  [icu]=icu
+  #[icu]=icu
   [libdrm]=
   [libjpeg]=libjpeg
   #[libpng]=libpng    # https://crbug.com/752403#c10
@@ -87,10 +87,10 @@ declare -gA _system_libs=(
   [libxml]=libxml2
   [libxslt]=libxslt
   [opus]=opus
-  [re2]=re2
-  [snappy]=snappy
-  [yasm]=
-  [zlib]=minizip
+  #[re2]=re2
+  #[snappy]=snappy
+  [yasm]=yasm
+  #[zlib]=minizip
 )
 _unwanted_bundled_libs=(
   $(printf "%s\n" ${!_system_libs[@]} | sed 's/^libjpeg$/&_turbo/')
@@ -111,10 +111,10 @@ patch -p1 -i $CWD/0001-crashpad-include-limits.patch || exit 1
 patch -p1 -i $CWD/chromium-81.0.4044.122-Fix-sandbox-Aw-snap-for-syscalls-403-and-407.patch ||exit 1
 
 # Build ARMv7 with NEON
-[[ $ARCH == "armv7h" ]] && NUMJOBS="-j4" && CFLAGS=`echo $CFLAGS | sed -e 's/vfpv3-d16/neon/'` && CXXFLAGS="$CFLAGS"
+[[ $ARCH == "armv7h" ]] && NUMJOBS="-j4" && SLKCFLAGS=$(echo $SLKCFLAGS | sed -e 's/vfpv3-d16/neon/') && CXXFLAGS="$SLKCFLAGS"
 
 # Allow build to set march and options on AArch64 (crc, crypto)
-[[ $ARCH == "aarch64" ]] && CFLAGS=`echo $CFLAGS | sed -e 's/-march=armv8-a//'` && CXXFLAGS="$CFLAGS"
+[[ $ARCH == "aarch64" ]] && SLKCFLAGS=$(echo $SLKCFLAGS | sed -e 's/-march=armv8-a//') && CXXFLAGS="$SLKCFLAGS"
 
 # https://crbug.com/893950
 sed -i -e 's/\/malloc/' -e 's/\/free/' \
@@ -193,7 +193,8 @@ _flags=(
   'fieldtrial_testing_like_official_build=true'
   'ffmpeg_branding="Chrome"'
   'proprietary_codecs=true'
-  'rtc_use_pipewire=true'
+  #'rtc_use_pipewire=true'
+  'enable_webrtc=true'
   'link_pulseaudio=true'
   'use_gnome_keyring=false'
   'use_gold=false'
@@ -201,11 +202,16 @@ _flags=(
   'linux_use_bundled_binutils=false'
   'use_custom_libcxx=false'
   'enable_hangout_services_extension=true'
-  'enable_widevine=true'
+  'enable_widevine=false'
   'enable_nacl=false'
   'enable_swiftshader=false'
   'symbol_level=0'
-  "linux_sandbox_path=\"/usr/lib${LIBDIRSUFFIX}/${NAME}/chrome_sandbox\""
+  'use_bundled_fontconfig=false'
+  'use_cfi_icall=false' # https://crbug.com/866290
+  'use_cups=true'
+  'use_custom_libcxx=true'
+  'use_kerberos=false'
+  'use_lld=true'
   "google_api_key=\"${_google_api_key}\""
   "google_default_client_id=\"${_google_default_client_id}\""
   "google_default_client_secret=\"${_google_default_client_secret}\""
@@ -264,6 +270,25 @@ for size in 16 32; do
   install -Dm644 "chrome/app/theme/default_100_percent/chromium/product_logo_$size.png" \
     "$PKG/usr/share/icons/hicolor/${size}x${size}/apps/chromium.png"
 done
+
+# Install a wrapper script:
+install -D -m0755 $CWD/${NAME}.sh $PKG/usr/bin/${NAME}
+sed \
+    -e "s/@PRGNAM@/${NAME}/g" \
+    -e "s/@LIBDIRSUFFIX@/${LIBDIRSUFFIX}/g" \
+    -e "s/@CRFLAGS@/${CRFLAGS}/g" \
+    -e "s/@CRUSERFLAGS@/${CRUSERFLAGS}/g" \
+    -i $PKG/usr/bin/${NAME}
+
+# Move the 'default' file into place.
+# This allows users to override command-line options:
+mkdir -p $PKG/etc/${NAME}
+cat $CWD/${NAME}.default | sed \
+  -e "s/@PRGNAM@/${NAME}/g" \
+  -e "s/@CRFLAGS@/${CRFLAGS}/g" \
+  -e "s/@CRUSERFLAGS@/${CRUSERFLAGS}/g" \
+  -e "s/@LIBDIRSUFFIX@/${LIBDIRSUFFIX}/g" \
+  > $PKG/etc/${NAME}/00-default.conf.new
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la

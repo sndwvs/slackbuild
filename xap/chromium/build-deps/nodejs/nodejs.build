@@ -91,7 +91,7 @@ CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=$TMP/chromium-build-deps/usr \
-  --shared-zlib \
-  --without-ssl
+  --shared-openssl \
+  --shared-zlib
   make $NUMJOBS || make || exit 1
   make install DESTDIR=$PKG || exit 1
