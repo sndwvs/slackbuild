@@ -82,7 +82,7 @@ cp -a firmware/* $PKG/usr/lib/firmware/raspberrypi/bootloader
 
 # Copy the override in place
 install -d -m 755 $PKG/etc/default
-install -D -m 644 rpi-eeprom-update-default $PKG/etc/default/rpi-eeprom-update.new
+cat rpi-eeprom-update-default | sed 's:FIRMWARE_ROOT=:FIRMWARE_ROOT=/usr:' > $PKG/etc/default/rpi-eeprom-update.new
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
