@@ -2,8 +2,8 @@
 
 CWD=$(pwd)
 
-NAME="fontforge"
-VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
+NAME="libspiro"
+VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f3 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -56,7 +56,7 @@ mkdir -p $PKG
 # Delete a directory previous build / create new and change rights
 cd $TMP
 rm -rf $NAME-$VERSION
-tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
+tar xvf $CWD/$NAME-dist-$VERSION.tar.?z* || exit 1
 cd $NAME-$VERSION || exit 1
 chown -R root:root .
 find . \
@@ -65,19 +65,20 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-install -d build
-cd build
+autoreconf -i && automake --foreign -Wall
 
 # Configuration
+LDFLAGS= \
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DENABLE_MAINTAINER_TOOLS=TRUE \
-    -DENABLE_FONTFORGE_EXTRAS=TRUE \
-    -DUNIX=TRUE \
-    ..
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$NAME-$VERSION \
+  --enable-static=no \
+  --enable-shared=yes \
+  --build=$TARGET
 
 # Compilation
 make $NUMJOBS || exit 1
@@ -86,8 +87,7 @@ make install DESTDIR=$PKG
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 
-# fixed man
-mv $PKG/usr/share/man $PKG/usr/
+install -Dm644 libspiro.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/libspiro.pc
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
