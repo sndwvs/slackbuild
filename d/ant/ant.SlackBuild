@@ -68,37 +68,25 @@ find . \
 
 # Configuration
 export JAVA_HOME="/usr/lib$LIBDIRSUFFIX/java"
-export ANT_OPTS="-Xmx512M"
-cp $CWD/junit-4.12.jar lib/optional/junit.jar || exit 1
-
-# disable junit as it depends on stuff that requires ant
-sed -i "s:jars,test-jar:jars:g" build.xml
+# Use the standardized ANT_HOME location:
+export ANT_HOME=/usr/share/ant
 
 # Compilation
-./build.sh -Ddist.dir=$PKG/usr/share/ant dist -Djavadoc.notrequired=true
+./bootstrap.sh || exit 1
+bootstrap/bin/ant -Ddest=optional -f fetch.xml
+bootstrap/bin/ant dist
 
+install -dm 755 $PKG/$ANT_HOME
 install -Dm 755 "${CWD}/${NAME##*-}.csh" "${PKG}/etc/profile.d/${NAME##*-}.csh"
 install -Dm 755 "${CWD}/${NAME##*-}.sh" "${PKG}/etc/profile.d/${NAME##*-}.sh"
-install -dm 755 ${PKG}/usr/share/java
-ln -s /usr/share/ant/lib $PKG/usr/share/java/ant
 
-pushd $PKG/usr/share/ant
+cd $NAME-$VERSION || exit 1
+find bin -type f -a ! -name \*.bat -a ! -name \*.cmd \
+    -exec install -Dm 755 {} -t ${PKG}/${ANT_HOME}/bin \;
+cp -a lib etc $PKG/$ANT_HOME/
 
-install -dm 755 ${PKG}/usr/doc/${NAME##*-}-$VERSION
-mv manual "${PKG}/usr/doc/${NAME##*-}-$VERSION/"
-
-mv CONTRIBUTORS INSTALL KEYS LICENSE NOTICE README WHATSNEW \
-   contributors.xml fetch.xml get-m2.xml patch.xml \
-   -t "${PKG}/usr/doc/${NAME##*-}-$VERSION"
-
-popd
-
-# Don't ship .la files:
-rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
-
-# Strip binaries:
-find $PKG | xargs file | grep -e "executable" -e "shared object" \
-  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+install -dm 755 $PKG/usr/share/java
+ln -s $ANT_HOME/lib $PKG/usr/share/java/ant
 
 # Compress manual pages:
 find $PKG/usr/man -type f -exec gzip -9 {} \;
@@ -108,10 +96,13 @@ for i in $( find $PKG/usr/man -type l ) ; do
 done
 
 # Copy docs
-#mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
-#cp -fav \
-#  LICENSE README \
-#  $PKG/usr/doc/$NAME-$VERSION/
+mkdir -vpm755 $PKG/usr/doc/${NAME##*-}-$VERSION
+cp -fav \
+  CONTRIBUTORS INSTALL KEYS LICENSE NOTICE README WHATSNEW \
+  contributors.xml fetch.xml get-m2.xml patch.xml \
+  $PKG/usr/doc/${NAME##*-}-$VERSION/
+cp -fav manual $PKG/usr/doc/${NAME##*-}-$VERSION/
+cat $CWD/${NAME##*-}.SlackBuild > $PKG/usr/doc/${NAME##*-}-$VERSION/${NAME##*-}.SlackBuild
 
 # Description and installation script
 mkdir -p $PKG/install
