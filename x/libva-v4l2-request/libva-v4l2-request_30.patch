@@ -1,0 +1,26 @@
+From 5259f7c9b7ce7e8ecf909add75eaec3e8021525d Mon Sep 17 00:00:00 2001
+From: Philipp Zabel <p.zabel@pengutronix.de>
+Date: Wed, 4 Dec 2019 18:27:07 +0100
+Subject: [PATCH] surface: fix status type
+
+Correct the type of the surface object's status property to
+VASurfaceStatus.
+
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+---
+ src/surface.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/surface.h b/src/surface.h
+index 41007f8..a9be915 100644
+--- a/src/surface.h
++++ b/src/surface.h
+@@ -40,7 +40,7 @@
+ struct object_surface {
+ 	struct object_base base;
+ 
+-	VAStatus status;
++	VASurfaceStatus status;
+ 	int width;
+ 	int height;
+ 

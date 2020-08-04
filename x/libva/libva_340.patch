@@ -1,0 +1,26 @@
+From 09c4e042344ae8cf7fd92a2126ee71c66119b611 Mon Sep 17 00:00:00 2001
+From: "Murugasen Krishnan, Kuhanh" <kuhanh.murugasen.krishnan@intel.com>
+Date: Wed, 9 Oct 2019 11:36:00 +0800
+Subject: [PATCH] drm: Add mapping of hantro kernel driver
+
+This patch allows hantro kernel driver to be recognized
+by va_getDriverName and for vaInitialize to select the
+correct VA-API driver for hantro.
+
+Signed-off-by: Murugasen Krishnan, Kuhanh <kuhanh.murugasen.krishnan@intel.com>
+---
+ va/drm/va_drm_utils.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/va/drm/va_drm_utils.c b/va/drm/va_drm_utils.c
+index 0fe1a352..2e0cbadb 100644
+--- a/va/drm/va_drm_utils.c
++++ b/va/drm/va_drm_utils.c
+@@ -44,6 +44,7 @@ static const struct driver_name_map g_driver_name_map[] = {
+     { "nouveau",    7, "nouveau"  }, // Mesa Gallium driver
+     { "radeon",     6, "r600"     }, // Mesa Gallium driver
+     { "amdgpu",     6, "radeonsi" }, // Mesa Gallium driver
++    { "hantro",     6, "hantro"   }, // Hantro Media driver
+     { NULL,         0, NULL }
+ };
+ 

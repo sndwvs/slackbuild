@@ -1,0 +1,134 @@
+From 6c0b549a312541e950c27a3027c3cb92f4f67551 Mon Sep 17 00:00:00 2001
+From: Philipp Zabel <p.zabel@pengutronix.de>
+Date: Wed, 4 Sep 2019 15:10:02 +0200
+Subject: [PATCH 1/5] Add dec_ref_pic_marking() syntax element size to
+ VASliceParameterBufferH264
+
+The Hantro G1 hardware H.264 decoder requires this information.
+
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+---
+ va/va.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/va/va.h b/va/va.h
+index 63d4bb7c..95b2864f 100755
+--- a/va/va.h
++++ b/va/va.h
+@@ -3149,9 +3149,11 @@ typedef struct _VASliceParameterBufferH264
+     uint8_t chroma_weight_l1_flag;
+     int16_t chroma_weight_l1[32][2];
+     int16_t chroma_offset_l1[32][2];
++    /** \brief Size in bits of the dec_ref_pic_marking() syntax element. */
++    uint32_t dec_ref_pic_marking_bit_size;
+ 
+     /** \brief Reserved bytes for future use, must be zero */
+-    uint32_t                va_reserved[VA_PADDING_LOW];
++    uint32_t                va_reserved[3];
+ } VASliceParameterBufferH264;
+ 
+ /****************************
+
+From feed52407545ac0b50c6c8e4ce99d297f9950167 Mon Sep 17 00:00:00 2001
+From: Philipp Zabel <p.zabel@pengutronix.de>
+Date: Wed, 4 Sep 2019 15:12:04 +0200
+Subject: [PATCH 2/5] Add idr_pic_id syntax element to
+ VASliceParameterBufferH264
+
+The Hantro G1 hardware H.264 decoder requires this information.
+
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+---
+ va/va.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/va/va.h b/va/va.h
+index 95b2864f..70cf8447 100755
+--- a/va/va.h
++++ b/va/va.h
+@@ -3133,6 +3133,8 @@ typedef struct _VASliceParameterBufferH264
+     uint8_t disable_deblocking_filter_idc;
+     int8_t slice_alpha_c0_offset_div2;
+     int8_t slice_beta_offset_div2;
++    /** \brief Same as the H.264 bitstream syntax element. */
++    uint16_t  idr_pic_id;
+     VAPictureH264 RefPicList0[32];	/* See 8.2.4.2 */
+     VAPictureH264 RefPicList1[32];	/* See 8.2.4.2 */
+     uint8_t luma_log2_weight_denom;
+
+From 377564ee78bb475fab45b08151206bd183c9909b Mon Sep 17 00:00:00 2001
+From: Philipp Zabel <p.zabel@pengutronix.de>
+Date: Wed, 4 Sep 2019 17:03:01 +0200
+Subject: [PATCH 3/5] Add size of the pic_order_cnt related syntax elements to
+ VASliceParameterBufferH264
+
+Add the size in bits of the pic_order_cnt_lsb,
+delta_pic_order_cnt_bottom, delta_pic_order_cnt[0], and
+delta_pic_order_cnt[1] syntax elements.
+
+The Hantro G1 hardware H.264 decoder requires this information.
+
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+---
+ va/va.h | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/va/va.h b/va/va.h
+index 70cf8447..d990aa4e 100755
+--- a/va/va.h
++++ b/va/va.h
+@@ -3153,9 +3153,16 @@ typedef struct _VASliceParameterBufferH264
+     int16_t chroma_offset_l1[32][2];
+     /** \brief Size in bits of the dec_ref_pic_marking() syntax element. */
+     uint32_t dec_ref_pic_marking_bit_size;
++    /**
++     * \brief Size in bits of the pic_order_cnt related syntax elements.
++     *
++     * Size in bits of the pic_order_cnt_lsb, delta_pic_order_cnt_bottom,
++     * delta_pic_order_cnt[0], and delta_pic_order_cnt[1] syntax elements.
++     */
++    uint32_t pic_order_cnt_bit_size;
+ 
+     /** \brief Reserved bytes for future use, must be zero */
+-    uint32_t                va_reserved[3];
++    uint32_t                va_reserved[2];
+ } VASliceParameterBufferH264;
+ 
+ /****************************
+
+From 3856b78e5be3700f606fbdfc723e1f350ec12fa8 Mon Sep 17 00:00:00 2001
+From: Philipp Zabel <p.zabel@pengutronix.de>
+Date: Thu, 5 Sep 2019 13:58:21 +0200
+Subject: [PATCH 4/5] Add num_ref_idx_l[01]_default_active_minus1 syntax
+ elements to VAPictureParameterBufferH264
+
+The Hantro G1 hardware H.264 decoder requires this information.
+
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+---
+ va/va.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/va/va.h b/va/va.h
+index d990aa4e..a5f2aca3 100755
+--- a/va/va.h
++++ b/va/va.h
+@@ -3076,6 +3076,10 @@ typedef struct _VAPictureParameterBufferH264
+         uint32_t value;
+     } pic_fields;
+     uint16_t frame_num;
++    /** \brief Same as the H.264 bitstream syntax element. */
++    uint8_t num_ref_idx_l0_default_active_minus1;
++    /** \brief Same as the H.264 bitstream syntax element. */
++    uint8_t num_ref_idx_l1_default_active_minus1;
+ 
+     /** \brief Reserved bytes for future use, must be zero */
+     uint32_t                va_reserved[VA_PADDING_MEDIUM];
+
+From 0b8a288ea72aa644fddde4f76035c6d6d7192397 Mon Sep 17 00:00:00 2001
+From: Philipp Zabel <philipp.zabel@gmail.com>
+Date: Thu, 19 Sep 2019 23:53:04 +0200
+Subject: [PATCH 5/5] build: meson: bump api micro version
+
+Bump the API version to 1.6.1 due to the fields added to
+VAPictureParameterBufferH264 and VASliceParameterBufferH264.
