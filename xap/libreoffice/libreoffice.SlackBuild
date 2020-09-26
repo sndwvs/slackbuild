@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="libreoffice"
-VERSION=7.0.0.3
+VERSION=7.0.1.2
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -159,8 +159,7 @@ CPPFLAGS+=' -DU_USING_ICU_NAMESPACE=1'
   --with-external-tar="$TMP/$NAME/ext_sources" \
   --enable-{build-opensymbol,dbus,firebird-sdbc=no,gtk3,introspection=yes,release-build,odk,openssl,python=system} \
   --with-{lang="",myspell-dicts,parallelism} \
-  --with-build-version="${VERSION}-${BUILD}" \
-  --with-extra-buildid="$(date +%Y%m%d)" \
+  --with-extra-buildid="${VERSION}-${BUILD}" \
   --with-vendor="Slarm64 Linux" \
   --with-package-version="${VERSION}" \
   --with-system-{headers,libs} \
