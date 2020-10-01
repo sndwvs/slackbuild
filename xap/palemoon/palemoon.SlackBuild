@@ -32,7 +32,7 @@ CWD=$(pwd)
 NAME="palemoon"
 VERSION=${VERSION:-$(ls Pale-Moon-*.tar.?z* | cut -d - -f3 | rev | cut -d . -f3- | cut -d _ -f2-| rev)}
 SRC1=${SRC1:-Pale-Moon-${VERSION}_Release}
-SRC2=${SRC2:-UXP-RELBASE_20200901}
+SRC2=${SRC2:-UXP-RELBASE_20200930}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
