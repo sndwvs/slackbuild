@@ -15,7 +15,8 @@ get_ver() {
   elif [[ -d .git ]];then
     ( set -o pipefail
 #        git describe --long 2>/dev/null | sed 's/\([^-]*-g\)/r\1/;s/-/./g' ||
-        printf "r%s.%s\n" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+#        printf "r%s.%s\n" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+        printf "%s_%s\n" "$(git log -1 --pretty='format:%cd' --date=format:'%Y%m%d' HEAD)" "$(git rev-parse --short=7 HEAD)"
     )
   elif [[ -d .svn ]];then
   local ver="$(svnversion)"
