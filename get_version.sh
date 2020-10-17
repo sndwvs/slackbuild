@@ -11,7 +11,8 @@ get_ver() {
   pushd "$PKG_DIR" 2>&1>/dev/null
 
   if [[ -d .hg ]];then
-    printf "r%s.%s\n" "$(hg identify -n)" "$(hg identify -i)"
+#    printf "r%s.%s\n" "$(hg identify -n)" "$(hg identify -i)"
+    printf "%s_%s\n" "$(hg log -l1 --template '{date(date|localdate, "%Y%m%d")}')" "$(hg log -l1 --template '{node|short}\n' | cut -c-7)"
   elif [[ -d .git ]];then
     ( set -o pipefail
 #        git describe --long 2>/dev/null | sed 's/\([^-]*-g\)/r\1/;s/-/./g' ||
