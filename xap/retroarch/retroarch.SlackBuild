@@ -85,6 +85,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --disable-jack \
   --disable-oss \
   --disable-sdl \
+  --disable-qt \
   --enable-dbus \
   --enable-opengles \
   --build=$TARGET
