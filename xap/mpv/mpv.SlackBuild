@@ -6,6 +6,7 @@ NAME="mpv"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
+FAMILY=${FAMILY:-}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
 
@@ -65,6 +66,8 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
+[[ ! -z ${FAMILY} ]] && FAMILY="-${FAMILY}"
+
 [[ -x ./bootstrap.py ]] && ./bootstrap.py
 
 # Configuration
@@ -114,8 +117,9 @@ cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
 # Description and installation script
 mkdir -p $PKG/install
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
-cat $CWD/slack-desc > $PKG/install/slack-desc
+# fixed slack-desc
+cat $CWD/slack-desc | sed "s#^${NAME}#${NAME}${FAMILY}#g" > $PKG/install/slack-desc
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/${NAME}${FAMILY}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
