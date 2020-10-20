@@ -65,7 +65,12 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-xzcat $CWD/libdrm-2.4.102-rockchip.patch.xz | patch -p1 --verbose || exit 1
+if [[ ${FAMILY} = rockchip ]]; then
+    xzcat $CWD/libdrm-2.4.102-rockchip.patch.xz | patch -p1 --verbose || exit 1
+    OPTIONS=" -Drockchip=true "
+fi
+
+[[ ! -z ${FAMILY} ]] && FAMILY="-${FAMILY}"
 
 # Configuration, Compilation
 export CFLAGS="$SLKCFLAGS"
@@ -85,7 +90,7 @@ meson setup \
   --localstatedir=/var \
   --buildtype=release \
   -Dudev=true \
-  -Drockchip=true \
+  $OPTIONS \
   .. || exit 1
   "${NINJA:=ninja}" $NUMJOBS || exit 1
   DESTDIR=$PKG $NINJA install || exit 1
@@ -115,8 +120,9 @@ cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
 # Description and installation script
 mkdir -p $PKG/install
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
-cat $CWD/slack-desc > $PKG/install/slack-desc
+# fixed slack-desc
+cat $CWD/slack-desc | sed "s#^${NAME}#${NAME}${FAMILY}#g" > $PKG/install/slack-desc
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/${NAME}${FAMILY}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
