@@ -65,25 +65,31 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-[[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
-
 # Configuration
+mkdir -pv build
+cd build
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --mandir=/usr/man \
-  --docdir=/usr/doc/$NAME-$VERSION \
-  --enable-lightweight \
-  --with-gtk \
-  --enable-daemon \
-  --disable-cli \
-  --build=$TARGET
+cmake \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DINSTALL_LIB=ON \
+  -DENABLE_DAEMON=ON \
+  -DENABLE_GTK=ON \
+  -DENABLE_QT=OFF \
+  -DENABLE_CLI=OFF \
+  -DENABLE_LIGHTWEIGHT=ON \
+  -DENABLE_TESTS=OFF \
+  ..
 
 # Compilation
 make $NUMJOBS || exit 1
 make install DESTDIR=$PKG
+
+mv $PKG/usr/share/doc $PKG/usr/doc
+mv $PKG/usr/doc/$NAME $PKG/usr/doc/$NAME-$VERSION
+mv $PKG/usr/share/man $PKG/usr
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
