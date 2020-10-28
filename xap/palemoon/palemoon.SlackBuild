@@ -31,8 +31,9 @@ CWD=$(pwd)
 
 NAME="palemoon"
 VERSION=${VERSION:-$(ls Pale-Moon-*.tar.?z* | cut -d - -f3 | rev | cut -d . -f3- | cut -d _ -f2-| rev)}
+VERSION_UXP=${VERSION_UXP:-$(ls UXP-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | cut -d _ -f1 | rev)}
 SRC1=${SRC1:-Pale-Moon-${VERSION}_Release}
-SRC2=${SRC2:-UXP-RELBASE_20200930}
+SRC2=${SRC2:-UXP-RELBASE_${VERSION_UXP}}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -94,7 +95,7 @@ mkdir -p $PKG $TMP/$OBJ
 # build requires old autoconf-2.13
 cd $TMP
 rm -rf autoconf-2.13
-tar xvf $CWD/autoconf-2.13.tar.xz
+tar xvf $CWD/autoconf-2.13.tar.xz || exit 1
 cd autoconf-2.13
 zcat $CWD/autoconf-2.13-consolidated_fixes-1.patch.gz | patch -p1 --verbose
 chown -R root:root .
@@ -131,6 +132,7 @@ PATH=$TMP/autoconf-tmp/usr/bin:$PATH
 cd $TMP
 rm -rf $SRC1 || exit 1
 tar -xvf $CWD/$SRC1.tar.?z* || exit 1
+[[ ! -d $SRC1 ]] && ln -sf pale-moon $SRC1
 cd $SRC1 || exit 1
 tar -xvf $CWD/$SRC2.tar.?z* -C platform --strip-components 1 || exit 1
 chown -R root:root .
