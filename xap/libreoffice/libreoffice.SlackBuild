@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="libreoffice"
-VERSION=7.0.2.2
+VERSION=7.0.3.1
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -134,6 +134,9 @@ cp -f $CWD/sources/185d60944ea767075d27247c3162b3bc-unowinreg.dll $TMP/$NAME/ext
 
 # remove check-if-root
 patch -Np0 -i $CWD/makefile.in.patch || exit 1
+
+# allow to build with recent liborcus/libixion/mdds stack - Debian patch
+patch -Np1 -i $CWD/liborcus-0.16.diff || exit 1
 
 # determine configure options based on installed packages on the system
 [[ -e /usr/lib${LIBDIRSUFFIX}/ccache ]] && OPT_LIBREOFFICE+="" || OPT_LIBREOFFICE+=" --disable-ccache"

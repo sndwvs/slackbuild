@@ -65,6 +65,9 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
+cat $CWD/0001-Use-own-thunk-functions-instead-of-fbdevHW-Weak.patch | patch -p1 || exit 1
+cat $CWD/0002-GCC-8-fix.patch | patch -p1 || exit 1
+
 [[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
 
 # Configuration
@@ -114,4 +117,3 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 # Package creation
 cd $PKG
 makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
-

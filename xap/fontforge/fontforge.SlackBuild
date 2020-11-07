@@ -77,6 +77,8 @@ cmake \
     -DENABLE_MAINTAINER_TOOLS=TRUE \
     -DENABLE_FONTFORGE_EXTRAS=TRUE \
     -DUNIX=TRUE \
+    -DCMAKE_C_COMPILER="clang" \
+    -DCMAKE_CXX_COMPILER="clang++" \
     ..
 
 # Compilation
