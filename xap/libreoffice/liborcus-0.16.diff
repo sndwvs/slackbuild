@@ -986,7 +986,7 @@ index b0f6a572aff7..000000000000
 -      */
 --    void hsl(uint8_t hue, uint8_t sat, uint8_t light) {}
 -+    void hsl(uint8_t hue, uint8_t sat, uint8_t light)
-    {
+-+    {
 -+        (void)hue; (void)sat; (void)light;
 -+    }
 - 
@@ -1252,3 +1252,4 @@ index 4736dbccab4b..e5e33b0b1249 100644
  ifeq ($(OS),WNT)
 -- 
 cgit v1.2.1
+

@@ -42,13 +42,19 @@ DOWNLOADS+=( ${SOURCE_URL2}/mdds-1.6.0.tar.bz2 )
 DOWNLOADS+=( ${SOURCE_URL2}/libmspub-0.1.4.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libmwaw-0.3.16.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/a8c2c5b8f09e7ede322d5c602ff6a4b6-mythes-1.2.4.tar.gz )
-DOWNLOADS+=( ${SOURCE_URL2}/liborcus-0.15.4.tar.bz2 )
+DOWNLOADS+=( ${SOURCE_URL2}/liborcus-0.16.1.tar.bz2 )
 DOWNLOADS+=( ${SOURCE_URL2}/libpagemaker-0.0.4.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libqxp-0.0.2.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libstaroffice-0.0.7.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libwps-0.4.11.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libzmf-0.0.2.tar.xz )
-DOWNLOADS+=( ${SOURCE_URL2}/skia-m84-c1baf6e1c2a5454148adb516f0f833483b5a0353.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/skia-m85-e684c6daef6bfb774a325a069eda1f76ca6ac26c.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/icu4c-67_1-src.tgz )
+DOWNLOADS+=( ${SOURCE_URL2}/icu4c-67_1-data.zip )
+DOWNLOADS+=( ${SOURCE_URL2}/graphite2-minimal-1.3.14.tgz )
+DOWNLOADS+=( ${SOURCE_URL2}/boost_1_71_0.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/harfbuzz-2.6.0.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/poppler-0.82.0.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL3}/8249374c274932a21846fa7629c2aa9b-officeotron-0.7.4-master.jar ) # for test suite
 DOWNLOADS+=( ${SOURCE_URL3}/odfvalidator-1.2.0-incubating-SNAPSHOT-jar-with-dependencies-971c54fd38a968f5860014b44301872706f9e540.jar ) # for test suite
 DOWNLOADS+=( ${SOURCE_URL3}/185d60944ea767075d27247c3162b3bc-unowinreg.dll )
@@ -138,6 +144,8 @@ patch -Np0 -i $CWD/makefile.in.patch || exit 1
 # allow to build with recent liborcus/libixion/mdds stack - Debian patch
 patch -Np1 -i $CWD/liborcus-0.16.diff || exit 1
 
+patch -Np1 -i $CWD/0001-fix-disable-pdfium-build.patch || exit 1
+
 # determine configure options based on installed packages on the system
 [[ -e /usr/lib${LIBDIRSUFFIX}/ccache ]] && OPT_LIBREOFFICE+="" || OPT_LIBREOFFICE+=" --disable-ccache"
 [[ -e /usr/lib${LIBDIRSUFFIX}/cups ]] && OPT_LIBREOFFICE+=" --enable-cups" || OPT_LIBREOFFICE+=" --disable-cups"
@@ -176,6 +184,7 @@ CPPFLAGS+=' -DU_USING_ICU_NAMESPACE=1'
   --without-system-{libcmis,xmlsec,libepubgen,libwps,libcdr,libmspub,libmwaw,libetonyek,libfreehand} \
   --without-system-{libebook,libabw,libpagemaker,libqxp,libzmf,libstaroffice,cppunit,mdds,glm,orcus} \
   --without-system-{altlinuxhyph,mythes,lpsolve,libexttextcat,libnumbertext,liblangtag,qrcodegen} \
+  --without-system-{icu,graphite,boost,harfbuzz,poppler} \
   --build=$TARGET \
   --host=$TARGET
 
