@@ -2,8 +2,8 @@
 
 CWD=$(pwd)
 
-NAME="xfce4-mixer"
-VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f3 | rev | cut -d . -f3- | rev)}
+NAME="xfce4-alsa-plugin"
+VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f4 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -65,24 +65,28 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-[[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
-
 # Configuration
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
-./configure \
+export CFLAGS="$SLKCFLAGS"
+export CXXFLAGS="$SLKCFLAGS"
+mkdir meson-build
+cd meson-build
+meson setup \
   --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
+  --libdir=lib${LIBDIRSUFFIX} \
+  --libexecdir=/usr/libexec \
+  --bindir=/usr/bin \
+  --sbindir=/usr/sbin \
+  --includedir=/usr/include \
+  --datadir=/usr/share \
   --mandir=/usr/man \
-  --docdir=/usr/doc/$NAME-$VERSION \
-  --disable-static \
-  --disable-debug \
-  --build=$TARGET || exit 1
-
-# Compilation
-make $NUMJOBS || exit 1
-make install DESTDIR=$PKG
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --buildtype=release \
+  $OPTIONS \
+  .. || exit 1
+  "${NINJA:=ninja}" $NUMJOBS || exit 1
+  DESTDIR=$PKG $NINJA install || exit 1
+cd ..
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
