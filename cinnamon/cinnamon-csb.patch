@@ -1,0 +1,463 @@
+diff -Naur a/accountsservice/accountsservice.SlackBuild b/accountsservice/accountsservice.SlackBuild
+--- a/accountsservice/accountsservice.SlackBuild	2020-12-06 21:12:24.150537369 +0000
++++ b/accountsservice/accountsservice.SlackBuild	2020-12-06 12:47:20.888056620 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/caribou/caribou.SlackBuild b/caribou/caribou.SlackBuild
+--- a/caribou/caribou.SlackBuild	2020-12-06 21:12:24.150537369 +0000
++++ b/caribou/caribou.SlackBuild	2020-12-06 19:36:57.965446035 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+@@ -71,6 +74,7 @@
+  \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+   -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+ 
++PYTHON="/usr/bin/python3" \
+ CFLAGS="$SLKCFLAGS" \
+ CXXFLAGS="$SLKCFLAGS" \
+ ./configure \
+diff -Naur a/cinnamon/cinnamon.SlackBuild b/cinnamon/cinnamon.SlackBuild
+--- a/cinnamon/cinnamon.SlackBuild	2020-12-06 21:12:24.154537468 +0000
++++ b/cinnamon/cinnamon.SlackBuild	2020-12-06 12:47:19.908032314 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/cinnamon-control-center/cinnamon-control-center.SlackBuild b/cinnamon-control-center/cinnamon-control-center.SlackBuild
+--- a/cinnamon-control-center/cinnamon-control-center.SlackBuild	2020-12-06 21:12:24.150537369 +0000
++++ b/cinnamon-control-center/cinnamon-control-center.SlackBuild	2020-12-06 12:47:21.056060787 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/cinnamon-desktop/cinnamon-desktop.SlackBuild b/cinnamon-desktop/cinnamon-desktop.SlackBuild
+--- a/cinnamon-desktop/cinnamon-desktop.SlackBuild	2020-12-06 21:12:24.150537369 +0000
++++ b/cinnamon-desktop/cinnamon-desktop.SlackBuild	2020-12-06 12:47:21.136062771 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/cinnamon-menus/cinnamon-menus.SlackBuild b/cinnamon-menus/cinnamon-menus.SlackBuild
+--- a/cinnamon-menus/cinnamon-menus.SlackBuild	2020-12-06 21:12:24.150537369 +0000
++++ b/cinnamon-menus/cinnamon-menus.SlackBuild	2020-12-06 12:47:21.220064855 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/cinnamon-screensaver/cinnamon-screensaver.SlackBuild b/cinnamon-screensaver/cinnamon-screensaver.SlackBuild
+--- a/cinnamon-screensaver/cinnamon-screensaver.SlackBuild	2020-12-06 21:12:24.154537468 +0000
++++ b/cinnamon-screensaver/cinnamon-screensaver.SlackBuild	2020-12-06 12:47:21.304066938 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/cinnamon-session/cinnamon-session.SlackBuild b/cinnamon-session/cinnamon-session.SlackBuild
+--- a/cinnamon-session/cinnamon-session.SlackBuild	2020-12-06 21:12:24.154537468 +0000
++++ b/cinnamon-session/cinnamon-session.SlackBuild	2020-12-06 12:47:21.380068823 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/cinnamon-settings-daemon/cinnamon-settings-daemon.SlackBuild b/cinnamon-settings-daemon/cinnamon-settings-daemon.SlackBuild
+--- a/cinnamon-settings-daemon/cinnamon-settings-daemon.SlackBuild	2020-12-06 21:12:24.154537468 +0000
++++ b/cinnamon-settings-daemon/cinnamon-settings-daemon.SlackBuild	2020-12-06 12:47:21.468071006 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/cjs/cjs.SlackBuild b/cjs/cjs.SlackBuild
+--- a/cjs/cjs.SlackBuild	2020-12-06 21:12:24.174537961 +0000
++++ b/cjs/cjs.SlackBuild	2020-12-06 12:47:19.988034298 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/clutter/clutter.SlackBuild b/clutter/clutter.SlackBuild
+--- a/clutter/clutter.SlackBuild	2020-12-06 21:12:24.174537961 +0000
++++ b/clutter/clutter.SlackBuild	2020-12-06 12:47:20.156038465 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/clutter-gtk/clutter-gtk.SlackBuild b/clutter-gtk/clutter-gtk.SlackBuild
+--- a/clutter-gtk/clutter-gtk.SlackBuild	2020-12-06 21:12:24.174537961 +0000
++++ b/clutter-gtk/clutter-gtk.SlackBuild	2020-12-06 12:47:20.072036382 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/cogl/cogl.SlackBuild b/cogl/cogl.SlackBuild
+--- a/cogl/cogl.SlackBuild	2020-12-06 21:12:24.174537961 +0000
++++ b/cogl/cogl.SlackBuild	2020-12-06 12:47:20.240040548 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/colord/colord.SlackBuild b/colord/colord.SlackBuild
+--- a/colord/colord.SlackBuild	2020-12-06 21:12:24.178538060 +0000
++++ b/colord/colord.SlackBuild	2020-12-06 12:47:20.280041541 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/gnome-menus/gnome-menus.SlackBuild b/gnome-menus/gnome-menus.SlackBuild
+--- a/gnome-menus/gnome-menus.SlackBuild	2020-12-06 21:12:24.178538060 +0000
++++ b/gnome-menus/gnome-menus.SlackBuild	2020-12-06 12:47:20.324042632 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/libcroco/libcroco.SlackBuild b/libcroco/libcroco.SlackBuild
+--- a/libcroco/libcroco.SlackBuild	2020-12-06 21:12:24.178538060 +0000
++++ b/libcroco/libcroco.SlackBuild	2020-12-06 12:47:20.364043624 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/libdbusmenu/libdbusmenu.SlackBuild b/libdbusmenu/libdbusmenu.SlackBuild
+--- a/libdbusmenu/libdbusmenu.SlackBuild	2020-12-06 21:12:24.178538060 +0000
++++ b/libdbusmenu/libdbusmenu.SlackBuild	2020-12-06 12:47:20.408044715 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/libgee/libgee.SlackBuild b/libgee/libgee.SlackBuild
+--- a/libgee/libgee.SlackBuild	2020-12-06 21:12:24.182538159 +0000
++++ b/libgee/libgee.SlackBuild	2020-12-06 12:47:20.448045707 +0000
+@@ -32,6 +32,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/libgnomekbd/libgnomekbd.SlackBuild b/libgnomekbd/libgnomekbd.SlackBuild
+--- a/libgnomekbd/libgnomekbd.SlackBuild	2020-12-06 21:12:24.182538159 +0000
++++ b/libgnomekbd/libgnomekbd.SlackBuild	2020-12-06 12:47:20.488046699 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/libgtop/libgtop.SlackBuild b/libgtop/libgtop.SlackBuild
+--- a/libgtop/libgtop.SlackBuild	2020-12-06 21:12:24.182538159 +0000
++++ b/libgtop/libgtop.SlackBuild	2020-12-06 12:47:20.532047791 +0000
+@@ -51,6 +51,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/libgusb/libgusb.SlackBuild b/libgusb/libgusb.SlackBuild
+--- a/libgusb/libgusb.SlackBuild	2020-12-06 21:12:24.186538258 +0000
++++ b/libgusb/libgusb.SlackBuild	2020-12-06 12:47:20.576048882 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/libtimezonemap/libtimezonemap.SlackBuild b/libtimezonemap/libtimezonemap.SlackBuild
+--- a/libtimezonemap/libtimezonemap.SlackBuild	2020-12-06 21:12:24.186538258 +0000
++++ b/libtimezonemap/libtimezonemap.SlackBuild	2020-12-06 12:47:20.616049874 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/metacity/metacity.SlackBuild b/metacity/metacity.SlackBuild
+--- a/metacity/metacity.SlackBuild	2020-12-06 21:12:24.186538258 +0000
++++ b/metacity/metacity.SlackBuild	2020-12-06 12:47:20.652050767 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/mozjs/mozjs.SlackBuild b/mozjs/mozjs.SlackBuild
+--- a/mozjs/mozjs.SlackBuild	2020-12-06 21:12:24.186538258 +0000
++++ b/mozjs/mozjs.SlackBuild	2020-12-06 12:47:20.768053644 +0000
+@@ -50,6 +50,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/muffin/muffin.SlackBuild b/muffin/muffin.SlackBuild
+--- a/muffin/muffin.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/muffin/muffin.SlackBuild	2020-12-06 12:47:20.812054735 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/nemo/nemo.SlackBuild b/nemo/nemo.SlackBuild
+--- a/nemo/nemo.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/nemo/nemo.SlackBuild	2020-12-06 12:47:20.852055728 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/pangox-compat/pangox-compat.SlackBuild b/pangox-compat/pangox-compat.SlackBuild
+--- a/pangox-compat/pangox-compat.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/pangox-compat/pangox-compat.SlackBuild	2020-12-06 12:47:20.928057613 +0000
+@@ -51,6 +51,9 @@
+ elif [ "$ARCH" = "s390" ]; then
+   SLKCFLAGS="-O2"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/pexpect/pexpect.SlackBuild b/pexpect/pexpect.SlackBuild
+--- a/pexpect/pexpect.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/pexpect/pexpect.SlackBuild	2020-12-06 12:47:21.012059696 +0000
+@@ -50,6 +50,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/polib/polib.SlackBuild b/polib/polib.SlackBuild
+--- a/polib/polib.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/polib/polib.SlackBuild	2020-12-06 12:47:21.180063863 +0000
+@@ -46,6 +46,9 @@
+   LIBDIRSUFFIX=""
+ elif [ "$ARCH" = "i686" ]; then
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   LIBDIRSUFFIX="64"
+ else
+diff -Naur a/ptyprocess/ptyprocess.SlackBuild b/ptyprocess/ptyprocess.SlackBuild
+--- a/ptyprocess/ptyprocess.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/ptyprocess/ptyprocess.SlackBuild	2020-12-06 12:47:21.340067831 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/python-pam/python-pam.SlackBuild b/python-pam/python-pam.SlackBuild
+--- a/python-pam/python-pam.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/python-pam/python-pam.SlackBuild	2020-12-06 12:47:21.424069915 +0000
+@@ -49,6 +49,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/setproctitle/setproctitle.SlackBuild b/setproctitle/setproctitle.SlackBuild
+--- a/setproctitle/setproctitle.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/setproctitle/setproctitle.SlackBuild	2020-12-06 12:47:19.948033306 +0000
+@@ -50,6 +50,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/tinycss/tinycss.SlackBuild b/tinycss/tinycss.SlackBuild
+--- a/tinycss/tinycss.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/tinycss/tinycss.SlackBuild	2020-12-06 12:47:20.028035290 +0000
+@@ -50,6 +50,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/xapp/xapp.SlackBuild b/xapp/xapp.SlackBuild
+--- a/xapp/xapp.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/xapp/xapp.SlackBuild	2020-12-06 12:47:20.116037473 +0000
+@@ -48,6 +48,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
+diff -Naur a/zenity/zenity.SlackBuild b/zenity/zenity.SlackBuild
+--- a/zenity/zenity.SlackBuild	2020-12-06 21:12:24.190538356 +0000
++++ b/zenity/zenity.SlackBuild	2020-12-06 12:47:20.196039457 +0000
+@@ -30,6 +30,9 @@
+ elif [ "$ARCH" = "i686" ]; then
+   SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+   LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2"
++  LIBDIRSUFFIX="64"
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
