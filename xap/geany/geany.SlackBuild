@@ -106,6 +106,7 @@ mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
 cp -fav \
   LICENSE README \
   $PKG/usr/doc/$NAME-$VERSION/
+cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
 
 # Description and installation script
 mkdir -p $PKG/install
