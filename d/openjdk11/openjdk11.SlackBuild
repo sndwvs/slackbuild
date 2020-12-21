@@ -214,14 +214,14 @@ done
 
 # Copy docs
 mkdir -vpm755 $PKG1/usr/doc/$NAME1-$VERSION
-cp -fav \
+cp -fav ${TMP}${PKGVERSION} \
   LICENSE README \
-  $PKG/usr/doc/$NAME1-$VERSION/
+  $PKG1/usr/doc/$NAME1-$VERSION/
 cat $CWD/${NAME1}${MAJORVER}.SlackBuild > $PKG1/usr/doc/$NAME1-$VERSION/${NAME1}${MAJORVER}.SlackBuild
 mkdir -vpm755 $PKG2/usr/doc/$NAME2-$VERSION
-cp -fav \
+cp -fav ${TMP}${PKGVERSION} \
   LICENSE README \
-  $PKG/usr/doc/$NAME2-$VERSION/
+  $PKG2/usr/doc/$NAME2-$VERSION/
 cat $CWD/${NAME1}${MAJORVER}.SlackBuild > $PKG2/usr/doc/$NAME2-$VERSION/${NAME1}${MAJORVER}.SlackBuild
 
 # Description and installation script
