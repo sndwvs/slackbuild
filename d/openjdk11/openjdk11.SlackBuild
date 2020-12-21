@@ -1,0 +1,238 @@
+#!/bin/bash
+# Copyright 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020  Eric Hameleers, Eindhoven, The Netherlands
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+CWD=$(pwd)
+
+NAME1=openjdk
+NAME2=openjre
+MAJORVER=11
+MINORVER=0
+SECURITYVER=10
+UPDATEVER=7
+VERSION=${MAJORVER}.${MINORVER}.${SECURITYVER}.u${UPDATEVER}
+SRCVERSION=jdk-${MAJORVER}.${MINORVER}.${SECURITYVER}+${UPDATEVER}
+PKGVERSION=jdk${MAJORVER}u-jdk-${MAJORVER}.${MINORVER}.${SECURITYVER}+${UPDATEVER}
+BUILD=${BUILD:-1}
+PACKAGER=${PACKAGER:-mara}
+
+NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
+
+wget -c https://hg.openjdk.java.net/jdk-updates/jdk${MAJORVER}u/archive/jdk-${MAJORVER}.${MINORVER}.${SECURITYVER}+${UPDATEVER}.tar.gz
+
+# Automatically determine the architecture we're building on:
+MARCH=$( uname -m )
+if [ -z "$ARCH" ]; then
+  case "$MARCH" in
+    i?86)    export ARCH=i586 ;;
+    armv7hl) export ARCH=$MARCH ;;
+    arm*)    export ARCH=arm ;;
+    # Unless $ARCH is already set, use uname -m for all other archs:
+    *)       export ARCH=$MARCH ;;
+  esac
+fi
+
+if [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O3 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O3 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "armv7hl" ]; then
+  SLKCFLAGS="-O3 -march=armv7-a -mfpu=vfpv3-d16"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "arm" ]; then
+  SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "aarch64" ]; then
+  SLKCFLAGS="-O3"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+case "$ARCH" in
+    arm*) TARGET=$ARCH-slackware-linux-gnueabihf ;;
+    *)    TARGET=$ARCH-slackware-linux ;;
+esac
+
+# Establishment tmp directory for
+TMP=${TMP:-/tmp}
+PKG1=$TMP/package-$NAME1
+PKG2=$TMP/package-$NAME2
+rm -rf $PKG1 $PKG2
+mkdir -p $PKG1 $PKG2
+
+# Delete a directory previous build / create new and change rights
+cd $TMP
+rm -rf ${PKGVERSION}
+tar xvf $CWD/${SRCVERSION}.tar.?z* || exit 1
+cd ${PKGVERSION} || exit 1
+chown -R root:root .
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+if [[ $ARCH == "arm" ]]; then
+  IMGDIR=build/linux-${ARCH}-normal-zero-release/images
+else
+  IMGDIR=build/linux-${ARCH}-normal-server-release/images
+fi
+
+NUM_PROC_OPT=''
+NUMJOBS_J=$(echo ${NUMJOBS} | sed -En 's/.*-j([0-9]+).*/\1/p')
+if [ -n "${NUMJOBS_J}" ]; then
+	# http://hg.openjdk.java.net/jdk10/jdk10/file/85e6cb013b98/make/InitSupport.gmk#l105
+    echo "Removing '-j${NUMJOBS_J}' from MAKEFLAGS to prevent build fail. Passing it directly to ./configure."
+    export NUMJOBS=${NUMJOBS/-j${NUMJOBS_J}/}
+    NUM_PROC_OPT="--with-jobs=${NUMJOBS_J}"
+fi
+
+unset CFLAGS
+unset CXXFLAGS
+unset LDFLAGS
+
+if [[ $ARCH == "arm" ]]; then
+    VARIANTS='zero'
+else
+    VARIANTS='server'
+fi
+
+# Configuration
+_CFLAGS="$SLKCFLAGS -fcommon" \
+_CXXFLAGS="$SLKCFLAGS -fcommon" \
+_LDFLAGS="${LDFLAGS}" \
+bash configure \
+    --with-version-build="${UPDATEVER}" \
+    --with-version-pre="" \
+    --with-version-opt="" \
+    --with-stdc++lib=dynamic \
+    --with-extra-cflags="${_CFLAGS}" \
+    --with-extra-cxxflags="${_CXXFLAGS}" \
+    --with-extra-ldflags="${_LDFLAGS}" \
+    --with-libjpeg=system \
+    --with-giflib=system \
+    --with-libpng=system \
+    --with-lcms=system \
+    --with-zlib=system \
+    --with-jvm-features=zgc \
+    --enable-unlimited-crypto \
+    --disable-warnings-as-errors \
+    --with-jvm-variants=$VARIANTS \
+    ${NUM_PROC_OPT}
+    #--disable-javac-server
+
+# Compilation
+make images legacy-jre-image || exit 1
+
+# https://bugs.openjdk.java.net/browse/JDK-8173610
+find ${IMGDIR} -iname '*.so' -exec chmod +x {} \;
+
+# Strip binaries:
+#find $PKG | xargs file | grep -e "executable" -e "shared object" \
+#  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+
+# Move the generated jre and sdk images to the respective packages:
+mkdir -p $PKG1/usr/lib${LIBDIRSUFFIX} $PKG2/usr/lib${LIBDIRSUFFIX}/java
+cp -a $IMGDIR/jdk \
+  $PKG1/usr/lib${LIBDIRSUFFIX}/java
+find $PKG1/usr/lib${LIBDIRSUFFIX}/java/ -iname '*.debuginfo' -exec rm {} +;
+cp -a $IMGDIR/jre \
+  $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre
+find $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre -iname '*.debuginfo' -exec rm {} +;
+
+# Generate a cacerts file from the certificates installed through our
+# ca-certificates package - the "cacerts" in the OpenJDK sources is empty.
+# This will only work if we already have a proper JDK/JRE installed:
+if which keytool 1>/dev/null 2>&1 ; then
+  mkdir certgen
+  ( cd certgen
+    cp $CWD/scripts/generate-cacerts.pl .
+    for cert in /usr/share/ca-certificates/*/*.crt; do
+      openssl x509 -text -in "${cert}" >> all.crt
+    done
+    perl generate-cacerts.pl keytool all.crt
+    install -p -m0644 cacerts $PKG1/usr/lib${LIBDIRSUFFIX}/java/lib/security
+    install -p -m0644 cacerts $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre/lib/security
+  )
+else
+  echo "** Not installing a proper cacerts file !"
+  echo "** Missing keytool program (do you really have a Java installed?)"
+fi
+
+# Symlinks are present in Slackware historically:
+( cd $PKG1/usr/lib${LIBDIRSUFFIX}
+  ln -sf java jdk${VERSION}
+) || exit 1
+( cd $PKG2/usr/lib${LIBDIRSUFFIX}/java
+  ln -sf jre jre${VERSION}
+) || exit 1
+
+# Add the profile scripts:
+mkdir -p $PKG1/etc/profile.d $PKG2/etc/profile.d
+for file in $(ls $CWD/profile.d/openjdk*) ; do
+  cat $file | sed -e "s#lib/java#lib${LIBDIRSUFFIX}/java#" \
+    > $PKG1/etc/profile.d/$(basename $file)
+done
+for file in $(ls $CWD/profile.d/openjre*) ; do
+  cat $file | sed -e "s#lib/java#lib${LIBDIRSUFFIX}/java#" \
+    > $PKG2/etc/profile.d/$(basename $file)
+done
+chmod 755 $PKG1/etc/profile.d/* $PKG2/etc/profile.d/*
+
+# Compress manual pages:
+find $PKG1/usr/lib${LIBDIRSUFFIX}/java/man -type f -exec gzip -9 {} \;
+for i in $( find $PKG1/usr/lib${LIBDIRSUFFIX}/java/man -type l ) ; do
+  ln -s $( readlink $i ).gz $i.gz
+  rm $i
+done
+find $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre/man -type f -exec gzip -9 {} \;
+for i in $( find $PKG2/usr/lib${LIBDIRSUFFIX}/java/jre/man -type l ) ; do
+  ln -s $( readlink $i ).gz $i.gz
+  rm $i
+done
+
+# Copy docs
+mkdir -vpm755 $PKG1/usr/doc/$NAME1-$VERSION
+cp -fav \
+  LICENSE README \
+  $PKG/usr/doc/$NAME1-$VERSION/
+cat $CWD/${NAME1}${MAJORVER}.SlackBuild > $PKG1/usr/doc/$NAME1-$VERSION/${NAME1}${MAJORVER}.SlackBuild
+mkdir -vpm755 $PKG2/usr/doc/$NAME2-$VERSION
+cp -fav \
+  LICENSE README \
+  $PKG/usr/doc/$NAME2-$VERSION/
+cat $CWD/${NAME1}${MAJORVER}.SlackBuild > $PKG2/usr/doc/$NAME2-$VERSION/${NAME1}${MAJORVER}.SlackBuild
+
+# Description and installation script
+mkdir -p $PKG1/install $PKG2/install
+cat $CWD/slack-desc.jdk > $PKG1/install/slack-desc
+#zcat $CWD/doinst.sh.gz > $PKG1/install/doinst.sh
+cat $CWD/slack-desc.jre > $PKG2/install/slack-desc
+#zcat $CWD/doinst.sh.gz  > $PKG2/install/doinst.sh
+
+# Package creation
+cd $PKG1
+makepkg -l n -c n $TMP/${NAME1}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+cd $PKG2
+makepkg -l n -c n $TMP/${NAME2}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
