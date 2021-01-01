@@ -1,5 +1,5 @@
---- Makefile.in.orig	2020-07-29 19:29:17.000000000 +0000
-+++ Makefile.in	2020-08-15 12:43:10.229909435 +0000
+--- Makefile.in.orig	2020-12-17 21:59:38.000000000 +0000
++++ Makefile.in	2021-01-01 01:21:42.505805208 +0000
 @@ -9,7 +9,7 @@
  
  gb_Top_MODULE_CHECK_TARGETS := slowcheck unitcheck subsequentcheck perfcheck uicheck screenshot
@@ -14,7 +14,7 @@
  .DEFAULT_GOAL := build
  
 -check-if-root:
--	@if test ! `uname` = 'Haiku' -a `id -u` = 0 && ! grep -q 'lxc\|docker' /proc/self/cgroup && ! grep -q 'libpod_parent' /proc/self/cgroup; then \
+-	@if test ! `uname` = 'Haiku' -a `id -u` = 0 && test -z $$container && ! grep -q 'lxc\|docker' /proc/self/cgroup && ! grep -q 'libpod_parent' /proc/self/cgroup; then \
 -		echo; \
 -		echo 'Building LibreOffice as root is a very bad idea, use a regular user.'; \
 -		echo; \
