@@ -65,8 +65,6 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-patch -Np1 -i $CWD/lightdm-default-config.patch || exit 1
-
 [[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
 
 # Then change the Linux-PAM configuration files so that elogind is used: 
@@ -107,7 +105,9 @@ cp tests/src/lightdm-session $PKG/usr/bin
 sed -i '1 s/sh/bash --login/' $PKG/usr/bin/lightdm-session
 
 # install Xsession wrapper to use with lightdm
-install -m 755 $CWD/Xsession $PKG/etc/lightdm/Xsession.new
+install -dm 755 -g root $PKG/etc/lightdm/lightdm.conf.d
+install -m 644 $CWD/50-slarm64-defaults.conf $PKG/etc/lightdm/lightdm.conf.d/50-slarm64-defaults.conf.new
+install -m 644 $CWD/50-directories.conf $PKG/etc/lightdm/lightdm.conf.d/50-directories.conf.new
 mv $PKG/etc/lightdm/keys.conf $PKG/etc/lightdm/keys.conf.new
 mv $PKG/etc/lightdm/lightdm.conf $PKG/etc/lightdm/lightdm.conf.new
 mv $PKG/etc/lightdm/users.conf $PKG/etc/lightdm/users.conf.new
@@ -120,10 +120,10 @@ chown 620:620 -R $PKG/var/lib/lightdm{,-data}
 chown 620:620 -R $PKG/var/log/lightdm
 
 # adjust users.conf to accept userid<500
-sed -i 's/500/100/g' $PKG/etc/lightdm/users.conf
+sed -i 's/500/100/g' $PKG/etc/lightdm/users.conf.new
 
 # install PolKit rules
-install -dm 750 -g root $PKG/usr/share/polkit-1/rules.d
+install -dm 755 -g root $PKG/usr/share/polkit-1/rules.d
 install -m 644 $CWD/lightdm.rules $PKG/usr/share/polkit-1/rules.d/lightdm.rules
 
 # remove junk
