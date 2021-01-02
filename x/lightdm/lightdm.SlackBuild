@@ -123,8 +123,8 @@ chown 620:620 -R $PKG/var/log/lightdm
 sed -i 's/500/100/g' $PKG/etc/lightdm/users.conf
 
 # install PolKit rules
-install -dm 750 -g root $PKG/etc/polkit-1/rules.d
-install -m 644 -g 620 -o 620 $CWD/50-lightdm.rules $PKG/etc/polkit-1/rules.d/50-lightdm.rules.new
+install -dm 750 -g root $PKG/usr/share/polkit-1/rules.d
+install -m 644 $CWD/lightdm.rules $PKG/usr/share/polkit-1/rules.d/lightdm.rules
 
 # remove junk
 #rm -fr $PKG/usr/share/{locale,gtk-doc,help}
