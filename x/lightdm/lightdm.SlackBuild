@@ -124,7 +124,7 @@ sed -i 's/500/100/g' $PKG/etc/lightdm/users.conf.new
 
 # install PolKit rules
 install -dm 755 -g root $PKG/usr/share/polkit-1/rules.d
-install -m 644 $CWD/lightdm.rules $PKG/usr/share/polkit-1/rules.d/lightdm.rules
+install -m 644 $CWD/lightdm.rules $PKG/usr/share/polkit-1/rules.d/lightdm.rules.new
 
 # remove junk
 #rm -fr $PKG/usr/share/{locale,gtk-doc,help}
