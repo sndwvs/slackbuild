@@ -66,7 +66,7 @@ find . \
  -exec chmod 644 {} \;
 
 if [[ ${FAMILY} = rockchip ]]; then
-    xzcat $CWD/libdrm-2.4.103-rockchip.patch.xz | patch -p1 --verbose || exit 1
+    xzcat $CWD/libdrm-2.4.104-rockchip.patch.xz | patch -p1 --verbose || exit 1
     OPTIONS=" -Drockchip=true "
 fi
 
