@@ -1,0 +1,47 @@
+commit 0513e634f0013083d29af9f5762b225297d3ad6c (HEAD -> v2.1, origin/v2.1)
+Author: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date:   Fri Apr 12 20:42:55 2019 +0530
+
+    Remove built binary from git
+    
+    Oops.
+
+From 9b4f498707569f3ecf81a0561a0d3d91570cec3d Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Fri, 15 Mar 2019 15:51:02 +0530
+Subject: [PATCH 68/72] bench: Fix build warnings
+
+---
+ bench/Makefile       |   2 +-
+ bench/luajit-bench   | Bin 571144 -> 571224 bytes
+ bench/luajit-bench.c |   1 +
+ 3 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/bench/Makefile b/bench/Makefile
+index d0c1e8d..87d213a 100644
+--- a/bench/Makefile
++++ b/bench/Makefile
+@@ -44,7 +44,7 @@ endif
+ LUAJIT_A = ../src/$(FILE_A)
+ 
+ $(BENCH_BIN): $(LUAJIT_A) $(BENCH_BIN).c Makefile
+-	$(CC) $@.c $(DURATION) -g -O3 -c -o $@.o -I ../src
++	$(CC) $@.c -std=gnu11 $(DURATION) -g -O3 -c -o $@.o -I ../src
+ 	$(CC) $@.o -lpthread $< -lm -ldl -o $@
+ 
+ # Build the luajit static library if it doesn't exist.
+diff --git a/bench/luajit-bench.c b/bench/luajit-bench.c
+index e7b068d..6603132 100644
+--- a/bench/luajit-bench.c
++++ b/bench/luajit-bench.c
+@@ -39,6 +39,7 @@
+ #include <argp.h>
+ #include <sys/param.h>
+ #include <string.h>
++#include <time.h>
+ 
+ #include "lua.h"
+ #include "lualib.h"
+-- 
+2.20.1
+

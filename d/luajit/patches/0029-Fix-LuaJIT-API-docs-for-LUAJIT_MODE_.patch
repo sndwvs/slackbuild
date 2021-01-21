@@ -1,0 +1,28 @@
+From c88602f080dcafea6ba222a2f7cc1ea0e41ef3cc Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Thu, 18 Jan 2018 12:29:39 +0100
+Subject: [PATCH 29/72] Fix LuaJIT API docs for LUAJIT_MODE_*.
+
+Thanks to sunfishgao.
+---
+ doc/ext_c_api.html | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/doc/ext_c_api.html b/doc/ext_c_api.html
+index 041a722..4bb8251 100644
+--- a/doc/ext_c_api.html
++++ b/doc/ext_c_api.html
+@@ -89,8 +89,8 @@ other Lua/C API functions).
+ </p>
+ <p>
+ The third argument specifies the mode, which is 'or'ed with a flag.
+-The flag can be <tt>LUAJIT_MODE_OFF</tt> to turn a feature on,
+-<tt>LUAJIT_MODE_ON</tt> to turn a feature off, or
++The flag can be <tt>LUAJIT_MODE_OFF</tt> to turn a feature off,
++<tt>LUAJIT_MODE_ON</tt> to turn a feature on, or
+ <tt>LUAJIT_MODE_FLUSH</tt> to flush cached code.
+ </p>
+ <p>
+-- 
+2.20.1
+

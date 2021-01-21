@@ -1,0 +1,34 @@
+From 43a3893b0d7d82bfbfd13bf458a5906f755989c9 Mon Sep 17 00:00:00 2001
+From: Patrick Galizia <pgalizia.qdt@qualcommdatacenter.com>
+Date: Fri, 24 Aug 2018 11:02:15 -0400
+Subject: [PATCH 60/72] Fix arm64 register allocation issue for XLOAD.
+
+For the arm64 implementation of asm_xload(), it is possible for
+the dest register selected to be the same as one of the source
+registers generated in the asm_fusexref() call.  To prevent this,
+exclude the dest register from the list of allowed registers for
+that call.
+
+Thanks to Javier for guidance as well as his script to replicate
+the issue.
+---
+ src/lj_asm_arm64.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/lj_asm_arm64.h b/src/lj_asm_arm64.h
+index baafa21..045f260 100644
+--- a/src/lj_asm_arm64.h
++++ b/src/lj_asm_arm64.h
+@@ -1008,7 +1008,8 @@ static void asm_xload(ASMState *as, IRIns *ir)
+ {
+   Reg dest = ra_dest(as, ir, irt_isfp(ir->t) ? RSET_FPR : RSET_GPR);
+   lua_assert(!(ir->op2 & IRXLOAD_UNALIGNED));
+-  asm_fusexref(as, asm_fxloadins(ir), dest, ir->op1, RSET_GPR);
++  asm_fusexref(as, asm_fxloadins(ir), dest, ir->op1,
++               rset_exclude(RSET_GPR, dest));
+ }
+ 
+ static void asm_xstore(ASMState *as, IRIns *ir)
+-- 
+2.20.1
+

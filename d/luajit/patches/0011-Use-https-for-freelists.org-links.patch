@@ -1,0 +1,25 @@
+From f3d75075ed91137699c6071abe49e2252e794a9c Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Fri, 18 Aug 2017 12:52:14 +0200
+Subject: [PATCH 11/72] Use https for freelists.org links.
+
+---
+ doc/ext_ffi_semantics.html | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/doc/ext_ffi_semantics.html b/doc/ext_ffi_semantics.html
+index 899640c..ae3c037 100644
+--- a/doc/ext_ffi_semantics.html
++++ b/doc/ext_ffi_semantics.html
+@@ -844,7 +844,7 @@ place of a type, you'd need to use <tt>ffi.typeof("int")</tt> instead.
+ <p>
+ The main use for parameterized types are libraries implementing abstract
+ data types
+-(<a href="http://www.freelists.org/post/luajit/ffi-type-of-pointer-to,8"><span class="ext">&raquo;</span>&nbsp;example</a>),
++(<a href="https://www.freelists.org/post/luajit/ffi-type-of-pointer-to,8">example</a>),
+ similar to what can be achieved with C++ template metaprogramming.
+ Another use case are derived types of anonymous structs, which avoids
+ pollution of the global struct namespace.
+-- 
+2.20.1
+

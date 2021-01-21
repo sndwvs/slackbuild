@@ -1,0 +1,52 @@
+commit 362f034c1b91d52ea2cf971314ed4e0c24348bff
+Merge: 260b9b4 f5d424a
+Author: Mike Pall <mike>
+Date:   Sun May 20 12:28:10 2018 +0200
+
+    Merge branch 'master' into v2.1
+
+From f5d424afe8b9395f0df05aba905e0e1f6a2262b8 Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Sun, 20 May 2018 12:25:36 +0200
+Subject: [PATCH 39/72] FFI: Make FP to U64 conversions match JIT backend
+ behavior.
+
+---
+ src/lj_obj.h | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/src/lj_obj.h b/src/lj_obj.h
+index e70b003..2ee526c 100644
+--- a/src/lj_obj.h
++++ b/src/lj_obj.h
+@@ -816,14 +816,22 @@ static LJ_AINLINE int32_t lj_num2bit(lua_Number n)
+ 
+ #define lj_num2int(n)   ((int32_t)(n))
+ 
++/*
++** This must match the JIT backend behavior. In particular for archs
++** that don't have a common hardware instruction for this conversion.
++** Note that signed FP to unsigned int conversions have an undefined
++** result and should never be relied upon in portable FFI code.
++** See also: C99 or C11 standard, 6.3.1.4, footnote of (1).
++*/
+ static LJ_AINLINE uint64_t lj_num2u64(lua_Number n)
+ {
+-#ifdef _MSC_VER
+-  if (n >= 9223372036854775808.0)  /* They think it's a feature. */
+-    return (uint64_t)(int64_t)(n - 18446744073709551616.0);
+-  else
++#if LJ_TARGET_X86ORX64 || LJ_TARGET_MIPS
++  int64_t i = (int64_t)n;
++  if (i < 0) i = (int64_t)(n - 18446744073709551616.0);
++  return (uint64_t)i;
++#else
++  return (uint64_t)n;
+ #endif
+-    return (uint64_t)n;
+ }
+ 
+ static LJ_AINLINE int32_t numberVint(cTValue *o)
+-- 
+2.20.1
+

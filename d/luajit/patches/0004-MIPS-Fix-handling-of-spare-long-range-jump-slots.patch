@@ -1,0 +1,77 @@
+From c7c3c4da432ddb543d4b0a9abbb245f11b26afd0 Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Wed, 7 Jun 2017 19:36:46 +0200
+Subject: [PATCH 04/72] MIPS: Fix handling of spare long-range jump slots.
+
+Contributed by Djordje Kovacevic and Stefan Pejic.
+---
+ src/lj_asm_mips.h | 9 +++++----
+ src/lj_jit.h      | 6 ++++++
+ src/lj_mcode.c    | 6 ------
+ 3 files changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/src/lj_asm_mips.h b/src/lj_asm_mips.h
+index d0a1ca5..7631190 100644
+--- a/src/lj_asm_mips.h
++++ b/src/lj_asm_mips.h
+@@ -65,10 +65,9 @@ static Reg ra_alloc2(ASMState *as, IRIns *ir, RegSet allow)
+ static void asm_sparejump_setup(ASMState *as)
+ {
+   MCode *mxp = as->mcbot;
+-  /* Assumes sizeof(MCLink) == 8. */
+-  if (((uintptr_t)mxp & (LJ_PAGESIZE-1)) == 8) {
++  if (((uintptr_t)mxp & (LJ_PAGESIZE-1)) == sizeof(MCLink)) {
+     lua_assert(MIPSI_NOP == 0);
+-    memset(mxp+2, 0, MIPS_SPAREJUMP*8);
++    memset(mxp, 0, MIPS_SPAREJUMP*2*sizeof(MCode));
+     mxp += MIPS_SPAREJUMP*2;
+     lua_assert(mxp < as->mctop);
+     lj_mcode_sync(as->mcbot, mxp);
+@@ -1947,7 +1946,9 @@ void lj_asm_patchexit(jit_State *J, GCtrace *T, ExitNo exitno, MCode *target)
+ 	  if (!cstart) cstart = p-1;
+ 	} else {  /* Branch out of range. Use spare jump slot in mcarea. */
+ 	  int i;
+-	  for (i = 2; i < 2+MIPS_SPAREJUMP*2; i += 2) {
++	  for (i = (int)(sizeof(MCLink)/sizeof(MCode));
++	       i < (int)(sizeof(MCLink)/sizeof(MCode)+MIPS_SPAREJUMP*2);
++	       i += 2) {
+ 	    if (mcarea[i] == tjump) {
+ 	      delta = mcarea+i - p;
+ 	      goto patchbranch;
+diff --git a/src/lj_jit.h b/src/lj_jit.h
+index a2e8fd9..3f38d28 100644
+--- a/src/lj_jit.h
++++ b/src/lj_jit.h
+@@ -155,6 +155,12 @@ typedef uint8_t MCode;
+ typedef uint32_t MCode;
+ #endif
+ 
++/* Linked list of MCode areas. */
++typedef struct MCLink {
++  MCode *next;		/* Next area. */
++  size_t size;		/* Size of current area. */
++} MCLink;
++
+ /* Stack snapshot header. */
+ typedef struct SnapShot {
+   uint16_t mapofs;	/* Offset into snapshot map. */
+diff --git a/src/lj_mcode.c b/src/lj_mcode.c
+index f0a1f69..5ea89f6 100644
+--- a/src/lj_mcode.c
++++ b/src/lj_mcode.c
+@@ -272,12 +272,6 @@ static void *mcode_alloc(jit_State *J, size_t sz)
+ 
+ /* -- MCode area management ----------------------------------------------- */
+ 
+-/* Linked list of MCode areas. */
+-typedef struct MCLink {
+-  MCode *next;		/* Next area. */
+-  size_t size;		/* Size of current area. */
+-} MCLink;
+-
+ /* Allocate a new MCode area. */
+ static void mcode_allocarea(jit_State *J)
+ {
+-- 
+2.20.1
+

@@ -1,0 +1,26 @@
+From bf12f1dafb157008b963f829b57b2472b6993cc8 Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Mon, 18 Sep 2017 09:50:22 +0200
+Subject: [PATCH 15/72] MIPS64: Hide internal function.
+
+---
+ src/lj_ccall.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/lj_ccall.c b/src/lj_ccall.c
+index 799be48..25e938c 100644
+--- a/src/lj_ccall.c
++++ b/src/lj_ccall.c
+@@ -848,7 +848,8 @@ noth:  /* Not a homogeneous float/double aggregate. */
+   return 0;  /* Struct is in GPRs. */
+ }
+ 
+-void ccall_copy_struct(CCallState *cc, CType *ctr, void *dp, void *sp, int ft)
++static void ccall_copy_struct(CCallState *cc, CType *ctr, void *dp, void *sp,
++			      int ft)
+ {
+   if (LJ_ABI_SOFTFP ? ft :
+       ((ft & 3) == FTYPE_FLOAT || (ft >> 2) == FTYPE_FLOAT)) {
+-- 
+2.20.1
+

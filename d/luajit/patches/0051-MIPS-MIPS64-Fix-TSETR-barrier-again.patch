@@ -1,0 +1,39 @@
+From 9c1b637898f38dd4606da08ba1a82a174c3e64b6 Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Sun, 14 Oct 2018 15:12:59 +0200
+Subject: [PATCH 51/72] MIPS/MIPS64: Fix TSETR barrier (again).
+
+---
+ src/vm_mips.dasc   | 2 +-
+ src/vm_mips64.dasc | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/vm_mips.dasc b/src/vm_mips.dasc
+index 1afd611..f324812 100644
+--- a/src/vm_mips.dasc
++++ b/src/vm_mips.dasc
+@@ -4317,7 +4317,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     |  ins_next2
+     |
+     |7:  // Possible table write barrier for the value. Skip valiswhite check.
+-    |  barrierback TAB:CARG2, TMP3, TMP0, <2
++    |  barrierback TAB:CARG2, TMP3, CRET1, <2
+     break;
+ 
+   case BC_TSETM:
+diff --git a/src/vm_mips64.dasc b/src/vm_mips64.dasc
+index 0a3f8e5..1682c81 100644
+--- a/src/vm_mips64.dasc
++++ b/src/vm_mips64.dasc
+@@ -4263,7 +4263,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     |  ins_next2
+     |
+     |7:  // Possible table write barrier for the value. Skip valiswhite check.
+-    |  barrierback TAB:CARG2, TMP3, TMP0, <2
++    |  barrierback TAB:CARG2, TMP3, CRET1, <2
+     break;
+ 
+   case BC_TSETM:
+-- 
+2.20.1
+

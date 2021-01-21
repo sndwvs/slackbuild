@@ -1,0 +1,4897 @@
+From d84f3bbd94f2f74c8d9e95f9df7bbc62616725e1 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Tue, 30 Apr 2019 15:48:46 +0530
+Subject: [PATCH] Update README to reflect reality for this repository
+
+---
+ README | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/README b/README
+index 2b9ae9d2..c46794f8 100644
+--- a/README
++++ b/README
+@@ -1,3 +1,43 @@
++LuaJIT
++======
++
++This is an integrtion fork of the original
++[LuaJIT project](https://repo.or.cz/w/luajit-2.0.git) authored by Mike Pall
++with the aim of providing a quicker paced and more inclusive development
++workflow for LuaJIT.  The original README is preserved below for posterity.
++This repo will attempt to remain in sync with developments in the original
++LuaJIT but will allow space to innovate and fix bugs so as to provide
++continuity for people interested in the project.
++
++LuaJIT is Copyright (c) 2005-2019 Mike Pall and various contributors.  The list
++of contributors may be found via the git log and from the CONTRIBUTORS file in
++the top level of these sources, which is updated on a regular basis.
++
++Branches
++--------
++
++The original LuaJIT project had two supported versions in v2.0 and v2.1.  These
++were tracked using three branches, master, v2.0 and v2.1, where master is used
++for v2.0 bug fixes and v2.0 simply tracks master.  This is confusing and does
++not allow space for new development, so this project has a slightly different
++branch layout that helps unblock development and also track the original
++LuaJIT.
++
++This repo has the following main branches:
++
++  * master: This is where new features and language support will land.  This may
++  diverge from the original LuaJIT, although as the goal of this project
++  suggests, attempts will be made to remain as compatible as possible.
++  * v2.1: This remains a bug fix branch for this repository and will be regularly
++  merged with the upstream v2.1 branch.
++  * v2.0: This remains a bug fix branch that tracks the v2.0 branch upstream.
++
++The upstream master branch currently only tracks the v2.0 branch (or vice
++versa, we may never know!) so it is ignored.
++
++Original README
++===============
++
+ README for LuaJIT 2.1.0-beta3
+ -----------------------------
+ 
+-- 
+2.21.0
+
+From 624eec51ffdcc6dca0d620de0bc8a00a460da1d3 Mon Sep 17 00:00:00 2001
+From: "Yichun Zhang (agentzh)" <agentzh@gmail.com>
+Date: Sun, 24 Dec 2017 13:10:31 -0800
+Subject: [PATCH 02/34] feature: implemented new API function jit.prngstate()
+ for reading or setting the current PRNG state number used in the JIT
+ compiler.
+
+---
+ src/lib_jit.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/lib_jit.c b/src/lib_jit.c
+index 6972550b..c6cdda7a 100644
+--- a/src/lib_jit.c
++++ b/src/lib_jit.c
+@@ -141,6 +141,17 @@ LJLIB_CF(jit_attach)
+   return 0;
+ }
+ 
++LJLIB_CF(jit_prngstate)
++{
++  jit_State *J = L2J(L);
++  int32_t cur = (int32_t)J->prngstate;
++  if (L->base < L->top && !tvisnil(L->base)) {
++    J->prngstate = (uint32_t)lj_lib_checkint(L, 1);
++  }
++  setintV(L->top++, cur);
++  return 1;
++}
++
+ LJLIB_PUSH(top-5) LJLIB_SET(os)
+ LJLIB_PUSH(top-4) LJLIB_SET(arch)
+ LJLIB_PUSH(top-3) LJLIB_SET(version_num)
+-- 
+2.21.0
+
+
+From 92c12849f85710f40bbef8391c89f1f452ddd52f Mon Sep 17 00:00:00 2001
+From: abhay1722 <abhays@us.ibm.com>
+Date: Tue, 30 Apr 2019 06:28:08 +0000
+Subject: [PATCH 03/34] bugfix: guarded the jit_prngstate builtin with the
+ LJ_HAS_JIT macro.
+
+---
+ src/lib_jit.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/lib_jit.c b/src/lib_jit.c
+index c6cdda7a..ef444d7e 100644
+--- a/src/lib_jit.c
++++ b/src/lib_jit.c
+@@ -141,6 +141,7 @@ LJLIB_CF(jit_attach)
+   return 0;
+ }
+ 
++#if LJ_HASJIT
+ LJLIB_CF(jit_prngstate)
+ {
+   jit_State *J = L2J(L);
+@@ -151,6 +152,7 @@ LJLIB_CF(jit_prngstate)
+   setintV(L->top++, cur);
+   return 1;
+ }
++#endif
+ 
+ LJLIB_PUSH(top-5) LJLIB_SET(os)
+ LJLIB_PUSH(top-4) LJLIB_SET(arch)
+-- 
+2.21.0
+
+
+From f2d82d08ae5d4b1eea35914e25f01389aa0bd21b Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Wed, 3 Jul 2019 21:09:29 +0530
+Subject: [PATCH 04/34] jit.prngstate: Return a sane value (0) for
+ LUAJIT_DISABLE_JIT
+
+Have jit.prngstate() return 0 when JIT is disabled during build
+instead of throwing an error like so:
+
+src/luajit: foo.lua:1: attempt to call field 'prngstate' (a nil value)
+stack traceback:
+	foo.lua:1: in main chunk
+	[C]: at 0x00405130
+---
+ src/lib_jit.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/lib_jit.c b/src/lib_jit.c
+index ef444d7e..b84efa13 100644
+--- a/src/lib_jit.c
++++ b/src/lib_jit.c
+@@ -141,18 +141,20 @@ LJLIB_CF(jit_attach)
+   return 0;
+ }
+ 
+-#if LJ_HASJIT
+ LJLIB_CF(jit_prngstate)
+ {
++#if LJ_HASJIT
+   jit_State *J = L2J(L);
+   int32_t cur = (int32_t)J->prngstate;
+   if (L->base < L->top && !tvisnil(L->base)) {
+     J->prngstate = (uint32_t)lj_lib_checkint(L, 1);
+   }
++#else
++  int32_t cur = 0;
++#endif
+   setintV(L->top++, cur);
+   return 1;
+ }
+-#endif
+ 
+ LJLIB_PUSH(top-5) LJLIB_SET(os)
+ LJLIB_PUSH(top-4) LJLIB_SET(arch)
+-- 
+2.21.0
+
+
+From 4abab76427696afc062f8c031e0958beec7f927a Mon Sep 17 00:00:00 2001
+From: "Yichun Zhang (agentzh)" <agentzh@gmail.com>
+Date: Thu, 7 Jun 2018 22:27:29 -0700
+Subject: [PATCH 05/34] feature: implemented the new Lua and C API functions
+ for thread exdata.
+
+The Lua API can be used like below:
+
+  local exdata = require "thread.exdata"
+  exdata(0xdeadbeefLL)  -- set the exdata of the current Lua thread
+  local ptr = exdata()  -- fetch the exdata of the current Lua thread
+
+The exdata value on the Lua land is represented as a cdata object of the
+ctype "void*".
+
+Right now the reading API, i.e., `exdata()` calls without any arguments,
+can be JIT compiled.
+
+Also exposed the following public C API functions for manipulating
+exdata on the C land:
+
+  void lua_setexdata(lua_State *L, void *exdata);
+  void *lua_getexdata(lua_State *L);
+
+The exdata pointer is initialized to NULL when the main thread is
+created. Any child Lua threads created will inherit the parent's exdata
+but still have their own exdata storage. So child Lua threads can always
+override the inherited parent exdata pointer values.
+
+This API is used internally by the OpenResty core so never ever mess
+with it yourself in the context of OpenResty.
+
+Thanks Zexuan Luo for preparing the final version of the patch.
+
+Signed-off-by: Yichun Zhang (agentzh) <agentzh@gmail.com>
+---
+ README            |  35 ++++++++
+ src/lib_base.c    |  37 ++++++++
+ src/lj_api.c      |   9 ++
+ src/lj_errmsg.h   |   1 +
+ src/lj_ffrecord.c |  16 ++++
+ src/lj_ir.h       |   1 +
+ src/lj_lib.c      |   7 ++
+ src/lj_lib.h      |   1 +
+ src/lj_obj.h      |   1 +
+ src/lj_state.c    |   2 +
+ src/lua.h         |   2 +
+ src/lualib.h      |   1 +
+ t/TestLJ.pm       |  91 +++++++++++++++++++
+ t/exdata.t        | 221 ++++++++++++++++++++++++++++++++++++++++++++++
+ 14 files changed, 425 insertions(+)
+ create mode 100644 t/TestLJ.pm
+ create mode 100644 t/exdata.t
+
+diff --git a/README b/README
+index c46794f8..073ae647 100644
+--- a/README
++++ b/README
+@@ -35,6 +35,41 @@ This repo has the following main branches:
+ The upstream master branch currently only tracks the v2.0 branch (or vice
+ versa, we may never know!) so it is ignored.
+ 
++
++Additional Features
++-------------------
++
++* New API function thread.exdata to embed user data in LuaJIT threads.  This
++  API needs FFI and hence is not available when built with
++  `-DLUAJIT_DISABLE_FFI`.
++
++    The Lua API can be used like below:
++
++      local exdata = require "thread.exdata"
++      exdata(0xdeadbeefLL)  -- set the exdata of the current Lua thread
++      local ptr = exdata()  -- fetch the exdata of the current Lua thread
++
++    The exdata value on the Lua land is represented as a cdata object of the
++    ctype "void*".
++
++    Right now the reading API, i.e., `exdata()` calls without any arguments,
++    can be JIT compiled.
++
++    Also exposed the following public C API functions for manipulating
++    exdata on the C land:
++
++      void lua_setexdata(lua_State *L, void *exdata);
++      void *lua_getexdata(lua_State *L);
++
++    The exdata pointer is initialized to NULL when the main thread is
++    created. Any child Lua threads created will inherit the parent's exdata
++    but still have their own exdata storage. So child Lua threads can always
++    override the inherited parent exdata pointer values.
++
++    This API is used internally by the OpenResty core so never ever mess
++    with it yourself in the context of OpenResty.
++
++
+ Original README
+ ===============
+ 
+diff --git a/src/lib_base.c b/src/lib_base.c
+index 1cd83058..e341a366 100644
+--- a/src/lib_base.c
++++ b/src/lib_base.c
+@@ -35,6 +35,7 @@
+ #include "lj_strscan.h"
+ #include "lj_strfmt.h"
+ #include "lj_lib.h"
++#include "lj_cdata.h"
+ 
+ /* -- Base library: checks ------------------------------------------------ */
+ 
+@@ -652,6 +653,30 @@ static void setpc_wrap_aux(lua_State *L, GCfunc *fn)
+   setmref(fn->c.pc, &L2GG(L)->bcff[lj_lib_init_coroutine[1]+2]);
+ }
+ 
++#if LJ_HASFFI
++LJLIB_NOREG LJLIB_CF(thread_exdata) LJLIB_REC(.)
++{
++  ptrdiff_t nargs = L->top - L->base;
++  GCcdata *cd;
++
++  if (nargs == 0) {
++    CTState *cts = ctype_ctsG(G(L));
++    if (cts == NULL)
++      lj_err_caller(L, LJ_ERR_FFI_NOTLOAD);
++    cts->L = L;  /* Save L for errors and allocations. */
++
++    cd = lj_cdata_new(cts, CTID_P_VOID, CTSIZE_PTR);
++    cdata_setptr(cdataptr(cd), CTSIZE_PTR, L->exdata);
++    setcdataV(L, L->top++, cd);
++    return 1;
++  }
++
++  cd = lj_lib_checkcdata(L, 1);
++  L->exdata = cdata_getptr(cdataptr(cd), CTSIZE_PTR);
++  return 0;
++}
++#endif
++
+ /* ------------------------------------------------------------------------ */
+ 
+ static void newproxy_weaktable(lua_State *L)
+@@ -665,6 +690,13 @@ static void newproxy_weaktable(lua_State *L)
+   t->nomm = (uint8_t)(~(1u<<MM_mode));
+ }
+ 
++#if LJ_HASFFI
++static int luaopen_thread_exdata(lua_State *L)
++{
++  return lj_lib_postreg(L, lj_cf_thread_exdata, FF_thread_exdata, "exdata");
++}
++#endif
++
+ LUALIB_API int luaopen_base(lua_State *L)
+ {
+   /* NOBARRIER: Table and value are the same. */
+@@ -674,6 +706,11 @@ LUALIB_API int luaopen_base(lua_State *L)
+   newproxy_weaktable(L);  /* top-2. */
+   LJ_LIB_REG(L, "_G", base);
+   LJ_LIB_REG(L, LUA_COLIBNAME, coroutine);
++
++#if LJ_HASFFI
++  lj_lib_prereg(L, LUA_THRLIBNAME ".exdata", luaopen_thread_exdata, env);
++#endif
++
+   return 2;
+ }
+ 
+diff --git a/src/lj_api.c b/src/lj_api.c
+index d17a5754..9c4864d7 100644
+--- a/src/lj_api.c
++++ b/src/lj_api.c
+@@ -1290,3 +1290,12 @@ LUA_API void lua_setallocf(lua_State *L, lua_Alloc f, void *ud)
+   g->allocf = f;
+ }
+ 
++LUA_API void lua_setexdata(lua_State *L, void *exdata)
++{
++  L->exdata = exdata;
++}
++
++LUA_API void *lua_getexdata(lua_State *L)
++{
++  return L->exdata;
++}
+diff --git a/src/lj_errmsg.h b/src/lj_errmsg.h
+index 060a9f89..a3ecd016 100644
+--- a/src/lj_errmsg.h
++++ b/src/lj_errmsg.h
+@@ -181,6 +181,7 @@ ERRDEF(FFI_CBACKOV,	"too many callbacks")
+ #endif
+ ERRDEF(FFI_NYIPACKBIT,	"NYI: packed bit fields")
+ ERRDEF(FFI_NYICALL,	"NYI: cannot call this C function (yet)")
++ERRDEF(FFI_NOTLOAD,	"ffi module not loaded (yet)")
+ #endif
+ 
+ #undef ERRDEF
+diff --git a/src/lj_ffrecord.c b/src/lj_ffrecord.c
+index 849d7a27..242d5d51 100644
+--- a/src/lj_ffrecord.c
++++ b/src/lj_ffrecord.c
+@@ -28,6 +28,7 @@
+ #include "lj_vm.h"
+ #include "lj_strscan.h"
+ #include "lj_strfmt.h"
++#include "lj_cdata.h"
+ 
+ /* Some local macros to save typing. Undef'd at the end. */
+ #define IR(ref)			(&J->cur.ir[(ref)])
+@@ -1105,6 +1106,21 @@ static void LJ_FASTCALL recff_table_clear(jit_State *J, RecordFFData *rd)
+   }  /* else: Interpreter will throw. */
+ }
+ 
++/* -- thread library fast functions ------------------------------------------ */
++
++void LJ_FASTCALL recff_thread_exdata(jit_State *J, RecordFFData *rd)
++{
++  TRef tr = J->base[0];
++  if (!tr) {
++    TRef trl = emitir(IRT(IR_LREF, IRT_THREAD), 0, 0);
++    TRef trp = emitir(IRT(IR_FLOAD, IRT_PTR), trl, IRFL_THREAD_EXDATA);
++    TRef trid = lj_ir_kint(J, CTID_P_VOID);
++    J->base[0] = emitir(IRTG(IR_CNEWI, IRT_CDATA), trid, trp);
++    return;
++  }
++  recff_nyiu(J, rd);  /* this case is too rare to be interesting */
++}
++
+ /* -- I/O library fast functions ------------------------------------------ */
+ 
+ /* Get FILE* for I/O function. Any I/O error aborts recording, so there's
+diff --git a/src/lj_ir.h b/src/lj_ir.h
+index a46b561f..0961f665 100644
+--- a/src/lj_ir.h
++++ b/src/lj_ir.h
+@@ -196,6 +196,7 @@ IRFPMDEF(FPMENUM)
+   _(FUNC_PC,	offsetof(GCfunc, l.pc)) \
+   _(FUNC_FFID,	offsetof(GCfunc, l.ffid)) \
+   _(THREAD_ENV,	offsetof(lua_State, env)) \
++  _(THREAD_EXDATA,	offsetof(lua_State, exdata)) \
+   _(TAB_META,	offsetof(GCtab, metatable)) \
+   _(TAB_ARRAY,	offsetof(GCtab, array)) \
+   _(TAB_NODE,	offsetof(GCtab, node)) \
+diff --git a/src/lj_lib.c b/src/lj_lib.c
+index b8638de6..63dfca6c 100644
+--- a/src/lj_lib.c
++++ b/src/lj_lib.c
+@@ -301,3 +301,10 @@ int lj_lib_checkopt(lua_State *L, int narg, int def, const char *lst)
+   return def;
+ }
+ 
++GCcdata *lj_lib_checkcdata(lua_State *L, int narg)
++{
++  TValue *o = L->base + narg-1;
++  if (!(o < L->top && tviscdata(o)))
++    lj_err_argt(L, narg, LUA_TCDATA);
++  return cdataV(o);
++}
+diff --git a/src/lj_lib.h b/src/lj_lib.h
+index 37ec9d78..8cb675a1 100644
+--- a/src/lj_lib.h
++++ b/src/lj_lib.h
+@@ -45,6 +45,7 @@ LJ_FUNC GCfunc *lj_lib_checkfunc(lua_State *L, int narg);
+ LJ_FUNC GCtab *lj_lib_checktab(lua_State *L, int narg);
+ LJ_FUNC GCtab *lj_lib_checktabornil(lua_State *L, int narg);
+ LJ_FUNC int lj_lib_checkopt(lua_State *L, int narg, int def, const char *lst);
++LJ_FUNC GCcdata *lj_lib_checkcdata(lua_State *L, int narg);
+ 
+ /* Avoid including lj_frame.h. */
+ #if LJ_GC64
+diff --git a/src/lj_obj.h b/src/lj_obj.h
+index 4ff59441..a63f8d7c 100644
+--- a/src/lj_obj.h
++++ b/src/lj_obj.h
+@@ -660,6 +660,7 @@ struct lua_State {
+   GCRef env;		/* Thread environment (table of globals). */
+   void *cframe;		/* End of C stack frame chain. */
+   MSize stacksize;	/* True stack size (incl. LJ_STACK_EXTRA). */
++  void *exdata;	        /* user extra data pointer. added by OpenResty */
+ };
+ 
+ #define G(L)			(mref(L->glref, global_State))
+diff --git a/src/lj_state.c b/src/lj_state.c
+index 632dd07e..a0fba2ac 100644
+--- a/src/lj_state.c
++++ b/src/lj_state.c
+@@ -225,6 +225,7 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
+     return NULL;
+   }
+   L->status = LUA_OK;
++  L->exdata = NULL;
+   return L;
+ }
+ 
+@@ -284,6 +285,7 @@ lua_State *lj_state_new(lua_State *L)
+   setgcrefr(L1->env, L->env);
+   stack_init(L1, L);  /* init stack */
+   lua_assert(iswhite(obj2gco(L1)));
++  L1->exdata = L->exdata;
+   return L1;
+ }
+ 
+diff --git a/src/lua.h b/src/lua.h
+index 850bd796..9dcafd69 100644
+--- a/src/lua.h
++++ b/src/lua.h
+@@ -245,6 +245,8 @@ LUA_API void  (lua_concat) (lua_State *L, int n);
+ LUA_API lua_Alloc (lua_getallocf) (lua_State *L, void **ud);
+ LUA_API void lua_setallocf (lua_State *L, lua_Alloc f, void *ud);
+ 
++LUA_API void lua_setexdata(lua_State *L, void *exdata);
++LUA_API void *lua_getexdata(lua_State *L);
+ 
+ 
+ /*
+diff --git a/src/lualib.h b/src/lualib.h
+index bfc130a1..6aceabe5 100644
+--- a/src/lualib.h
++++ b/src/lualib.h
+@@ -21,6 +21,7 @@
+ #define LUA_BITLIBNAME	"bit"
+ #define LUA_JITLIBNAME	"jit"
+ #define LUA_FFILIBNAME	"ffi"
++#define LUA_THRLIBNAME	"thread"
+ 
+ LUALIB_API int luaopen_base(lua_State *L);
+ LUALIB_API int luaopen_math(lua_State *L);
+diff --git a/t/TestLJ.pm b/t/TestLJ.pm
+new file mode 100644
+index 00000000..cdc02a8e
+--- /dev/null
++++ b/t/TestLJ.pm
+@@ -0,0 +1,91 @@
++package t::TestLJ;
++
++use v5.10.1;
++use Test::Base -Base;
++use IPC::Run3;
++use Cwd qw( cwd );
++use Test::LongString;
++use File::Temp qw( tempdir );
++
++our @EXPORT = qw( run_tests );
++
++$ENV{LUA_CPATH} = "../?.so;;";
++$ENV{LUA_PATH} = "../lua/?.lua;;";
++#$ENV{LUA_PATH} = ($ENV{LUA_PATH} || "" ) . ';' . getcwd . "/runtime/?.lua" . ';;';
++
++my $cwd = cwd;
++
++sub run_test ($) {
++    my $block = shift;
++    #print $json_xs->pretty->encode(\@new_rows);
++    #my $res = #print $json_xs->pretty->encode($res);
++    my $name = $block->name;
++
++    my $lua = $block->lua or
++        die "No --- lua specified for test $name\n";
++
++    my $luafile = "test.lua";
++
++    {
++        my $dir = tempdir "testlj_XXXXXXX", CLEANUP => 1;
++        chdir $dir or die "$name - Cannot chdir to $dir: $!";
++        open my $fh, ">$luafile"
++            or die "$name - Cannot open $luafile in $dir for writing: $!\n";
++        print $fh $lua;
++        close $fh;
++    }
++
++    my ($res, $err);
++
++    my @cmd;
++
++    if ($ENV{TEST_LJ_USE_VALGRIND}) {
++        warn "$name\n";
++        @cmd =  ('valgrind', '-q', '--leak-check=full', 'luajit',
++                 defined($block->jv) ? '-jv' : (),
++                 defined($block->jdump) ? '-jdump' : (),
++                 $luafile);
++    } else {
++        @cmd =  ('luajit',
++                 defined($block->jv) ? '-jv' : (),
++                 defined($block->jdump) ? '-jdump' : (),
++                 $luafile);
++    }
++
++    run3 \@cmd, undef, \$res, \$err;
++    my $rc = $?;
++
++    #warn "res:$res\nerr:$err\n";
++
++    my $exp_rc = $block->exit // 0;
++
++    is $exp_rc, $rc >> 8, "$name - exit code okay";
++
++    if (defined $block->err) {
++        if ($err =~ /.*:.*:.*: (.*\s)?/) {
++            $err = $1;
++        }
++        is $err, $block->err, "$name - err expected";
++
++    } elsif (defined $err && $err ne '') {
++        warn "$name - STDERR:\n$err";
++    }
++
++    if (defined $block->out) {
++        #is $res, $block->out, "$name - output ok";
++        is $res, $block->out, "$name - output ok";
++
++    } elsif (defined $res && $res ne '') {
++        warn "$name - STDOUT:\n$res";
++    }
++
++    chdir $cwd or die $!;
++}
++
++sub run_tests () {
++    for my $block (blocks()) {
++        run_test($block);
++    }
++}
++
++1;
+diff --git a/t/exdata.t b/t/exdata.t
+new file mode 100644
+index 00000000..239bb86c
+--- /dev/null
++++ b/t/exdata.t
+@@ -0,0 +1,221 @@
++# vim: set ss=4 ft= sw=4 et sts=4 ts=4:
++
++use lib '.';
++use t::TestLJ;
++
++plan tests => 3 * blocks();
++
++run_tests();
++
++__DATA__
++
++=== TEST 1: interpreted (sanity)
++--- lua
++jit.off()
++local assert = assert
++local exdata = require "thread.exdata"
++local ffi = require "ffi"
++local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++local ptr = ffi.cast("void *", u64)
++local saved_q
++for i = 1, 5 do
++    exdata(u64)
++    local q = exdata()
++    if saved_q then
++        assert(q == saved_q)
++    end
++    saved_q = q
++end
++print(tostring(ptr))
++print(tostring(saved_q))
++--- jv
++--- out
++cdata<void *>: 0xefdeaddeadbeef
++cdata<void *>: 0xefdeaddeadbeef
++--- err
++
++
++
++=== TEST 2: newly created coroutines should inherit the exdata
++--- lua
++jit.off()
++local exdata = require "thread.exdata"
++local ffi = require "ffi"
++local u64 = ffi.new("uintptr_t", 0xefdeadbeefLL)
++local ptr = ffi.cast("void *", u64)
++local ptr2 = ffi.cast("void *", u64 + 1)
++local ptr3 = ffi.cast("void *", u64 - 2)
++local saved_q
++local function f()
++    coroutine.yield(exdata())
++    exdata(ptr2)
++    coroutine.yield(exdata())
++    coroutine.yield(exdata())
++end
++
++exdata(u64)
++
++local co = coroutine.create(f)
++
++local ok, data = coroutine.resume(co)
++assert(ok)
++print(tostring(data))
++
++ok, data = coroutine.resume(co)
++assert(ok)
++print(tostring(data))
++
++exdata(ptr3)
++
++ok, data = coroutine.resume(co)
++assert(ok)
++print(tostring(data))
++
++print(tostring(exdata()))
++--- jv
++--- out
++cdata<void *>: 0xefdeadbeef
++cdata<void *>: 0xefdeadbef0
++cdata<void *>: 0xefdeadbef0
++cdata<void *>: 0xefdeadbeed
++--- err
++
++
++
++=== TEST 3: JIT mode (reading)
++--- lua
++jit.opt.start("minstitch=100000", "hotloop=2")
++local assert = assert
++local exdata = require "thread.exdata"
++local ffi = require "ffi"
++local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++local ptr = ffi.cast("void *", u64)
++local saved_q
++exdata(u64)
++for i = 1, 10 do
++    local q = exdata()
++    if saved_q then
++        assert(q == saved_q)
++    end
++    saved_q = q
++end
++print(tostring(ptr))
++print(tostring(saved_q))
++
++--- jv
++--- out
++cdata<void *>: 0xefdeaddeadbeef
++cdata<void *>: 0xefdeaddeadbeef
++--- err
++[TRACE   1 test.lua:9 loop]
++
++
++
++=== TEST 4: JIT mode (writing)
++--- lua
++jit.opt.start("minstitch=100000", "hotloop=2")
++local assert = assert
++local exdata = require "thread.exdata"
++local ffi = require "ffi"
++local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++local ptr = ffi.cast("void *", u64)
++local saved_q
++for i = 1, 10 do
++    exdata(u64)
++    local q = exdata()
++    if saved_q then
++        assert(q == saved_q)
++    end
++    saved_q = q
++end
++print(tostring(ptr))
++print(tostring(saved_q))
++
++--- jv
++--- out
++cdata<void *>: 0xefdeaddeadbeef
++cdata<void *>: 0xefdeaddeadbeef
++--- err
++[TRACE --- test.lua:8 -- trace too short at test.lua:9]
++
++
++
++=== TEST 5: interpreted  - check the number of arguments
++--- lua
++jit.off()
++local assert = assert
++local select = select
++local exdata = require "thread.exdata"
++local ffi = require "ffi"
++local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++local ptr = ffi.cast("void *", u64)
++
++local function nargs(...)
++    return select('#', ...)
++end
++print(nargs(exdata(ptr)))
++print(nargs(exdata()))
++--- jv
++--- out
++0
++1
++--- err
++
++
++
++=== TEST 6: JIT mode  - check the number of arguments
++--- lua
++jit.opt.start("minstitch=100000", "hotloop=2")
++local assert = assert
++local select = select
++local exdata = require "thread.exdata"
++local ffi = require "ffi"
++local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++local ptr = ffi.cast("void *", u64)
++
++local function nargs(...)
++    return select('#', ...)
++end
++
++local total = 0
++for i = 1, 10 do
++    total = total + nargs(exdata(ptr))
++end
++
++print("set: " .. total)
++
++total = 0
++for i = 1, 10 do
++    total = total + nargs(exdata())
++end
++
++print("get: " .. total)
++--- jv
++--- out
++set: 0
++get: 10
++--- err
++[TRACE --- test.lua:14 -- trace too short at test.lua:15]
++[TRACE   1 test.lua:21 loop]
++
++
++
++=== TEST 7: interpreted (no ffi initialized)
++--- lua
++jit.off()
++local assert = assert
++local exdata = require "thread.exdata"
++local saved_q
++for i = 1, 5 do
++    local q = exdata()
++    if saved_q then
++        assert(q == saved_q)
++    end
++    saved_q = q
++end
++print(tostring(saved_q))
++--- jv
++--- out
++--- err
++ffi module not loaded (yet)
++--- exit: 1
+-- 
+2.21.0
+
+
+From dd4dfee59a2e68cd04b1e1b4c8d4f21743bfe3d0 Mon Sep 17 00:00:00 2001
+From: "Yichun Zhang (agentzh)" <yichun@openresty.com>
+Date: Wed, 30 Jan 2019 15:00:07 -0800
+Subject: [PATCH 06/34] bugfix: we broke the arm build in the commit c844a613.
+ thanks Alec Muffett for the report in #37.
+
+Fix #37.
+---
+ src/lj_obj.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/lj_obj.h b/src/lj_obj.h
+index a63f8d7c..3f674db2 100644
+--- a/src/lj_obj.h
++++ b/src/lj_obj.h
+@@ -661,6 +661,10 @@ struct lua_State {
+   void *cframe;		/* End of C stack frame chain. */
+   MSize stacksize;	/* True stack size (incl. LJ_STACK_EXTRA). */
+   void *exdata;	        /* user extra data pointer. added by OpenResty */
++#if LJ_TARGET_ARM
++  uint32_t unused1;
++  uint32_t unused2;
++#endif
+ };
+ 
+ #define G(L)			(mref(L->glref, global_State))
+-- 
+2.21.0
+
+
+From 13f03a44f0b571397a6b52c6ea4c00356a2189c9 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Mon, 8 Jul 2019 22:59:51 +0530
+Subject: [PATCH 07/34] thread.exdata: Port openresty test and fix fallout
+
+Fix up contents.lua to expect thread.exdata and add two more tests
+from c58fe79b870f1934479bf14fe8035fc3d9fdfde2 in openresty/luajit2.
+---
+ t/TestLJ.pm             |  91 -----------------
+ t/exdata.t              | 221 ----------------------------------------
+ test/lib/contents.lua   |   4 +-
+ test/lib/ffi/exdata.lua | 152 +++++++++++++++++++++++++++
+ test/lib/ffi/index      |   1 +
+ 5 files changed, 155 insertions(+), 314 deletions(-)
+ delete mode 100644 t/TestLJ.pm
+ delete mode 100644 t/exdata.t
+ create mode 100644 test/lib/ffi/exdata.lua
+
+diff --git a/t/TestLJ.pm b/t/TestLJ.pm
+deleted file mode 100644
+index cdc02a8e..00000000
+--- a/t/TestLJ.pm
++++ /dev/null
+@@ -1,91 +0,0 @@
+-package t::TestLJ;
+-
+-use v5.10.1;
+-use Test::Base -Base;
+-use IPC::Run3;
+-use Cwd qw( cwd );
+-use Test::LongString;
+-use File::Temp qw( tempdir );
+-
+-our @EXPORT = qw( run_tests );
+-
+-$ENV{LUA_CPATH} = "../?.so;;";
+-$ENV{LUA_PATH} = "../lua/?.lua;;";
+-#$ENV{LUA_PATH} = ($ENV{LUA_PATH} || "" ) . ';' . getcwd . "/runtime/?.lua" . ';;';
+-
+-my $cwd = cwd;
+-
+-sub run_test ($) {
+-    my $block = shift;
+-    #print $json_xs->pretty->encode(\@new_rows);
+-    #my $res = #print $json_xs->pretty->encode($res);
+-    my $name = $block->name;
+-
+-    my $lua = $block->lua or
+-        die "No --- lua specified for test $name\n";
+-
+-    my $luafile = "test.lua";
+-
+-    {
+-        my $dir = tempdir "testlj_XXXXXXX", CLEANUP => 1;
+-        chdir $dir or die "$name - Cannot chdir to $dir: $!";
+-        open my $fh, ">$luafile"
+-            or die "$name - Cannot open $luafile in $dir for writing: $!\n";
+-        print $fh $lua;
+-        close $fh;
+-    }
+-
+-    my ($res, $err);
+-
+-    my @cmd;
+-
+-    if ($ENV{TEST_LJ_USE_VALGRIND}) {
+-        warn "$name\n";
+-        @cmd =  ('valgrind', '-q', '--leak-check=full', 'luajit',
+-                 defined($block->jv) ? '-jv' : (),
+-                 defined($block->jdump) ? '-jdump' : (),
+-                 $luafile);
+-    } else {
+-        @cmd =  ('luajit',
+-                 defined($block->jv) ? '-jv' : (),
+-                 defined($block->jdump) ? '-jdump' : (),
+-                 $luafile);
+-    }
+-
+-    run3 \@cmd, undef, \$res, \$err;
+-    my $rc = $?;
+-
+-    #warn "res:$res\nerr:$err\n";
+-
+-    my $exp_rc = $block->exit // 0;
+-
+-    is $exp_rc, $rc >> 8, "$name - exit code okay";
+-
+-    if (defined $block->err) {
+-        if ($err =~ /.*:.*:.*: (.*\s)?/) {
+-            $err = $1;
+-        }
+-        is $err, $block->err, "$name - err expected";
+-
+-    } elsif (defined $err && $err ne '') {
+-        warn "$name - STDERR:\n$err";
+-    }
+-
+-    if (defined $block->out) {
+-        #is $res, $block->out, "$name - output ok";
+-        is $res, $block->out, "$name - output ok";
+-
+-    } elsif (defined $res && $res ne '') {
+-        warn "$name - STDOUT:\n$res";
+-    }
+-
+-    chdir $cwd or die $!;
+-}
+-
+-sub run_tests () {
+-    for my $block (blocks()) {
+-        run_test($block);
+-    }
+-}
+-
+-1;
+diff --git a/t/exdata.t b/t/exdata.t
+deleted file mode 100644
+index 239bb86c..00000000
+--- a/t/exdata.t
++++ /dev/null
+@@ -1,221 +0,0 @@
+-# vim: set ss=4 ft= sw=4 et sts=4 ts=4:
+-
+-use lib '.';
+-use t::TestLJ;
+-
+-plan tests => 3 * blocks();
+-
+-run_tests();
+-
+-__DATA__
+-
+-=== TEST 1: interpreted (sanity)
+---- lua
+-jit.off()
+-local assert = assert
+-local exdata = require "thread.exdata"
+-local ffi = require "ffi"
+-local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
+-local ptr = ffi.cast("void *", u64)
+-local saved_q
+-for i = 1, 5 do
+-    exdata(u64)
+-    local q = exdata()
+-    if saved_q then
+-        assert(q == saved_q)
+-    end
+-    saved_q = q
+-end
+-print(tostring(ptr))
+-print(tostring(saved_q))
+---- jv
+---- out
+-cdata<void *>: 0xefdeaddeadbeef
+-cdata<void *>: 0xefdeaddeadbeef
+---- err
+-
+-
+-
+-=== TEST 2: newly created coroutines should inherit the exdata
+---- lua
+-jit.off()
+-local exdata = require "thread.exdata"
+-local ffi = require "ffi"
+-local u64 = ffi.new("uintptr_t", 0xefdeadbeefLL)
+-local ptr = ffi.cast("void *", u64)
+-local ptr2 = ffi.cast("void *", u64 + 1)
+-local ptr3 = ffi.cast("void *", u64 - 2)
+-local saved_q
+-local function f()
+-    coroutine.yield(exdata())
+-    exdata(ptr2)
+-    coroutine.yield(exdata())
+-    coroutine.yield(exdata())
+-end
+-
+-exdata(u64)
+-
+-local co = coroutine.create(f)
+-
+-local ok, data = coroutine.resume(co)
+-assert(ok)
+-print(tostring(data))
+-
+-ok, data = coroutine.resume(co)
+-assert(ok)
+-print(tostring(data))
+-
+-exdata(ptr3)
+-
+-ok, data = coroutine.resume(co)
+-assert(ok)
+-print(tostring(data))
+-
+-print(tostring(exdata()))
+---- jv
+---- out
+-cdata<void *>: 0xefdeadbeef
+-cdata<void *>: 0xefdeadbef0
+-cdata<void *>: 0xefdeadbef0
+-cdata<void *>: 0xefdeadbeed
+---- err
+-
+-
+-
+-=== TEST 3: JIT mode (reading)
+---- lua
+-jit.opt.start("minstitch=100000", "hotloop=2")
+-local assert = assert
+-local exdata = require "thread.exdata"
+-local ffi = require "ffi"
+-local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
+-local ptr = ffi.cast("void *", u64)
+-local saved_q
+-exdata(u64)
+-for i = 1, 10 do
+-    local q = exdata()
+-    if saved_q then
+-        assert(q == saved_q)
+-    end
+-    saved_q = q
+-end
+-print(tostring(ptr))
+-print(tostring(saved_q))
+-
+---- jv
+---- out
+-cdata<void *>: 0xefdeaddeadbeef
+-cdata<void *>: 0xefdeaddeadbeef
+---- err
+-[TRACE   1 test.lua:9 loop]
+-
+-
+-
+-=== TEST 4: JIT mode (writing)
+---- lua
+-jit.opt.start("minstitch=100000", "hotloop=2")
+-local assert = assert
+-local exdata = require "thread.exdata"
+-local ffi = require "ffi"
+-local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
+-local ptr = ffi.cast("void *", u64)
+-local saved_q
+-for i = 1, 10 do
+-    exdata(u64)
+-    local q = exdata()
+-    if saved_q then
+-        assert(q == saved_q)
+-    end
+-    saved_q = q
+-end
+-print(tostring(ptr))
+-print(tostring(saved_q))
+-
+---- jv
+---- out
+-cdata<void *>: 0xefdeaddeadbeef
+-cdata<void *>: 0xefdeaddeadbeef
+---- err
+-[TRACE --- test.lua:8 -- trace too short at test.lua:9]
+-
+-
+-
+-=== TEST 5: interpreted  - check the number of arguments
+---- lua
+-jit.off()
+-local assert = assert
+-local select = select
+-local exdata = require "thread.exdata"
+-local ffi = require "ffi"
+-local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
+-local ptr = ffi.cast("void *", u64)
+-
+-local function nargs(...)
+-    return select('#', ...)
+-end
+-print(nargs(exdata(ptr)))
+-print(nargs(exdata()))
+---- jv
+---- out
+-0
+-1
+---- err
+-
+-
+-
+-=== TEST 6: JIT mode  - check the number of arguments
+---- lua
+-jit.opt.start("minstitch=100000", "hotloop=2")
+-local assert = assert
+-local select = select
+-local exdata = require "thread.exdata"
+-local ffi = require "ffi"
+-local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
+-local ptr = ffi.cast("void *", u64)
+-
+-local function nargs(...)
+-    return select('#', ...)
+-end
+-
+-local total = 0
+-for i = 1, 10 do
+-    total = total + nargs(exdata(ptr))
+-end
+-
+-print("set: " .. total)
+-
+-total = 0
+-for i = 1, 10 do
+-    total = total + nargs(exdata())
+-end
+-
+-print("get: " .. total)
+---- jv
+---- out
+-set: 0
+-get: 10
+---- err
+-[TRACE --- test.lua:14 -- trace too short at test.lua:15]
+-[TRACE   1 test.lua:21 loop]
+-
+-
+-
+-=== TEST 7: interpreted (no ffi initialized)
+---- lua
+-jit.off()
+-local assert = assert
+-local exdata = require "thread.exdata"
+-local saved_q
+-for i = 1, 5 do
+-    local q = exdata()
+-    if saved_q then
+-        assert(q == saved_q)
+-    end
+-    saved_q = q
+-end
+-print(tostring(saved_q))
+---- jv
+---- out
+---- err
+-ffi module not loaded (yet)
+---- exit: 1
+diff --git a/test/lib/contents.lua b/test/lib/contents.lua
+index 09866f6f..1d393d96 100644
+--- a/test/lib/contents.lua
++++ b/test/lib/contents.lua
+@@ -19,7 +19,7 @@ local function check(m, expected, exclude)
+ end
+ 
+ do --- base
+-  check(_G, "_G:_VERSION:arg:assert:collectgarbage:coroutine:debug:dofile:error:getmetatable:io:ipairs:load:loadfile:math:next:os:package:pairs:pcall:print:rawequal:rawget:rawset:require:select:setmetatable:string:table:tonumber:tostring:type:xpcall", "rawlen:bit:bit32:jit:gcinfo:setfenv:getfenv:loadstring:unpack:module:newproxy")
++  check(_G, "_G:_VERSION:arg:assert:collectgarbage:coroutine:debug:dofile:error:exdata:getmetatable:io:ipairs:load:loadfile:math:next:os:package:pairs:pcall:print:rawequal:rawget:rawset:require:select:setmetatable:string:table:tonumber:tostring:type:xpcall", "rawlen:bit:bit32:jit:gcinfo:setfenv:getfenv:loadstring:unpack:module:newproxy")
+ end
+ 
+ do --- pre-5.2 base +lua<5.2
+@@ -145,7 +145,7 @@ do --- package.loaded
+       loaded[k] = v
+     end
+   end
+-  check(loaded, "_G:coroutine:debug:io:math:os:package:string:table", "bit:bit32:common:ffi:jit:table.new")
++  check(loaded, "_G:coroutine:debug:io:math:os:package:string:table:thread.exdata", "bit:bit32:common:ffi:jit:table.new")
+ end
+ 
+ do --- bit +bit
+diff --git a/test/lib/ffi/exdata.lua b/test/lib/ffi/exdata.lua
+new file mode 100644
+index 00000000..32a39ebe
+--- /dev/null
++++ b/test/lib/ffi/exdata.lua
+@@ -0,0 +1,152 @@
++local exdata = require "thread.exdata"
++local ffi = require "ffi"
++
++local function nargs(...)
++  return select('#', ...)
++end
++
++--[[ These tests need to be first so that they read the default value and not
++     the value updated by the tests that follow. --]]
++do --- default value: JIT off
++  jit.off()
++  local saved_q
++  for i = 1, 5 do
++    local q = exdata()
++    if saved_q then
++      assert(q == saved_q)
++    end
++    saved_q = q
++  end
++  print(saved_q)
++  assert(saved_q == nil)
++end
++
++do --- default value: JIT on
++  jit.opt.start("minstitch=100000", "hotloop=2")
++  jit.on()
++  local saved_q
++  for i = 1, 5 do
++    local q = exdata()
++    if saved_q then
++      assert(q == saved_q)
++    end
++    saved_q = q
++  end
++  print(saved_q)
++  assert(saved_q == nil)
++end
++
++do --- sanity: JIT off
++  jit.off()
++  local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++  local ptr = ffi.cast("void *", u64)
++  local saved_q
++  for i = 1, 5 do
++    exdata(u64)
++    local q = exdata()
++    if saved_q then
++      assert(q == saved_q)
++    end
++    saved_q = q
++  end
++  print(ptr)
++  assert(tostring(ptr) == "cdata<void *>: 0xefdeaddeadbeef")
++  assert(tostring(saved_q) == "cdata<void *>: 0xefdeaddeadbeef")
++end
++
++do --- coroutines: JIT off
++  jit.off()
++  local u64 = ffi.new("uintptr_t", 0xefdeadbeefLL)
++  local ptr = ffi.cast("void *", u64)
++  local ptr2 = ffi.cast("void *", u64 + 1)
++  local ptr3 = ffi.cast("void *", u64 - 2)
++  local saved_q
++  local function f()
++    coroutine.yield(exdata())
++    exdata(ptr2)
++    coroutine.yield(exdata())
++    coroutine.yield(exdata())
++  end
++
++  exdata(u64)
++
++  local co = coroutine.create(f)
++
++  local ok, data = coroutine.resume(co)
++  assert(ok)
++  assert(tostring(data) == "cdata<void *>: 0xefdeadbeef")
++
++  ok, data = coroutine.resume(co)
++  assert(ok)
++  assert(tostring(data) == "cdata<void *>: 0xefdeadbef0")
++
++  exdata(ptr3)
++
++  ok, data = coroutine.resume(co)
++  assert(ok)
++  assert(tostring(data) == "cdata<void *>: 0xefdeadbef0")
++  assert(tostring(exdata()) == "cdata<void *>: 0xefdeadbeed")
++end
++
++do --- reading: JIT on
++  jit.opt.start("minstitch=100000", "hotloop=2")
++  local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++  local ptr = ffi.cast("void *", u64)
++  local saved_q
++  exdata(u64)
++  for i = 1, 10 do
++    local q = exdata()
++    if saved_q then
++      assert(q == saved_q)
++    end
++    saved_q = q
++  end
++  assert(tostring(ptr) == "cdata<void *>: 0xefdeaddeadbeef")
++  assert(tostring(saved_q) == "cdata<void *>: 0xefdeaddeadbeef")
++end
++
++do --- writing: JIT on
++  jit.opt.start("minstitch=100000", "hotloop=2")
++  local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++  local ptr = ffi.cast("void *", u64)
++  local saved_q
++  for i = 1, 10 do
++    exdata(u64)
++    local q = exdata()
++    if saved_q then
++      assert(q == saved_q)
++    end
++    saved_q = q
++  end
++  assert(tostring(ptr) == "cdata<void *>: 0xefdeaddeadbeef")
++  assert(tostring(saved_q) == "cdata<void *>: 0xefdeaddeadbeef")
++end
++
++do --- Check number of arguments: JIT off
++  jit.off()
++  local select = select
++  local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++  local ptr = ffi.cast("void *", u64)
++
++  assert(nargs(exdata(ptr)) == 0)
++  assert(nargs(exdata()) == 1)
++end
++
++do --- Check number of arguments: JIT on
++  jit.opt.start("minstitch=100000", "hotloop=2")
++  local select = select
++  local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
++  local ptr = ffi.cast("void *", u64)
++
++  local total = 0
++  for i = 1, 10 do
++    total = total + nargs(exdata(ptr))
++  end
++  assert(total == 0)
++
++  for i = 1, 10 do
++    total = total + nargs(exdata())
++  end
++  assert(total == 10)
++end
++
+diff --git a/test/lib/ffi/index b/test/lib/ffi/index
+index 7933c5a7..45464ff8 100644
+--- a/test/lib/ffi/index
++++ b/test/lib/ffi/index
+@@ -2,6 +2,7 @@ bit64.lua +luajit>=2.1
+ cdata_var.lua
+ copy_fill.lua
+ err.lua
++exdata.lua
+ istype.lua
+ jit_array.lua
+ jit_complex.lua
+-- 
+2.21.0
+
+
+From 5c461aa215646e3dabb183c318d902f3180debbd Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Wed, 31 Jul 2019 19:54:57 +0530
+Subject: [PATCH 08/34] [aarch64] Fix crash with side traces under register
+ pressure
+
+IRRefs that get into the side trace from the parent trace may restore
+REF_BASE under register pressure and get to head_side holding on to
+it.  Restore such references so that REF_BASE gets RID_BASE back in
+head_side.
+---
+ src/lj_asm_arm64.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/lj_asm_arm64.h b/src/lj_asm_arm64.h
+index c72144a3..d2176e0b 100644
+--- a/src/lj_asm_arm64.h
++++ b/src/lj_asm_arm64.h
+@@ -1949,6 +1949,17 @@ static RegSet asm_head_side_base(ASMState *as, IRIns *irp, RegSet allow)
+   IRIns *ir;
+   asm_head_lreg(as);
+   ir = IR(REF_BASE);
++
++  /* IRRefs that get into the side trace from the parent trace may restore
++   * REF_BASE under severe register pressure and thus reach here holding on to
++   * the register.  Restore such references so that REF_BASE gets RID_BASE back
++   * when it tries to allocate below.  */
++  if (!ra_hasreg(ir->r)) {
++    Reg r = ra_gethint(ir->r);
++    if (!rset_test(as->freeset, r))
++      ra_restore(as, regcost_ref(as->cost[r]));
++  }
++
+   if (ra_hasreg(ir->r) && (rset_test(as->modset, ir->r) || irt_ismarked(ir->t)))
+     ra_spill(as, ir);
+   if (ra_hasspill(irp->s)) {
+-- 
+2.21.0
+
+
+From 4be079d219cdb44de3912f823407c7661f610d65 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Wed, 31 Jul 2019 19:59:11 +0530
+Subject: [PATCH 09/34] [aarch64] Allocate LJ_TISNUM early
+
+LJ_TISNUM is allocated too late in the cycle and it ends up reusing a
+different register, resulting in a crash under register pressure.
+Hoist the allocation to the top so that it is done early enough and
+the allowed register set no longer contains that register.  This also
+has the nice side effect of beig slightly faster since it hoists a
+constant allocation out of the generated loop.
+---
+ src/lj_asm_arm64.h | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/src/lj_asm_arm64.h b/src/lj_asm_arm64.h
+index d2176e0b..45661c6f 100644
+--- a/src/lj_asm_arm64.h
++++ b/src/lj_asm_arm64.h
+@@ -769,6 +769,14 @@ static void asm_href(ASMState *as, IRIns *ir, IROp merge)
+   uint32_t khash;
+   MCLabel l_end, l_loop, l_next;
+   rset_clear(allow, tab);
++  Reg tisnum = RID_TMP;
++
++  /* Allocate register early and clear it from the allowed set since it gets
++   * used multiple times during the loop.  */
++  if (irt_isnum(kt) && !isk) {
++    tisnum = ra_allock(as, LJ_TISNUM << 15, allow);
++    rset_clear(allow, tisnum);
++  }
+ 
+   if (!isk) {
+     key = ra_alloc1(as, ir->op2, irt_isnum(kt) ? RSET_FPR : allow);
+@@ -819,9 +827,7 @@ static void asm_href(ASMState *as, IRIns *ir, IROp merge)
+ 	emit_nm(as, A64I_CMPx, key, tmp);
+       emit_lso(as, A64I_LDRx, tmp, dest, offsetof(Node, key.u64));
+     } else {
+-      Reg tisnum = ra_allock(as, LJ_TISNUM << 15, allow);
+       Reg ftmp = ra_scratch(as, rset_exclude(RSET_FPR, key));
+-      rset_clear(allow, tisnum);
+       emit_nm(as, A64I_FCMPd, key, ftmp);
+       emit_dn(as, A64I_FMOV_D_R, (ftmp & 31), (tmp & 31));
+       emit_cond_branch(as, CC_LO, l_next);
+-- 
+2.21.0
+
+
+From 74a5510fb8910ebaa08d14aaaa66a69ac3f16cf5 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Wed, 7 Aug 2019 21:11:25 +0530
+Subject: [PATCH 10/34] [thread.exdata] Clean up test cases and add +jit
+ wherever applicable
+
+Run JIT tests only on configurations where JIT is on.
+---
+ test/lib/ffi/exdata.lua | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/test/lib/ffi/exdata.lua b/test/lib/ffi/exdata.lua
+index 32a39ebe..e048b740 100644
+--- a/test/lib/ffi/exdata.lua
++++ b/test/lib/ffi/exdata.lua
+@@ -17,11 +17,10 @@ do --- default value: JIT off
+     end
+     saved_q = q
+   end
+-  print(saved_q)
+   assert(saved_q == nil)
+ end
+ 
+-do --- default value: JIT on
++do --- default value: JIT on +jit
+   jit.opt.start("minstitch=100000", "hotloop=2")
+   jit.on()
+   local saved_q
+@@ -32,7 +31,6 @@ do --- default value: JIT on
+     end
+     saved_q = q
+   end
+-  print(saved_q)
+   assert(saved_q == nil)
+ end
+ 
+@@ -49,7 +47,6 @@ do --- sanity: JIT off
+     end
+     saved_q = q
+   end
+-  print(ptr)
+   assert(tostring(ptr) == "cdata<void *>: 0xefdeaddeadbeef")
+   assert(tostring(saved_q) == "cdata<void *>: 0xefdeaddeadbeef")
+ end
+@@ -88,7 +85,7 @@ do --- coroutines: JIT off
+   assert(tostring(exdata()) == "cdata<void *>: 0xefdeadbeed")
+ end
+ 
+-do --- reading: JIT on
++do --- reading: JIT on +jit
+   jit.opt.start("minstitch=100000", "hotloop=2")
+   local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
+   local ptr = ffi.cast("void *", u64)
+@@ -105,7 +102,7 @@ do --- reading: JIT on
+   assert(tostring(saved_q) == "cdata<void *>: 0xefdeaddeadbeef")
+ end
+ 
+-do --- writing: JIT on
++do --- writing: JIT on +jit
+   jit.opt.start("minstitch=100000", "hotloop=2")
+   local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
+   local ptr = ffi.cast("void *", u64)
+@@ -132,7 +129,7 @@ do --- Check number of arguments: JIT off
+   assert(nargs(exdata()) == 1)
+ end
+ 
+-do --- Check number of arguments: JIT on
++do --- Check number of arguments: JIT on +jit
+   jit.opt.start("minstitch=100000", "hotloop=2")
+   local select = select
+   local u64 = ffi.new("uintptr_t", 0xefdeaddeadbeefLL)
+-- 
+2.21.0
+
+
+From da70b450c65d4f3789852d5bf2675d16c2a5de35 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Thu, 8 Aug 2019 14:59:16 +0530
+Subject: [PATCH 11/34] [thread.exdata] Drop 64-bit-isms from test
+
+The test case assumes that the target is 64-bit because of which it
+fails on armv7.  Drop the string comparisons and instead just do
+numerical comparisons to ensure that the overflowed values match on
+32-bit.
+---
+ test/lib/ffi/exdata.lua | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
+
+diff --git a/test/lib/ffi/exdata.lua b/test/lib/ffi/exdata.lua
+index e048b740..0b8dfddc 100644
+--- a/test/lib/ffi/exdata.lua
++++ b/test/lib/ffi/exdata.lua
+@@ -47,8 +47,7 @@ do --- sanity: JIT off
+     end
+     saved_q = q
+   end
+-  assert(tostring(ptr) == "cdata<void *>: 0xefdeaddeadbeef")
+-  assert(tostring(saved_q) == "cdata<void *>: 0xefdeaddeadbeef")
++  assert(ptr == saved_q)
+ end
+ 
+ do --- coroutines: JIT off
+@@ -71,18 +70,18 @@ do --- coroutines: JIT off
+ 
+   local ok, data = coroutine.resume(co)
+   assert(ok)
+-  assert(tostring(data) == "cdata<void *>: 0xefdeadbeef")
++  assert(data == ptr)
+ 
+   ok, data = coroutine.resume(co)
+   assert(ok)
+-  assert(tostring(data) == "cdata<void *>: 0xefdeadbef0")
++  assert(data == ptr2)
+ 
+   exdata(ptr3)
+ 
+   ok, data = coroutine.resume(co)
+   assert(ok)
+-  assert(tostring(data) == "cdata<void *>: 0xefdeadbef0")
+-  assert(tostring(exdata()) == "cdata<void *>: 0xefdeadbeed")
++  assert(data == ptr2)
++  assert(exdata() == ptr3)
+ end
+ 
+ do --- reading: JIT on +jit
+@@ -98,8 +97,7 @@ do --- reading: JIT on +jit
+     end
+     saved_q = q
+   end
+-  assert(tostring(ptr) == "cdata<void *>: 0xefdeaddeadbeef")
+-  assert(tostring(saved_q) == "cdata<void *>: 0xefdeaddeadbeef")
++  assert(ptr == saved_q)
+ end
+ 
+ do --- writing: JIT on +jit
+@@ -115,8 +113,7 @@ do --- writing: JIT on +jit
+     end
+     saved_q = q
+   end
+-  assert(tostring(ptr) == "cdata<void *>: 0xefdeaddeadbeef")
+-  assert(tostring(saved_q) == "cdata<void *>: 0xefdeaddeadbeef")
++  assert(ptr == saved_q)
+ end
+ 
+ do --- Check number of arguments: JIT off
+-- 
+2.21.0
+
+
+From 4121ead645790370a1b5e668ba7249afe9fb92d5 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 14 Aug 2019 14:23:46 +0530
+Subject: [PATCH 12/34] [ppc] Fix access beyond list in ipairs
+
+The load into TMP2 was incorrectly put into ENDIAN_LE, which made the
+subsequent check invalid.
+---
+ src/vm_ppc.dasc | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/src/vm_ppc.dasc b/src/vm_ppc.dasc
+index f0b3498a..d059b8f6 100644
+--- a/src/vm_ppc.dasc
++++ b/src/vm_ppc.dasc
+@@ -1850,9 +1850,7 @@ static void build_subroutines(BuildCtx *ctx)
+   |  ble >2				// Not in array part?
+   |.if FPU
+   |  lfdux f0, TMP1, TMP3
+-  |.if ENDIAN_LE
+   |  lwz TMP2, WORD_HI(TMP1)
+-  |.endif
+   |.else
+   |  lwzux TMP2, TMP1, TMP3
+   |  lwz TMP3, WORD_HI(TMP1)
+-- 
+2.21.0
+
+
+From 1b12bef3aa18701ceadbadad45fca993788979c5 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 14 Aug 2019 14:24:55 +0530
+Subject: [PATCH 13/34] [ppc] Fix typo
+
+---
+ src/vm_ppc.dasc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/vm_ppc.dasc b/src/vm_ppc.dasc
+index d059b8f6..8ea1963a 100644
+--- a/src/vm_ppc.dasc
++++ b/src/vm_ppc.dasc
+@@ -3174,7 +3174,7 @@ static void build_subroutines(BuildCtx *ctx)
+   |
+   |->vm_exit_handler:
+   |.if JIT
+-  |  addi sp, TMP0, sp, -(EXIT_OFFSET+32*8+32*PSIZE)
++  |  addi sp, sp, -(EXIT_OFFSET+32*8+32*PSIZE)
+   |  saver 3 // CARG1
+   |  saver 4 // CARG2
+   |  saver 5 // CARG3
+-- 
+2.21.0
+
+
+From f135accb7e141abddd997023094a835ad91c853e Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 14 Aug 2019 14:49:47 +0530
+Subject: [PATCH 14/34] [ppc]  Load BASEP4 as much as possible
+
+BASEP4 doesn't seem to get initialized all the time, especially when
+BASE is updated because of which programs can crash at random on
+ppc32.  Err on the conservative side and set BASEP4 every time BASE_LO
+(or BASE_HI for LE) are accessed.
+
+This eventually needs to be tuned optimally.
+---
+ src/vm_ppc.dasc | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+
+diff --git a/src/vm_ppc.dasc b/src/vm_ppc.dasc
+index 8ea1963a..9627950d 100644
+--- a/src/vm_ppc.dasc
++++ b/src/vm_ppc.dasc
+@@ -1124,6 +1124,9 @@ static void build_subroutines(BuildCtx *ctx)
+   |.endif
+   |  b ->BC_TGETR_Z
+   |1:
++  |.if ENDIAN_LE
++  |  addi BASEP4, BASE, 4
++  |.endif
+   |  stwx TISNIL, BASE_HI, RA
+   |  b ->cont_nop
+   |
+@@ -3668,6 +3671,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+ 
+   case BC_ISLT: case BC_ISGE: case BC_ISLE: case BC_ISGT:
+     |  // RA = src1*8, RD = src2*8, JMP with RD = target
++    |  addi BASEP4, BASE, 4
+     |.if DUALNUM
+     |  lwzx CARG1, BASE_HI, RA
+     |    addi PC, PC, 4
+@@ -3773,6 +3777,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+   case BC_ISEQV: case BC_ISNEV:
+     vk = op == BC_ISEQV;
+     |  // RA = src1*8, RD = src2*8, JMP with RD = target
++    |  addi BASEP4, BASE, 4
+     |.if DUALNUM
+     |  lwzx CARG1, BASE_HI, RA
+     |    addi PC, PC, 4
+@@ -3890,6 +3895,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+   case BC_ISEQS: case BC_ISNES:
+     vk = op == BC_ISEQS;
+     |  // RA = src*8, RD = str_const*8 (~), JMP with RD = target
++    |  addi BASEP4, BASE, 4
+     |  lwzx TMP0, BASE_HI, RA
+     |   srwi RD, RD, 1
+     |  lwzx STR:TMP3, BASE_LO, RA
+@@ -3923,6 +3929,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+   case BC_ISEQN: case BC_ISNEN:
+     vk = op == BC_ISEQN;
+     |  // RA = src*8, RD = num_const*8, JMP with RD = target
++    |  addi BASEP4, BASE, 4
+     |.if DUALNUM
+     |  lwzx CARG1, BASE_HI, RA
+     |    addi PC, PC, 4
+@@ -4018,6 +4025,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+   case BC_ISEQP: case BC_ISNEP:
+     vk = op == BC_ISEQP;
+     |  // RA = src*8, RD = primitive_type*8 (~), JMP with RD = target
++    |  addi BASEP4, BASE, 4
+     |  lwzx TMP0, BASE_HI, RA
+     |   srwi TMP1, RD, 3
+     |    lwz TMP2, 0(PC)
+@@ -4048,6 +4056,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+ 
+   case BC_ISTC: case BC_ISFC: case BC_IST: case BC_ISF:
+     |  // RA = dst*8 or unused, RD = src*8, JMP with RD = target
++    |  addi BASEP4, BASE, 4
+     |  lwzx TMP0, BASE_HI, RD
+     |   lwz INS, 0(PC)
+     |   addi PC, PC, 4
+@@ -4093,6 +4102,9 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+ 
+   case BC_ISTYPE:
+     |  // RA = src*8, RD = -type*8
++    |.if ENDIAN_LE
++    |  addi BASEP4, BASE, 4
++    |.endif
+     |  lwzx TMP0, BASE_HI, RA
+     |  srwi TMP1, RD, 3
+     |  ins_next1
+@@ -4107,6 +4119,9 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_ISNUM:
+     |  // RA = src*8, RD = -(TISNUM-1)*8
++    |.if ENDIAN_LE
++    |  addi BASEP4, BASE, 4
++    |.endif
+     |  lwzx TMP0, BASE_HI, RA
+     |  ins_next1
+     |  checknum TMP0
+@@ -4132,6 +4147,9 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_NOT:
+     |  // RA = dst*8, RD = src*8
++    |.if ENDIAN_LE
++    |  addi BASEP4, BASE, 4
++    |.endif
+     |  ins_next1
+     |  lwzx TMP0, BASE_HI, RD
+     |  .gpr64 extsw TMP0, TMP0
+@@ -4142,6 +4160,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_UNM:
+     |  // RA = dst*8, RD = src*8
++    |  addi BASEP4, BASE, 4
+     |  lwzx TMP1, BASE_HI, RD
+     |   lwzx TMP0, BASE_LO, RD
+     |.if DUALNUM and not GPR64
+@@ -4184,6 +4203,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_LEN:
+     |  // RA = dst*8, RD = src*8
++    |  addi BASEP4, BASE, 4
+     |  lwzx TMP0, BASE_HI, RD
+     |   lwzx CARG1, BASE_LO, RD
+     |  checkstr TMP0; bne >2
+@@ -4224,6 +4244,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+ 
+     |.macro ins_arithpre
+     |  // RA = dst*8, RB = src1*8, RC = src2*8 | num_const*8
++    |  addi BASEP4, BASE, 4
+     ||vk = ((int)op - BC_ADDVN) / (BC_ADDNV-BC_ADDVN);
+     ||switch (vk) {
+     ||case 0:
+@@ -4371,6 +4392,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     |
+     |.macro ins_arithdn, intins, fpins, fpcall
+     |  // RA = dst*8, RB = src1*8, RC = src2*8 | num_const*8
++    |  addi BASEP4, BASE, 4
+     ||vk = ((int)op - BC_ADDVN) / (BC_ADDNV-BC_ADDVN);
+     ||switch (vk) {
+     ||case 0:
+@@ -4524,6 +4546,9 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_POW:
+     |  // NYI: (partial) integer arithmetic.
++    |.if ENDIAN_LE
++    |  addi BASEP4, BASE, 4
++    |.endif
+     |  lwzx CARG1, BASE_HI, RB
+     |  lwzx CARG3, BASE, RC
+     |.if FPU
+@@ -4583,6 +4608,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+ 
+   case BC_KSTR:
+     |  // RA = dst*8, RD = str_const*8 (~)
++    |  addi BASEP4, BASE, 4
+     |  srwi TMP1, RD, 1
+     |  subfic TMP1, TMP1, -4
+     |  ins_next1
+@@ -4595,6 +4621,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+   case BC_KCDATA:
+     |.if FFI
+     |  // RA = dst*8, RD = cdata_const*8 (~)
++    |  addi BASEP4, BASE, 4
+     |  srwi TMP1, RD, 1
+     |  subfic TMP1, TMP1, -4
+     |  ins_next1
+@@ -4607,6 +4634,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_KSHORT:
+     |  // RA = dst*8, RD = int16_literal*8
++    |  addi BASEP4, BASE, 4
+     |.if DUALNUM
+     |  slwi RD, RD, 13
+     |  srawi RD, RD, 16
+@@ -4652,6 +4680,9 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_KPRI:
+     |  // RA = dst*8, RD = primitive_type*8 (~)
++    |.if ENDIAN_LE
++    |  addi BASEP4, BASE, 4
++    |.endif
+     |  srwi TMP1, RD, 3
+     |  not TMP0, TMP1
+     |  ins_next1
+@@ -4660,6 +4691,9 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_KNIL:
+     |  // RA = base*8, RD = end*8
++    |.if ENDIAN_LE
++    |  addi BASEP4, BASE, 4
++    |.endif
+     |  stwx TISNIL, BASE_HI, RA
+     |   addi RA, RA, 8
+     |1:
+@@ -4900,6 +4934,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+ 
+   case BC_TGETV:
+     |  // RA = dst*8, RB = table*8, RC = key*8
++    |  addi BASEP4, BASE, 4
+     |  lwzx CARG1, BASE_HI, RB
+     |  lwzx CARG2, BASE_HI, RC
+     |   lwzx TAB:RB, BASE_LO, RB
+@@ -4974,6 +5009,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_TGETS:
+     |  // RA = dst*8, RB = table*8, RC = str_const*8 (~)
++    |  addi BASEP4, BASE, 4
+     |  lwzx CARG1, BASE_HI, RB
+     |   srwi TMP1, RC, 1
+     |    lwzx TAB:RB, BASE_LO, RB
+@@ -4983,6 +5019,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     |  bne ->vmeta_tgets1
+     |->BC_TGETS_Z:
+     |  // TAB:RB = GCtab *, STR:RC = GCstr *, RA = dst*8
++    |  addi BASEP4, BASE, 4
+     |  lwz TMP0, TAB:RB->hmask
+     |  lwz TMP1, STR:RC->hash
+     |  lwz NODE:TMP2, TAB:RB->node
+@@ -5022,6 +5059,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_TGETB:
+     |  // RA = dst*8, RB = table*8, RC = index*8
++    |  addi BASEP4, BASE, 4
+     |  lwzx CARG1, BASE_HI, RB
+     |   srwi TMP0, RC, 3
+     |   lwzx TAB:RB, BASE_LO, RB
+@@ -5063,6 +5101,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_TGETR:
+     |  // RA = dst*8, RB = table*8, RC = key*8
++    |  addi BASEP4, BASE, 4
+     |  lwzx TAB:CARG1, BASE_LO, RB
+     |.if DUALNUM
+     |  lwz TMP0, TAB:CARG1->asize
+@@ -5096,6 +5135,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+ 
+   case BC_TSETV:
+     |  // RA = src*8, RB = table*8, RC = key*8
++    |  addi BASEP4, BASE, 4
+     |  lwzx CARG1, BASE_HI, RB
+     |  lwzx CARG2, BASE_HI, RC
+     |   lwzx TAB:RB, BASE_LO, RB
+@@ -5178,6 +5218,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_TSETS:
+     |  // RA = src*8, RB = table*8, RC = str_const*8 (~)
++    |  addi BASEP4, BASE, 4
+     |  lwzx CARG1, BASE_HI, RB
+     |   srwi TMP1, RC, 1
+     |    lwzx TAB:RB, BASE_LO, RB
+@@ -5273,6 +5314,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_TSETB:
+     |  // RA = src*8, RB = table*8, RC = index*8
++    |  addi BASEP4, BASE, 4
+     |  lwzx CARG1, BASE_HI, RB
+     |   srwi TMP0, RC, 3
+     |   lwzx TAB:RB, BASE_LO, RB
+@@ -5323,6 +5365,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     break;
+   case BC_TSETR:
+     |  // RA = dst*8, RB = table*8, RC = key*8
++    |  addi BASEP4, BASE, 4
+     |  lwzx TAB:CARG2, BASE_LO, RB
+     |.if DUALNUM
+     |    lbz TMP3, TAB:CARG2->marked
+@@ -6021,6 +6064,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+       |9:  // FP loop.
+       |.else
+       |.if ENDIAN_LE
++      |  addi BASEP4, BASE, 4
+       |  lwzx TMP1, RA, BASE_LO
+       |  add RA, RA, BASE
+       |.else
+@@ -6218,6 +6262,9 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     }
+     |
+     |3:  // Clear missing parameters.
++    |.if ENDIAN_LE
++    |  addi BASEP4, BASE, 4
++    |.endif
+     |  stwx TISNIL, BASE_HI, NARGS8:RC
+     |  addi NARGS8:RC, NARGS8:RC, 8
+     |  b <2
+-- 
+2.21.0
+
+
+From 4c83e55809602a1051c77198d7e7c3ab6c6b7227 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 14 Aug 2019 15:40:09 +0530
+Subject: [PATCH 15/34] [ppc] Revert LE code for assert
+
+---
+ src/vm_ppc.dasc | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/src/vm_ppc.dasc b/src/vm_ppc.dasc
+index 9627950d..6d8681de 100644
+--- a/src/vm_ppc.dasc
++++ b/src/vm_ppc.dasc
+@@ -1517,22 +1517,11 @@ static void build_subroutines(BuildCtx *ctx)
+   |  bge cr1, ->fff_fallback
+   |   stw CARG3, WORD_HI(RA)
+   |  addi RD, NARGS8:RC, 8		// Compute (nresults+1)*8.
+-  |.if not ENDIAN_LE
+   |  addi TMP1, BASE, 8
+   |  add TMP2, RA, NARGS8:RC
+-  |.endif
+   |   stw CARG1, WORD_LO(RA)
+   |  beq ->fff_res			// Done if exactly 1 argument.
+-  |.if ENDIAN_LE
+-  |  li TMP1, 8
+-  |  subi RC, RC, 8
+-  |.endif
+   |1:
+-  |.if ENDIAN_LE
+-  |  cmplw TMP1, RC
+-  |   lfdx f0, BASE, TMP1
+-  |   stfdx f0, RA, TMP1
+-  |.else
+   |  cmplw TMP1, TMP2
+   |.if FPU
+   |   lfd f0, 0(TMP1)
+@@ -1543,7 +1532,6 @@ static void build_subroutines(BuildCtx *ctx)
+   |   stw CARG1, -8(TMP1)
+   |   stw CARG2, -4(TMP1)
+   |.endif
+-  |.endif
+   |    addi TMP1, TMP1, 8
+   |  bney <1
+   |  b ->fff_res
+-- 
+2.21.0
+
+
+From 84240a602aa7f2cd055e21fbb53e8630503a56b6 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 14 Aug 2019 16:03:38 +0530
+Subject: [PATCH 16/34] [ppc] Fix off by one in assert
+
+It ended up reading the first argument twice.
+---
+ src/vm_ppc.dasc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/vm_ppc.dasc b/src/vm_ppc.dasc
+index 6d8681de..31ed39a5 100644
+--- a/src/vm_ppc.dasc
++++ b/src/vm_ppc.dasc
+@@ -1525,7 +1525,7 @@ static void build_subroutines(BuildCtx *ctx)
+   |  cmplw TMP1, TMP2
+   |.if FPU
+   |   lfd f0, 0(TMP1)
+-  |   stfd f0, 0(TMP1)
++  |   stfd f0, -8(TMP1)
+   |.else
+   |   lwz CARG1, 0(TMP1)
+   |   lwz CARG2, 4(TMP1)
+-- 
+2.21.0
+
+
+From d8a7769ef37435f3c81c19779395eb6adb95037a Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Tue, 27 Aug 2019 23:20:28 +0530
+Subject: [PATCH 17/34] Move all register allocations out of the asm_href loop
+
+Register allocations inline while emitting HREF loop code is hazardous
+because a spill would mean a load or remat generated in the loop body.
+---
+ src/lj_asm_arm64.h | 38 ++++++++++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 16 deletions(-)
+
+diff --git a/src/lj_asm_arm64.h b/src/lj_asm_arm64.h
+index 45661c6f..a8835588 100644
+--- a/src/lj_asm_arm64.h
++++ b/src/lj_asm_arm64.h
+@@ -769,13 +769,29 @@ static void asm_href(ASMState *as, IRIns *ir, IROp merge)
+   uint32_t khash;
+   MCLabel l_end, l_loop, l_next;
+   rset_clear(allow, tab);
+-  Reg tisnum = RID_TMP;
++  Reg tisnum = RID_TMP, scr = RID_NONE, type = RID_NONE, ftmp = RID_NONE;
+ 
+-  /* Allocate register early and clear it from the allowed set since it gets
+-   * used multiple times during the loop.  */
+-  if (irt_isnum(kt) && !isk) {
+-    tisnum = ra_allock(as, LJ_TISNUM << 15, allow);
+-    rset_clear(allow, tisnum);
++  /* Allocate registers before emitting loop code.  Allocating inline will
++   * result in spills and restores getting into the loop body.  */
++  if (irt_isnum(kt)) {
++    if (!isk) {
++      tisnum = ra_allock(as, LJ_TISNUM << 15, allow);
++      rset_clear(allow, tisnum);
++      ftmp = ra_scratch(as, rset_exclude(RSET_FPR, key));
++    }
++  } else if (irt_isaddr(kt)) {
++    if (isk) {
++      int64_t kk = ((int64_t)irt_toitype(irkey->t) << 47) | irkey[1].tv.u64;
++      scr = ra_allock(as, kk, allow);
++    } else {
++      scr = ra_scratch(as, allow);
++    }
++    rset_clear(allow, scr);
++  } else {
++    lua_assert(irt_ispri(kt) && !irt_isnil(kt));
++    type = ra_allock(as, ~((int64_t)~irt_toitype(ir->t) << 47), allow);
++    scr = ra_scratch(as, rset_clear(allow, type));
++    rset_clear(allow, scr);
+   }
+ 
+   if (!isk) {
+@@ -827,7 +843,6 @@ static void asm_href(ASMState *as, IRIns *ir, IROp merge)
+ 	emit_nm(as, A64I_CMPx, key, tmp);
+       emit_lso(as, A64I_LDRx, tmp, dest, offsetof(Node, key.u64));
+     } else {
+-      Reg ftmp = ra_scratch(as, rset_exclude(RSET_FPR, key));
+       emit_nm(as, A64I_FCMPd, key, ftmp);
+       emit_dn(as, A64I_FMOV_D_R, (ftmp & 31), (tmp & 31));
+       emit_cond_branch(as, CC_LO, l_next);
+@@ -835,24 +850,15 @@ static void asm_href(ASMState *as, IRIns *ir, IROp merge)
+       emit_lso(as, A64I_LDRx, tmp, dest, offsetof(Node, key.n));
+     }
+   } else if (irt_isaddr(kt)) {
+-    Reg scr;
+     if (isk) {
+-      int64_t kk = ((int64_t)irt_toitype(irkey->t) << 47) | irkey[1].tv.u64;
+-      scr = ra_allock(as, kk, allow);
+       emit_nm(as, A64I_CMPx, scr, tmp);
+       emit_lso(as, A64I_LDRx, tmp, dest, offsetof(Node, key.u64));
+     } else {
+-      scr = ra_scratch(as, allow);
+       emit_nm(as, A64I_CMPx, tmp, scr);
+       emit_lso(as, A64I_LDRx, scr, dest, offsetof(Node, key.u64));
+     }
+-    rset_clear(allow, scr);
+   } else {
+-    Reg type, scr;
+     lua_assert(irt_ispri(kt) && !irt_isnil(kt));
+-    type = ra_allock(as, ~((int64_t)~irt_toitype(ir->t) << 47), allow);
+-    scr = ra_scratch(as, rset_clear(allow, type));
+-    rset_clear(allow, scr);
+     emit_nm(as, A64I_CMPw, scr, type);
+     emit_lso(as, A64I_LDRx, scr, dest, offsetof(Node, key));
+   }
+-- 
+2.21.0
+
+
+From c31d028cff6a02acbddac573f3a996c113ba2837 Mon Sep 17 00:00:00 2001
+From: Shuxin Yang <shuxinyang2006@gmail.com>
+Date: Mon, 26 Dec 2016 01:32:58 -0800
+Subject: [PATCH 18/34] optimize: lj_str_new: uses randomized hash functions
+ based on crc32 when -msse4.2 is specified.
+
+security wise:
+-------------
+o. crc32 up to 128 bytes, so it is difficult to attach with len <= 128.
+o. for len >= 128, random 128 bytes are crc32-ed, so it is vulnerable.
+
+performance wise:
+-----------------
+o. performance is measured by 'make -C src/x64/test benchmark'
+o. new hash function is realtively computationally cheaper if len < 120
+    and about 1.8x as slow if len >= 120.
+o. for len in [1-3], original hash function has better distribution.
+   need to understand why it is so.
+
+Signed-off-by: Yichun Zhang (agentzh) <yichun@openresty.com>
+---
+ src/lj_str.c                   |  44 ++++--
+ src/x64/Makefile               |  13 ++
+ src/x64/src/lj_str_hash_x64.h  | 266 +++++++++++++++++++++++++++++++
+ src/x64/test/Makefile          |  47 ++++++
+ src/x64/test/benchmark.cxx     | 278 +++++++++++++++++++++++++++++++++
+ src/x64/test/test.cpp          |  73 +++++++++
+ src/x64/test/test_str_comp.lua |  67 ++++++++
+ src/x64/test/test_util.cxx     |  21 +++
+ src/x64/test/test_util.hpp     |  57 +++++++
+ 9 files changed, 856 insertions(+), 10 deletions(-)
+ create mode 100644 src/x64/Makefile
+ create mode 100644 src/x64/src/lj_str_hash_x64.h
+ create mode 100644 src/x64/test/Makefile
+ create mode 100644 src/x64/test/benchmark.cxx
+ create mode 100644 src/x64/test/test.cpp
+ create mode 100644 src/x64/test/test_str_comp.lua
+ create mode 100644 src/x64/test/test_util.cxx
+ create mode 100644 src/x64/test/test_util.hpp
+
+diff --git a/src/lj_str.c b/src/lj_str.c
+index f1b5fb5d..5862f421 100644
+--- a/src/lj_str.c
++++ b/src/lj_str.c
+@@ -118,17 +118,16 @@ void lj_str_resize(lua_State *L, MSize newmask)
+   g->strhash = newhash;
+ }
+ 
+-/* Intern a string and return string object. */
+-GCstr *lj_str_new(lua_State *L, const char *str, size_t lenx)
+-{
+-  global_State *g;
+-  GCstr *s;
+-  GCobj *o;
++#include "x64/src/lj_str_hash_x64.h"
++
++#if defined(LJ_ARCH_STR_HASH)
++#define LJ_STR_HASH LJ_ARCH_STR_HASH
++#else
++static MSize
++lj_str_original_hash(const char *str, size_t lenx) {
+   MSize len = (MSize)lenx;
+   MSize a, b, h = len;
+-  if (lenx >= LJ_MAX_STR)
+-    lj_err_msg(L, LJ_ERR_STROV);
+-  g = G(L);
++
+   /* Compute string hash. Constants taken from lookup3 hash by Bob Jenkins. */
+   if (len >= 4) {  /* Caveat: unaligned access! */
+     a = lj_getu32(str);
+@@ -142,11 +141,36 @@ GCstr *lj_str_new(lua_State *L, const char *str, size_t lenx)
+     b = *(const uint8_t *)(str+(len>>1));
+     h ^= b; h -= lj_rol(b, 14);
+   } else {
+-    return &g->strempty;
++    return 0;
+   }
++
+   a ^= h; a -= lj_rol(h, 11);
+   b ^= a; b -= lj_rol(a, 25);
+   h ^= b; h -= lj_rol(b, 16);
++
++  return h;
++}
++#define LJ_STR_HASH lj_str_original_hash
++#endif
++
++/* Intern a string and return string object. */
++GCstr *lj_str_new(lua_State *L, const char *str, size_t lenx)
++{
++  global_State *g;
++  GCstr *s;
++  GCobj *o;
++  MSize len = (MSize)lenx;
++  MSize h;
++
++  if (lenx >= LJ_MAX_STR)
++    lj_err_msg(L, LJ_ERR_STROV);
++  g = G(L);
++  if (LJ_UNLIKELY(lenx == 0)) {
++    return &g->strempty;
++  }
++
++  h = LJ_STR_HASH(str, lenx);
++
+   /* Check if the string has already been interned. */
+   o = gcref(g->strhash[h & g->strmask]);
+   if (LJ_LIKELY((((uintptr_t)str+len-1) & (LJ_PAGESIZE-1)) <= LJ_PAGESIZE-4)) {
+diff --git a/src/x64/Makefile b/src/x64/Makefile
+new file mode 100644
+index 00000000..27277140
+--- /dev/null
++++ b/src/x64/Makefile
+@@ -0,0 +1,13 @@
++.PHONY: default test benchmark clean
++
++default:
++	@echo "make target include: test bechmark clean"
++
++test:
++	$(MAKE) -C test test
++
++benchmark:
++	$(MAKE) -C test benchmark
++
++clean:
++	$(MAKE) -C test clean
+diff --git a/src/x64/src/lj_str_hash_x64.h b/src/x64/src/lj_str_hash_x64.h
+new file mode 100644
+index 00000000..b783a394
+--- /dev/null
++++ b/src/x64/src/lj_str_hash_x64.h
+@@ -0,0 +1,266 @@
++/*
++ * This file defines string hash function using CRC32. It takes advantage of
++ * Intel hardware support (crc32 instruction, SSE 4.2) to speedup the CRC32
++ * computation. The hash functions try to compute CRC32 of length and up
++ * to 128 bytes of given string.
++ */
++
++#ifndef _LJ_STR_HASH_X64_H_
++#define _LJ_STR_HASH_X64_H_
++
++#if defined(__SSE4_2__) && defined(__x86_64) && defined(__GNUC__)
++
++#include <stdint.h>
++#include <sys/types.h>
++#include <unistd.h>
++#include <time.h>
++#include <smmintrin.h>
++
++#include "../../lj_def.h"
++
++#undef LJ_AINLINE
++#define LJ_AINLINE
++
++static const uint64_t* cast_uint64p(const char* str)
++{
++  return (const uint64_t*)(void*)str;
++}
++
++static const uint32_t* cast_uint32p(const char* str)
++{
++  return (const uint32_t*)(void*)str;
++}
++
++/* hash string with len in [1, 4) */
++static LJ_AINLINE uint32_t lj_str_hash_1_4(const char* str, uint32_t len)
++{
++#if 0
++  /* TODO: The if-1 part (i.e the original algorithm) is working better when
++   * the load-factor is high, as revealed by conflict benchmark (via
++   * 'make benchmark' command); need to understand why it's so.
++   */
++  uint32_t v = str[0];
++  v = (v << 8) | str[len >> 1];
++  v = (v << 8) | str[len - 1];
++  v = (v << 8) | len;
++  return _mm_crc32_u32(0, v);
++#else
++  uint32_t a, b, h = len;
++
++  a = *(const uint8_t *)str;
++  h ^= *(const uint8_t *)(str+len-1);
++  b = *(const uint8_t *)(str+(len>>1));
++  h ^= b; h -= lj_rol(b, 14);
++
++  a ^= h; a -= lj_rol(h, 11);
++  b ^= a; b -= lj_rol(a, 25);
++  h ^= b; h -= lj_rol(b, 16);
++
++  return h;
++#endif
++}
++
++/* hash string with len in [4, 16) */
++static LJ_AINLINE uint32_t lj_str_hash_4_16(const char* str, uint32_t len)
++{
++  uint64_t v1, v2, h;
++
++  if (len >= 8) {
++    v1 = *cast_uint64p(str);
++    v2 = *cast_uint64p(str + len - 8);
++  } else {
++    v1 = *cast_uint32p(str);
++    v2 = *cast_uint32p(str + len - 4);
++  }
++
++  h = _mm_crc32_u32(0, len);
++  h = _mm_crc32_u64(h, v1);
++  h = _mm_crc32_u64(h, v2);
++  return h;
++}
++
++/* hash string with length in [16, 128) */
++static uint32_t lj_str_hash_16_128(const char* str, uint32_t len)
++{
++  uint64_t h1, h2;
++  uint32_t i;
++
++  h1 = _mm_crc32_u32(0, len);
++  h2 = 0;
++
++  for (i = 0; i < len - 16; i += 16) {
++    h1 += _mm_crc32_u64(h1, *cast_uint64p(str + i));
++    h2 += _mm_crc32_u64(h2, *cast_uint64p(str + i + 8));
++  };
++
++  h1 = _mm_crc32_u64(h1, *cast_uint64p(str + len - 16));
++  h2 = _mm_crc32_u64(h2, *cast_uint64p(str + len - 8));
++
++  return _mm_crc32_u32(h1, h2);
++}
++
++/* **************************************************************************
++ *
++ *  Following is code about hashing string with length >= 128
++ *
++ * **************************************************************************
++ */
++static uint32_t random_pos[32][2];
++static const int8_t log2_tab[128] = { -1,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,4,4,
++  4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
++  5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,
++  6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
++  6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6 };
++
++/* return floor(log2(n)) */
++static LJ_AINLINE uint32_t log2_floor(uint32_t n)
++{
++  if (n <= 127) {
++    return log2_tab[n];
++  }
++
++  if ((n >> 8) <= 127) {
++    return log2_tab[n >> 8] + 8;
++  }
++
++  if ((n >> 16) <= 127) {
++    return log2_tab[n >> 16] + 16;
++  }
++
++  if ((n >> 24) <= 127) {
++    return log2_tab[n >> 24] + 24;
++  }
++
++  return 31;
++}
++
++#define POW2_MASK(n) ((1L << (n)) - 1)
++
++/* This function is to populate `random_pos` such that random_pos[i][*]
++ * contains random value in the range of [2**i, 2**(i+1)).
++ */
++static void x64_init_random(void)
++{
++  int i, seed, rml;
++
++  /* Calculate the ceil(log2(RAND_MAX)) */
++  rml = log2_floor(RAND_MAX);
++  if (RAND_MAX & (RAND_MAX - 1)) {
++    rml += 1;
++  }
++
++  /* Init seed */
++  seed = _mm_crc32_u32(0, getpid());
++  seed = _mm_crc32_u32(seed, time(NULL));
++  srandom(seed);
++
++  /* Now start to populate the random_pos[][]. */
++  for (i = 0; i < 3; i++) {
++    /* No need to provide random value for chunk smaller than 8 bytes */
++    random_pos[i][0] = random_pos[i][1] = 0;
++  }
++
++  for (; i < rml; i++) {
++    random_pos[i][0] = random() & POW2_MASK(i+1);
++    random_pos[i][1] = random() & POW2_MASK(i+1);
++  }
++
++  for (; i < 31; i++) {
++    int j;
++    for (j = 0; j < 2; j++) {
++      uint32_t v, scale;
++      scale = random_pos[i - rml][0];
++      if (scale == 0) {
++        scale = 1;
++      }
++      v = (random() * scale) & POW2_MASK(i+1);
++      random_pos[i][j] = v;
++    }
++  }
++}
++#undef POW2_MASK
++
++void __attribute__((constructor)) x64_init_random_constructor()
++{
++    x64_init_random();
++}
++
++/* Return a pre-computed random number in the range of [1**chunk_sz_order,
++ * 1**(chunk_sz_order+1)). It is "unsafe" in the sense that the return value
++ * may be greater than chunk-size; it is up to the caller to make sure
++ * "chunk-base + return-value-of-this-func" has valid virtual address.
++ */
++static LJ_AINLINE uint32_t get_random_pos_unsafe(uint32_t chunk_sz_order,
++                                                 uint32_t idx)
++{
++  uint32_t pos = random_pos[chunk_sz_order][idx & 1];
++  return pos;
++}
++
++static LJ_NOINLINE uint32_t lj_str_hash_128_above(const char* str,
++                                                  uint32_t len)
++{
++  uint32_t chunk_num, chunk_sz, chunk_sz_log2, i, pos1, pos2;
++  uint64_t h1, h2, v;
++  const char* chunk_ptr;
++
++  chunk_num = 16;
++  chunk_sz = len / chunk_num;
++  chunk_sz_log2 = log2_floor(chunk_sz);
++
++  pos1 = get_random_pos_unsafe(chunk_sz_log2, 0);
++  pos2 = get_random_pos_unsafe(chunk_sz_log2, 1);
++
++  h1 = _mm_crc32_u32(0, len);
++  h2 = 0;
++
++  /* loop over 14 chunks, 2 chunks at a time */
++  for (i = 0, chunk_ptr = str; i < (chunk_num / 2 - 1);
++       chunk_ptr += chunk_sz, i++) {
++
++    v = *cast_uint64p(chunk_ptr + pos1);
++    h1 = _mm_crc32_u64(h1, v);
++
++    v = *cast_uint64p(chunk_ptr + chunk_sz + pos2);
++    h2 = _mm_crc32_u64(h2, v);
++  }
++
++  /* the last two chunks */
++  v = *cast_uint64p(chunk_ptr + pos1);
++  h1 = _mm_crc32_u64(h1, v);
++
++  v = *cast_uint64p(chunk_ptr + chunk_sz - 8 - pos2);
++  h2 = _mm_crc32_u64(h2, v);
++
++  /* process the trailing part */
++  h1 = _mm_crc32_u64(h1, *cast_uint64p(str));
++  h2 = _mm_crc32_u64(h2, *cast_uint64p(str + len - 8));
++
++  h1 = _mm_crc32_u32(h1, h2);
++  return h1;
++}
++
++/* NOTE: the "len" should not be zero */
++static LJ_AINLINE uint32_t lj_str_hash(const char* str, size_t len)
++{
++  if (len < 128) {
++    if (len >= 16) { /* [16, 128) */
++      return lj_str_hash_16_128(str, len);
++    }
++
++    if (len >= 4) { /* [4, 16) */
++      return lj_str_hash_4_16(str, len);
++    }
++
++    /* [0, 4) */
++    return lj_str_hash_1_4(str, len);
++  }
++  /* [128, inf) */
++  return lj_str_hash_128_above(str, len);
++}
++
++#define LJ_ARCH_STR_HASH lj_str_hash
++#else
++#undef LJ_ARCH_STR_HASH
++#endif
++#endif /*_LJ_STR_HASH_X64_H_*/
+diff --git a/src/x64/test/Makefile b/src/x64/test/Makefile
+new file mode 100644
+index 00000000..4326ab3d
+--- /dev/null
++++ b/src/x64/test/Makefile
+@@ -0,0 +1,47 @@
++.PHONY: default test benchmark
++
++default: test benchmark
++
++COMMON_OBJ := test_util.o
++
++TEST_PROGRAM := ht_test
++BENCHMARK_PROGRAM := ht_benchmark
++
++TEST_PROGRAM_OBJ := $(COMMON_OBJ) test.o
++BENCHMARK_PROGRAM_OBJ := $(COMMON_OBJ) benchmark.o
++
++ifeq ($(WITH_VALGRIND), 1)
++    VALGRIND := valgrind --leak-check=full
++else
++    VALGRIND :=
++endif
++
++CXXFLAGS := -O3 -MD -g -msse4.2 -Wall -I../src -I../../../src
++
++%.o: %.cxx
++	$(CXX) $(CXXFLAGS) -MD -c $<
++
++test: $(TEST_PROGRAM)
++	@echo "some unit test"
++	$(VALGRIND) ./$(TEST_PROGRAM)
++
++	@echo "smoke test"
++	../../luajit test_str_comp.lua
++
++benchmark: $(BENCHMARK_PROGRAM)
++	# micro benchmark
++	./$(BENCHMARK_PROGRAM)
++
++$(TEST_PROGRAM) : $(TEST_PROGRAM_OBJ)
++	cat $(TEST_PROGRAM_OBJ:.o=.d) > dep1.txt
++	$(CXX) $+ $(CXXFLAGS) -lm -o $@
++
++$(BENCHMARK_PROGRAM): $(BENCHMARK_PROGRAM_OBJ)
++	cat $(BENCHMARK_PROGRAM_OBJ:.o=.d) > dep2.txt
++	$(CXX) $+ $(CXXFLAGS) -o $@
++
++-include dep1.txt
++-include dep2.txt
++
++clean:
++	-rm -f *.o *.d dep*.txt $(BENCHMARK_PROGRAM) $(TEST_PROGRAM)
+diff --git a/src/x64/test/benchmark.cxx b/src/x64/test/benchmark.cxx
+new file mode 100644
+index 00000000..e37edb03
+--- /dev/null
++++ b/src/x64/test/benchmark.cxx
+@@ -0,0 +1,278 @@
++#include <sys/time.h> // for gettimeofday()
++extern "C" {
++#include "lj_str_hash_x64.h"
++}
++#include <string>
++#include <vector>
++#include <utility>
++#include <algorithm>
++#include "test_util.hpp"
++#include <stdio.h>
++#include <math.h>
++
++using namespace std;
++
++#define lj_rol(x, n) (((x)<<(n)) | ((x)>>(-(int)(n)&(8*sizeof(x)-1))))
++#define lj_ror(x, n) (((x)<<(-(int)(n)&(8*sizeof(x)-1))) | ((x)>>(n)))
++
++const char* separator = "-------------------------------------------";
++
++static uint32_t LJ_AINLINE
++lj_original_hash(const char *str, size_t len)
++{
++  uint32_t a, b, h = len;
++  if (len >= 4) {
++    a = lj_getu32(str); h ^= lj_getu32(str+len-4);
++    b = lj_getu32(str+(len>>1)-2);
++    h ^= b; h -= lj_rol(b, 14);
++    b += lj_getu32(str+(len>>2)-1);
++    a ^= h; a -= lj_rol(h, 11);
++    b ^= a; b -= lj_rol(a, 25);
++    h ^= b; h -= lj_rol(b, 16);
++  } else {
++    a = *(const uint8_t *)str;
++    h ^= *(const uint8_t *)(str+len-1);
++    b = *(const uint8_t *)(str+(len>>1));
++    h ^= b; h -= lj_rol(b, 14);
++  }
++
++  a ^= h; a -= lj_rol(h, 11);
++  b ^= a; b -= lj_rol(a, 25);
++  h ^= b; h -= lj_rol(b, 16);
++
++  return h;
++}
++
++template<class T> double
++BenchmarkHashTmpl(T func, char* buf, size_t len)
++{
++  TestClock timer;
++  uint32_t h = 0;
++
++  timer.start();
++  for(int i = 1; i < 1000000 * 100; i++) {
++    // So the buf is not loop invariant, hence the F(...)
++    buf[i % 4096] = i;
++    h += func(buf, len) ^ i;
++  }
++  timer.stop();
++
++  // make h alive
++  test_printf("%x", h);
++  return timer.getElapseInSecond();
++}
++
++struct TestFuncWas
++{
++  uint32_t operator()(const char* buf, uint32_t len) {
++    return lj_original_hash(buf, len);
++  }
++};
++
++struct TestFuncIs
++{
++  uint32_t operator()(const char* buf, uint32_t len) {
++    return lj_str_hash(buf, len);
++  }
++};
++
++static void
++benchmarkIndividual(char* buf)
++{
++  fprintf(stdout,"\n\nCompare performance of particular len (in second)\n");
++  fprintf(stdout, "%-12s%-8s%-8s%s\n", "len", "was", "is", "diff");
++  fprintf(stdout, "-------------------------------------------\n");
++
++  uint32_t lens[] = {3, 4, 7, 10, 15, 16, 20, 32, 36, 63, 80, 100,
++                     120, 127, 280, 290, 400};
++  for (unsigned i = 0; i < sizeof(lens)/sizeof(lens[0]); i++) {
++    uint32_t len = lens[i];
++    double e1 = BenchmarkHashTmpl(TestFuncWas(), buf, len);
++    double e2 = BenchmarkHashTmpl(TestFuncIs(), buf, len);
++    fprintf(stdout, "len = %4d: %-7.3lf %-7.3lf %.2f\n", len, e1, e2, (e1-e2)/e1);
++  }
++}
++
++template<class T> double
++BenchmarkChangeLenTmpl(T func, char* buf, uint32_t* len_vect, uint32_t len_num)
++{
++  TestClock timer;
++  uint32_t h = 0;
++
++  timer.start();
++  for(int i = 1; i < 1000000 * 100; i++) {
++    for (int j = 0; j < (int)len_num; j++) {
++      // So the buf is not loop invariant, hence the F(...)
++      buf[(i + j) % 4096] = i;
++      h += func(buf, len_vect[j]) ^ j;
++    }
++  }
++  timer.stop();
++
++  // make h alive
++  test_printf("%x", h);
++  return timer.getElapseInSecond();
++}
++
++// It is to measure the performance when length is changing.
++// The purpose is to see how balanced branches impact the performance.
++//
++static void
++benchmarkToggleLens(char* buf)
++{
++  double e1, e2;
++  fprintf(stdout,"\nChanging length (in second):");
++  fprintf(stdout, "\n%-20s%-8s%-8s%s\n%s\n", "len", "was", "is", "diff",
++          separator);
++
++  uint32_t lens1[] = {4, 9};
++  e1 = BenchmarkChangeLenTmpl(TestFuncWas(), buf, lens1, 2);
++  e2 = BenchmarkChangeLenTmpl(TestFuncIs(), buf, lens1, 2);
++  fprintf(stdout, "%-20s%-7.3lf %-7.3lf %.2f\n", "4,9", e1, e2, (e1-e2)/e1);
++
++  uint32_t lens2[] = {1, 4, 9};
++  e1 = BenchmarkChangeLenTmpl(TestFuncWas(), buf, lens2, 3);
++  e2 = BenchmarkChangeLenTmpl(TestFuncIs(), buf, lens2, 3);
++  fprintf(stdout, "%-20s%-7.3lf %-7.3lf %.2f\n", "1,4,9", e1, e2, (e1-e2)/e1);
++
++  uint32_t lens3[] = {1, 33, 4, 9};
++  e1 = BenchmarkChangeLenTmpl(TestFuncWas(), buf, lens3, 4);
++  e2 = BenchmarkChangeLenTmpl(TestFuncIs(), buf, lens3, 4);
++  fprintf(stdout, "%-20s%-7.3lf %-7.3lf %.2f\n", "1,33,4,9",
++          e1, e2, (e1-e2)/e1);
++}
++
++static void
++genRandomString(uint32_t min, uint32_t max,
++                uint32_t num, vector<string>& result)
++{
++  double scale = (max - min) / (RAND_MAX + 1.0);
++  result.clear();
++  result.reserve(num);
++  for (uint32_t i = 0; i < num; i++) {
++    uint32_t len = (rand() * scale) + min;
++
++    char* buf = new char[len];
++    for (uint32_t l = 0; l < len; l++) {
++      buf[l] = rand() % 255;
++    }
++    result.push_back(string(buf, len));
++    delete[] buf;
++  }
++}
++
++// Return the standard deviation of given array of number
++static double
++standarDeviation(const vector<uint32_t>& v)
++{
++  uint64_t total = 0;
++  for (vector<uint32_t>::const_iterator i = v.begin(), e = v.end();
++      i != e; ++i) {
++    total += *i;
++  }
++
++  double avg = total / (double)v.size();
++  double sd = 0;
++
++  for (vector<uint32_t>::const_iterator i = v.begin(), e = v.end();
++       i != e; ++i) {
++    double t = avg - *i;
++    sd = sd + t*t;
++  }
++
++  return sqrt(sd/v.size());
++}
++
++static pair<double, double>
++benchmarkConflictHelper(uint32_t bucketNum, const vector<string>& strs)
++{
++  if (bucketNum & (bucketNum - 1)) {
++    bucketNum = (1L << (log2_floor(bucketNum) + 1));
++  }
++  uint32_t mask = bucketNum - 1;
++
++  vector<uint32_t> conflictWas(bucketNum);
++  vector<uint32_t> conflictIs(bucketNum);
++
++  conflictWas.resize(bucketNum);
++  conflictIs.resize(bucketNum);
++
++  for (vector<string>::const_iterator i = strs.begin(), e = strs.end();
++       i != e; ++i) {
++    uint32_t h1 = lj_original_hash(i->c_str(), i->size());
++    uint32_t h2 = lj_str_hash(i->c_str(), i->size());
++
++    conflictWas[h1 & mask]++;
++    conflictIs[h2 & mask]++;
++  }
++
++#if 0
++  std::sort(conflictWas.begin(), conflictWas.end(), std::greater<int>());
++  std::sort(conflictIs.begin(), conflictIs.end(), std::greater<int>());
++
++  fprintf(stderr, "%d %d %d %d vs %d %d %d %d\n",
++          conflictWas[0], conflictWas[1], conflictWas[2], conflictWas[3],
++          conflictIs[0], conflictIs[1], conflictIs[2], conflictIs[3]);
++#endif
++
++  return pair<double, double>(standarDeviation(conflictWas),
++                              standarDeviation(conflictIs));
++}
++
++static void
++benchmarkConflict()
++{
++  srand(time(0));
++
++  float loadFactor[] = { 0.5f, 1.0f, 2.0f, 4.0f, 8.0f };
++  int bucketNum[] = { 512, 1024, 2048, 4096, 8192, 16384};
++  int lenRange[][2] = { {1,3}, {4, 15}, {16, 127}, {128, 1024}, {1, 1024}};
++
++  fprintf(stdout,
++          "\nBechmarking conflict (stand deviation of conflict)\n%s\n",
++          separator);
++
++  for (uint32_t k = 0; k < sizeof(lenRange)/sizeof(lenRange[0]); k++) {
++    fprintf(stdout, "\nlen range from %d - %d\n", lenRange[k][0],
++            lenRange[k][1]);
++    fprintf(stdout, "%-10s %-12s %-10s %-10s diff\n%s\n",
++            "bucket", "load-factor", "was", "is", separator);
++    for (uint32_t i = 0; i < sizeof(bucketNum)/sizeof(bucketNum[0]); ++i) {
++      for (uint32_t j = 0;
++           j < sizeof(loadFactor)/sizeof(loadFactor[0]);
++           ++j) {
++        int strNum = bucketNum[i] * loadFactor[j];
++        vector<string> strs(strNum);
++        genRandomString(lenRange[k][0], lenRange[k][1], strNum, strs);
++
++        pair<double, double> p;
++        p = benchmarkConflictHelper(bucketNum[i], strs);
++        fprintf(stdout, "%-10d %-12.2f %-10.2f %-10.2f %.2f\n",
++                bucketNum[i], loadFactor[j], p.first, p.second,
++                p.first - p.second);
++      }
++    }
++  }
++}
++
++static void
++benchmarkHashFunc()
++{
++  char buf[4096];
++  char c = getpid() % 'a';
++  for (int i = 0; i < (int)sizeof(buf); i++) {
++    buf[i] = (c + i) % 255;
++  }
++
++  benchmarkConflict();
++  benchmarkIndividual(buf);
++  benchmarkToggleLens(buf);
++}
++
++int
++main(int argc, char** argv)
++{
++  fprintf(stdout, "========================\nMicro benchmark...\n");
++  benchmarkHashFunc();
++  return 0;
++}
+diff --git a/src/x64/test/test.cpp b/src/x64/test/test.cpp
+new file mode 100644
+index 00000000..bc92acbb
+--- /dev/null
++++ b/src/x64/test/test.cpp
+@@ -0,0 +1,73 @@
++#include <stdint.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <map>
++#include "test_util.hpp"
++#include "lj_str_hash_x64.h"
++
++using namespace std;
++
++static bool
++smoke_test()
++{
++  fprintf(stdout, "running smoke tests...\n");
++	char buf[1024];
++  char c = getpid() % 'a';
++
++  for (int i = 0; i < (int)sizeof(buf); i++) {
++    buf[i] = (c + i) % 255;
++  }
++
++  uint32_t lens[] = {3, 4, 5, 7, 8, 16, 17, 24, 25, 32, 33, 127, 128,
++                     255, 256, 257};
++  for (unsigned i = 0; i < sizeof(lens)/sizeof(lens[0]); i++) {
++    string s(buf, lens[i]);
++    test_printf("%d", lj_str_hash(s.c_str(), lens[i]));
++  }
++
++  return true;
++}
++
++static bool
++verify_log2()
++{
++  fprintf(stdout, "verify log2...\n");
++  bool err = false;
++  std::map<uint32_t, uint32_t> lm;
++  lm[0] =(uint32_t)-1;
++  lm[1] = 0;
++  lm[2] = 1;
++  for (int i = 2; i < 31; i++) {
++    lm[(1<<i) - 2] = i - 1;
++    lm[(1<<i) - 1] = i - 1;
++    lm[1<<i] = i;
++    lm[(1<<i) + 1] = i;
++  }
++  lm[(uint32_t)-1] = 31;
++
++  for (map<uint32_t, uint32_t>::iterator iter = lm.begin(), iter_e = lm.end();
++       iter != iter_e; ++iter) {
++    uint32_t v = (*iter).first;
++    uint32_t log2_expect = (*iter).second;
++    uint32_t log2_get = log2_floor(v);
++    if (log2_expect != log2_get) {
++      err = true;
++      fprintf(stderr, "log2(%u) expect %u, get %u\n", v, log2_expect, log2_get);
++      exit(1);
++    }
++  }
++  return !err;
++}
++
++int
++main(int argc, char** argv)
++{
++  fprintf(stdout, "=======================\nRun unit testing...\n");
++
++  ASSERT(smoke_test(), "smoke_test test failed");
++  ASSERT(verify_log2(), "log2 failed");
++
++  fprintf(stdout, TestErrMsgMgr::noError() ? "succ\n\n" : "fail\n\n");
++
++  return TestErrMsgMgr::noError() ? 0 : -1;
++}
+diff --git a/src/x64/test/test_str_comp.lua b/src/x64/test/test_str_comp.lua
+new file mode 100644
+index 00000000..3a5c3e67
+--- /dev/null
++++ b/src/x64/test/test_str_comp.lua
+@@ -0,0 +1,67 @@
++--[[
++ Given two content-idental string s1, s2, test if they end up to be the
++ same string object. The purpose of this test is to make sure hash function
++ do not accidently include extraneous bytes before and after the string in
++ question.
++]]
++
++local ffi = require("ffi")
++local C = ffi.C
++
++ffi.cdef[[
++    void free(void*);
++    char* malloc(size_t);
++    void *memset(void*, int, size_t);
++    void *memcpy(void*, void*, size_t);
++    long time(void*);
++    void srandom(unsigned);
++    long random(void);
++]]
++
++
++local function test_equal(len_min, len_max)
++    -- source string is wrapped by 16-byte-junk both before and after the
++    -- string
++    local x = C.random()
++    local l = len_min + x % (len_max - len_min);
++    local buf_len = tonumber(l + 16 * 2)
++
++    local src_buf = C.malloc(buf_len)
++    for i = 0, buf_len - 1 do
++        src_buf[i] = C.random() % 255
++    end
++
++    -- dest string is the clone of the source string, but it is sandwiched
++    -- by different junk bytes
++    local dest_buf = C.malloc(buf_len)
++    C.memset(dest_buf, 0x5a, buf_len)
++
++    local ofst = 8 + (C.random() % 8)
++    C.memcpy(dest_buf + ofst, src_buf + 16, l);
++
++    local str1 = ffi.string(src_buf + 16, l)
++    local str2 = ffi.string(dest_buf + ofst, l)
++
++    C.free(src_buf)
++    C.free(dest_buf)
++
++    if str1 ~= str2 then
++        -- Oops, look like hash function mistakenly include extraneous bytes
++        -- close to the string
++        return 1 -- wtf
++    end
++end
++
++--local lens = {1, 4, 16, 128, 1024}
++local lens = {128, 1024}
++local iter = 1000
++
++for i = 1, #lens - 1 do
++    for j = 1, iter do
++        if test_equal(lens[i], lens[i+1]) ~= nil then
++            os.exit(1)
++        end
++    end
++end
++
++os.exit(0)
+diff --git a/src/x64/test/test_util.cxx b/src/x64/test/test_util.cxx
+new file mode 100644
+index 00000000..34b7d675
+--- /dev/null
++++ b/src/x64/test/test_util.cxx
+@@ -0,0 +1,21 @@
++#include <stdarg.h>
++#include <stdio.h>
++#include "test_util.hpp"
++
++using namespace std;
++
++std::vector<TestErrMsg> TestErrMsgMgr::_errMsg;
++
++void
++test_printf(const char* format, ...)
++{
++  va_list args;
++  va_start (args, format);
++
++  FILE* devNull = fopen("/dev/null", "w");
++  if (devNull != 0) {
++    (void)vfprintf (devNull, format, args);
++  }
++  fclose(devNull);
++  va_end (args);
++}
+diff --git a/src/x64/test/test_util.hpp b/src/x64/test/test_util.hpp
+new file mode 100644
+index 00000000..6cc2ea2c
+--- /dev/null
++++ b/src/x64/test/test_util.hpp
+@@ -0,0 +1,57 @@
++#ifndef _TEST_UTIL_HPP_
++#define _TEST_UTIL_HPP_
++
++#include <sys/time.h> // gettimeofday()
++#include <string>
++#include <vector>
++
++struct TestErrMsg
++{
++  const char* fileName;
++  unsigned lineNo;
++  std::string errMsg;
++
++  TestErrMsg(const char* FN, unsigned LN, const char* Err):
++             fileName(FN), lineNo(LN), errMsg(Err) {}
++};
++
++class TestErrMsgMgr
++{
++public:
++  static std::vector<TestErrMsg> getError();
++  static void
++  addError(const char* fileName, unsigned lineNo, const char* Err) {
++    _errMsg.push_back(TestErrMsg(fileName, lineNo, Err));
++  }
++
++  static bool noError() {
++    return _errMsg.empty();
++  }
++
++private:
++  static std::vector<TestErrMsg> _errMsg;
++};
++
++#define ASSERT(c, e) \
++  if (!(c)) { TestErrMsgMgr::addError(__FILE__, __LINE__, (e)); }
++
++class TestClock
++{
++public:
++  void start() { gettimeofday(&_start, 0); }
++  void stop() { gettimeofday(&_end, 0); }
++  double getElapseInSecond() {
++    return (_end.tv_sec - _start.tv_sec)
++            + ((long)_end.tv_usec - (long)_start.tv_usec) / 1000000.0;
++  }
++
++private:
++  struct timeval _start, _end;
++};
++
++// write to /dev/null, the only purpose is to make the data fed to the
++// function alive.
++extern void test_printf(const char* format, ...)
++  __attribute__ ((format (printf, 1, 2)));
++
++#endif //_TEST_UTIL_HPP_
+-- 
+2.21.0
+
+
+From d9f1f081339ca387206a6b4f786f52c3a4227b95 Mon Sep 17 00:00:00 2001
+From: "Yichun Zhang (agentzh)" <agentzh@gmail.com>
+Date: Thu, 19 Apr 2018 23:42:33 -0700
+Subject: [PATCH 19/34] bugfix: fixed compatibility regression with MinGW gcc.
+ this bug had appeared in commit 7923c63.
+
+---
+ src/x64/src/lj_str_hash_x64.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/x64/src/lj_str_hash_x64.h b/src/x64/src/lj_str_hash_x64.h
+index b783a394..063f631c 100644
+--- a/src/x64/src/lj_str_hash_x64.h
++++ b/src/x64/src/lj_str_hash_x64.h
+@@ -21,6 +21,11 @@
+ #undef LJ_AINLINE
+ #define LJ_AINLINE
+ 
++#ifdef __MINGW32__
++#define random()  ((long) rand())
++#define srandom(seed)  srand(seed)
++#endif
++
+ static const uint64_t* cast_uint64p(const char* str)
+ {
+   return (const uint64_t*)(void*)str;
+-- 
+2.21.0
+
+
+From cd6f7e61915ddc365a0416de5916eb1ebc7962e3 Mon Sep 17 00:00:00 2001
+From: Shuxin Yang <shuxinyang2006@gmail.com>
+Date: Mon, 10 Jul 2017 19:11:50 -0700
+Subject: [PATCH 20/34] bugfix: FFI C parsers could not parse some C constructs
+ like `__attribute((aligned(N)))` and `#pragma`.
+
+Decoupled hash functions used in comparison (hardcoded) and string table.
+
+This bug had first appeared in v2.1-20170405 (or OpenResty 1.11.2.3).
+
+Signed-off-by: Yichun Zhang (agentzh) <agentzh@gmail.com>
+---
+ src/lib_ffi.c                                 |  2 +-
+ src/lj_cparse.c                               | 14 ++++++------
+ src/lj_str.c                                  | 16 +++++++++-----
+ src/lj_str.h                                  |  2 ++
+ src/x64/test/Makefile                         |  1 +
+ src/x64/test/unit/ffi/test_abi.lua            | 10 +++++++++
+ src/x64/test/unit/ffi/test_line_directive.lua | 15 +++++++++++++
+ .../unit/ffi/test_pragma_pack_pushpop.lua     | 12 ++++++++++
+ src/x64/test/unit/ffi/test_var_attribute.lua  | 22 +++++++++++++++++++
+ src/x64/test/unit_test.sh                     | 22 +++++++++++++++++++
+ 10 files changed, 103 insertions(+), 13 deletions(-)
+ create mode 100644 src/x64/test/unit/ffi/test_abi.lua
+ create mode 100644 src/x64/test/unit/ffi/test_line_directive.lua
+ create mode 100644 src/x64/test/unit/ffi/test_pragma_pack_pushpop.lua
+ create mode 100644 src/x64/test/unit/ffi/test_var_attribute.lua
+ create mode 100644 src/x64/test/unit_test.sh
+
+diff --git a/src/lib_ffi.c b/src/lib_ffi.c
+index 8032411e..bddecd8a 100644
+--- a/src/lib_ffi.c
++++ b/src/lib_ffi.c
+@@ -727,7 +727,7 @@ LJLIB_CF(ffi_abi)	LJLIB_REC(.)
+ {
+   GCstr *s = lj_lib_checkstr(L, 1);
+   int b = 0;
+-  switch (s->hash) {
++  switch (lj_str_indep_hash(s)) {
+ #if LJ_64
+   case H_(849858eb,ad35fd06): b = 1; break;  /* 64bit */
+ #else
+diff --git a/src/lj_cparse.c b/src/lj_cparse.c
+index 19f632ff..0724d4a6 100644
+--- a/src/lj_cparse.c
++++ b/src/lj_cparse.c
+@@ -1069,7 +1069,7 @@ static void cp_decl_gccattribute(CPState *cp, CPDecl *decl)
+     if (cp->tok == CTOK_IDENT) {
+       GCstr *attrstr = cp->str;
+       cp_next(cp);
+-      switch (attrstr->hash) {
++      switch (lj_str_indep_hash(attrstr)) {
+       case H_(64a9208e,8ce14319): case H_(8e6331b2,95a282af):  /* aligned */
+ 	cp_decl_align(cp, decl);
+ 	break;
+@@ -1138,7 +1138,7 @@ static void cp_decl_msvcattribute(CPState *cp, CPDecl *decl)
+   while (cp->tok == CTOK_IDENT) {
+     GCstr *attrstr = cp->str;
+     cp_next(cp);
+-    switch (attrstr->hash) {
++    switch (lj_str_indep_hash(attrstr)) {
+     case H_(bc2395fa,98f267f8):  /* align */
+       cp_decl_align(cp, decl);
+       break;
+@@ -1728,16 +1728,16 @@ static void cp_pragma(CPState *cp, BCLine pragmaline)
+ {
+   cp_next(cp);
+   if (cp->tok == CTOK_IDENT &&
+-      cp->str->hash == H_(e79b999f,42ca3e85))  {  /* pack */
++      (lj_str_indep_hash(cp->str)) == H_(e79b999f,42ca3e85))  {  /* pack */
+     cp_next(cp);
+     cp_check(cp, '(');
+     if (cp->tok == CTOK_IDENT) {
+-      if (cp->str->hash == H_(738e923c,a1b65954)) {  /* push */
++      if (lj_str_indep_hash(cp->str) == H_(738e923c,a1b65954)) {  /* push */
+ 	if (cp->curpack < CPARSE_MAX_PACKSTACK) {
+ 	  cp->packstack[cp->curpack+1] = cp->packstack[cp->curpack];
+ 	  cp->curpack++;
+ 	}
+-      } else if (cp->str->hash == H_(6c71cf27,6c71cf27)) {  /* pop */
++      } else if (lj_str_indep_hash(cp->str) == H_(6c71cf27,6c71cf27)) {  /* pop */
+ 	if (cp->curpack > 0) cp->curpack--;
+       } else {
+ 	cp_errmsg(cp, cp->tok, LJ_ERR_XSYMBOL);
+@@ -1787,12 +1787,12 @@ static void cp_decl_multi(CPState *cp)
+ 	cp_line(cp, hashline);
+ 	continue;
+       } else if (tok == CTOK_IDENT &&
+-		 cp->str->hash == H_(187aab88,fcb60b42)) { /* line */
++		 lj_str_indep_hash(cp->str) == H_(187aab88,fcb60b42)) { /* line */
+ 	if (cp_next(cp) != CTOK_INTEGER) cp_err_token(cp, tok);
+ 	cp_line(cp, hashline);
+ 	continue;
+       } else if (tok == CTOK_IDENT &&
+-	  cp->str->hash == H_(f5e6b4f8,1d509107)) { /* pragma */
++	  lj_str_indep_hash(cp->str) == H_(f5e6b4f8,1d509107)) { /* pragma */
+ 	cp_pragma(cp, hashline);
+ 	continue;
+       } else {
+diff --git a/src/lj_str.c b/src/lj_str.c
+index 5862f421..fd2420c9 100644
+--- a/src/lj_str.c
++++ b/src/lj_str.c
+@@ -118,11 +118,6 @@ void lj_str_resize(lua_State *L, MSize newmask)
+   g->strhash = newhash;
+ }
+ 
+-#include "x64/src/lj_str_hash_x64.h"
+-
+-#if defined(LJ_ARCH_STR_HASH)
+-#define LJ_STR_HASH LJ_ARCH_STR_HASH
+-#else
+ static MSize
+ lj_str_original_hash(const char *str, size_t lenx) {
+   MSize len = (MSize)lenx;
+@@ -150,6 +145,17 @@ lj_str_original_hash(const char *str, size_t lenx) {
+ 
+   return h;
+ }
++
++MSize
++lj_str_indep_hash(GCstr *str) {
++  return lj_str_original_hash(strdata(str), str->len);
++}
++
++#include "x64/src/lj_str_hash_x64.h"
++
++#if defined(LJ_ARCH_STR_HASH)
++#define LJ_STR_HASH LJ_ARCH_STR_HASH
++#else
+ #define LJ_STR_HASH lj_str_original_hash
+ #endif
+ 
+diff --git a/src/lj_str.h b/src/lj_str.h
+index 85c1e405..0e21432e 100644
+--- a/src/lj_str.h
++++ b/src/lj_str.h
+@@ -24,4 +24,6 @@ LJ_FUNC void LJ_FASTCALL lj_str_free(global_State *g, GCstr *s);
+ #define lj_str_newz(L, s)	(lj_str_new(L, s, strlen(s)))
+ #define lj_str_newlit(L, s)	(lj_str_new(L, "" s, sizeof(s)-1))
+ 
++MSize lj_str_indep_hash(GCstr *str);
++
+ #endif
+diff --git a/src/x64/test/Makefile b/src/x64/test/Makefile
+index 4326ab3d..3ec44eae 100644
+--- a/src/x64/test/Makefile
++++ b/src/x64/test/Makefile
+@@ -24,6 +24,7 @@ CXXFLAGS := -O3 -MD -g -msse4.2 -Wall -I../src -I../../../src
+ test: $(TEST_PROGRAM)
+ 	@echo "some unit test"
+ 	$(VALGRIND) ./$(TEST_PROGRAM)
++	./unit_test.sh
+ 
+ 	@echo "smoke test"
+ 	../../luajit test_str_comp.lua
+diff --git a/src/x64/test/unit/ffi/test_abi.lua b/src/x64/test/unit/ffi/test_abi.lua
+new file mode 100644
+index 00000000..9fafcf55
+--- /dev/null
++++ b/src/x64/test/unit/ffi/test_abi.lua
+@@ -0,0 +1,10 @@
++local ffi = require "ffi"
++
++-- TODO: test "gc64" and "win" parameters
++assert((ffi.abi("32bit") or ffi.abi("64bit"))
++        and ffi.abi("le")
++        and not ffi.abi("be")
++        and ffi.abi("fpu")
++        and not ffi.abi("softfp")
++        and ffi.abi("hardfp")
++        and not ffi.abi("eabi"))
+diff --git a/src/x64/test/unit/ffi/test_line_directive.lua b/src/x64/test/unit/ffi/test_line_directive.lua
+new file mode 100644
+index 00000000..a8b0403c
+--- /dev/null
++++ b/src/x64/test/unit/ffi/test_line_directive.lua
+@@ -0,0 +1,15 @@
++local x = [=[
++local ffi = require "ffi"
++
++ffi.cdef [[
++    #line 100
++    typedef Int xxx
++]]
++]=]
++
++local function foo()
++    loadstring(x)()
++end
++
++local r, e = pcall(foo)
++assert(string.find(e, "declaration specifier expected near 'Int' at line 100") ~= nil)
+diff --git a/src/x64/test/unit/ffi/test_pragma_pack_pushpop.lua b/src/x64/test/unit/ffi/test_pragma_pack_pushpop.lua
+new file mode 100644
+index 00000000..5f1bdd30
+--- /dev/null
++++ b/src/x64/test/unit/ffi/test_pragma_pack_pushpop.lua
+@@ -0,0 +1,12 @@
++local ffi = require "ffi"
++
++ffi.cdef[[
++#pragma pack(push, 1)
++typedef struct {
++    char x;
++    double y;
++} foo;
++#pragma pack(pop)
++]]
++
++assert(ffi.sizeof("foo") == 9)
+diff --git a/src/x64/test/unit/ffi/test_var_attribute.lua b/src/x64/test/unit/ffi/test_var_attribute.lua
+new file mode 100644
+index 00000000..11252bba
+--- /dev/null
++++ b/src/x64/test/unit/ffi/test_var_attribute.lua
+@@ -0,0 +1,22 @@
++local ffi = require "ffi"
++
++ffi.cdef[[
++typedef struct { int a; char b; } __attribute__((packed)) myty1;
++typedef struct { int a; char b; } __attribute__((__packed__)) myty1_a;
++
++typedef struct { int a; char b; } __attribute__((aligned(16))) myty2_a;
++typedef struct { int a; char b; } __attribute__((__aligned__(16))) myty2;
++
++typedef int __attribute__ ((vector_size (32))) myty3;
++typedef int __attribute__ ((__vector_size__ (32))) myty3_a;
++
++typedef int __attribute__ ((mode(DI))) myty4;
++]]
++
++assert(ffi.sizeof("myty1") == 5 and
++       ffi.sizeof("myty1_a") == 5 and
++       ffi.alignof("myty2") == 16 and
++       ffi.alignof("myty2_a") == 16 and
++       ffi.sizeof("myty3") == 32 and
++       ffi.sizeof("myty3_a") == 32 and
++       ffi.sizeof("myty4") == 8)
+diff --git a/src/x64/test/unit_test.sh b/src/x64/test/unit_test.sh
+new file mode 100644
+index 00000000..c6633ca2
+--- /dev/null
++++ b/src/x64/test/unit_test.sh
+@@ -0,0 +1,22 @@
++#!/bin/sh
++DIR=$(cd $(dirname $0); pwd)
++cd $DIR
++
++LUAJIT=$DIR/../../luajit
++HASERR=0
++
++find $DIR/unit -name "*.lua" -print | while read x; do
++    $LUAJIT $x >/dev/null 2>/dev/null
++    if [ $? -eq 0 ]; then
++        echo "$x ok"
++    else
++        HASERR=1
++        echo "$x failed"
++    fi
++done
++
++if [ $HASERR -eq 0 ]; then
++    exit 0
++fi
++
++exit 1
+-- 
+2.21.0
+
+
+From 37df5975eeb9862d3b950b6e4fa7405316b2bbd1 Mon Sep 17 00:00:00 2001
+From: "Yichun Zhang (agentzh)" <yichun@openresty.com>
+Date: Sun, 7 Apr 2019 10:34:06 -0700
+Subject: [PATCH 21/34] style: minor coding style fixes.
+
+This is a followup fix for commit 2d3392771.
+---
+ src/lj_str.c                  | 7 ++++---
+ src/x64/src/lj_str_hash_x64.h | 2 +-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/src/lj_str.c b/src/lj_str.c
+index fd2420c9..842394c5 100644
+--- a/src/lj_str.c
++++ b/src/lj_str.c
+@@ -119,7 +119,8 @@ void lj_str_resize(lua_State *L, MSize newmask)
+ }
+ 
+ static MSize
+-lj_str_original_hash(const char *str, size_t lenx) {
++lj_str_original_hash(const char *str, size_t lenx)
++{
+   MSize len = (MSize)lenx;
+   MSize a, b, h = len;
+ 
+@@ -147,7 +148,8 @@ lj_str_original_hash(const char *str, size_t lenx) {
+ }
+ 
+ MSize
+-lj_str_indep_hash(GCstr *str) {
++lj_str_indep_hash(GCstr *str)
++{
+   return lj_str_original_hash(strdata(str), str->len);
+ }
+ 
+@@ -224,4 +226,3 @@ void LJ_FASTCALL lj_str_free(global_State *g, GCstr *s)
+   g->strnum--;
+   lj_mem_free(g, s, sizestring(s));
+ }
+-
+diff --git a/src/x64/src/lj_str_hash_x64.h b/src/x64/src/lj_str_hash_x64.h
+index 063f631c..cf37a2d2 100644
+--- a/src/x64/src/lj_str_hash_x64.h
++++ b/src/x64/src/lj_str_hash_x64.h
+@@ -203,7 +203,7 @@ static LJ_AINLINE uint32_t get_random_pos_unsafe(uint32_t chunk_sz_order,
+ }
+ 
+ static LJ_NOINLINE uint32_t lj_str_hash_128_above(const char* str,
+-                                                  uint32_t len)
++    uint32_t len)
+ {
+   uint32_t chunk_num, chunk_sz, chunk_sz_log2, i, pos1, pos2;
+   uint64_t h1, h2, v;
+-- 
+2.21.0
+
+
+From 465ae4fcca3b3d598f412cdd13060b6403b20de0 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 4 Sep 2019 16:01:40 +0530
+Subject: [PATCH 22/34] x86: Move lj_str_hash to the main code
+
+lj_str_hash can be written in an architecture independent manner so
+move it out from the x64 directory and add some convenience macros and
+assignments to make it easier to port.
+---
+ src/Makefile                                  |  2 +-
+ src/lj_str.c                                  | 41 +--------
+ src/lj_str.h                                  |  6 ++
+ .../src/lj_str_hash_x64.h => lj_str_hash.c}   | 88 ++++++++++++-------
+ 4 files changed, 67 insertions(+), 70 deletions(-)
+ rename src/{x64/src/lj_str_hash_x64.h => lj_str_hash.c} (76%)
+
+diff --git a/src/Makefile b/src/Makefile
+index 6764d32f..b22e325c 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -509,7 +509,7 @@ LJCORE_O= lj_gc.o lj_err.o lj_char.o lj_bc.o lj_obj.o lj_buf.o \
+ 	  lj_ctype.o lj_cdata.o lj_cconv.o lj_ccall.o lj_ccallback.o \
+ 	  lj_carith.o lj_clib.o lj_cparse.o \
+ 	  lj_lib.o lj_alloc.o lib_aux.o \
+-	  $(LJLIB_O) lib_init.o
++	  $(LJLIB_O) lib_init.o lj_str_hash.o
+ 
+ LJVMCORE_O= $(LJVM_O) $(LJCORE_O)
+ LJVMCORE_DYNO= $(LJVMCORE_O:.o=_dyn.o)
+diff --git a/src/lj_str.c b/src/lj_str.c
+index 842394c5..d13477cd 100644
+--- a/src/lj_str.c
++++ b/src/lj_str.c
+@@ -118,49 +118,12 @@ void lj_str_resize(lua_State *L, MSize newmask)
+   g->strhash = newhash;
+ }
+ 
+-static MSize
+-lj_str_original_hash(const char *str, size_t lenx)
+-{
+-  MSize len = (MSize)lenx;
+-  MSize a, b, h = len;
+-
+-  /* Compute string hash. Constants taken from lookup3 hash by Bob Jenkins. */
+-  if (len >= 4) {  /* Caveat: unaligned access! */
+-    a = lj_getu32(str);
+-    h ^= lj_getu32(str+len-4);
+-    b = lj_getu32(str+(len>>1)-2);
+-    h ^= b; h -= lj_rol(b, 14);
+-    b += lj_getu32(str+(len>>2)-1);
+-  } else if (len > 0) {
+-    a = *(const uint8_t *)str;
+-    h ^= *(const uint8_t *)(str+len-1);
+-    b = *(const uint8_t *)(str+(len>>1));
+-    h ^= b; h -= lj_rol(b, 14);
+-  } else {
+-    return 0;
+-  }
+-
+-  a ^= h; a -= lj_rol(h, 11);
+-  b ^= a; b -= lj_rol(a, 25);
+-  h ^= b; h -= lj_rol(b, 16);
+-
+-  return h;
+-}
+-
+ MSize
+ lj_str_indep_hash(GCstr *str)
+ {
+-  return lj_str_original_hash(strdata(str), str->len);
++  return lj_str_hash_default(strdata(str), str->len);
+ }
+ 
+-#include "x64/src/lj_str_hash_x64.h"
+-
+-#if defined(LJ_ARCH_STR_HASH)
+-#define LJ_STR_HASH LJ_ARCH_STR_HASH
+-#else
+-#define LJ_STR_HASH lj_str_original_hash
+-#endif
+-
+ /* Intern a string and return string object. */
+ GCstr *lj_str_new(lua_State *L, const char *str, size_t lenx)
+ {
+@@ -177,7 +140,7 @@ GCstr *lj_str_new(lua_State *L, const char *str, size_t lenx)
+     return &g->strempty;
+   }
+ 
+-  h = LJ_STR_HASH(str, lenx);
++  h = lj_str_hash(str, lenx);
+ 
+   /* Check if the string has already been interned. */
+   o = gcref(g->strhash[h & g->strmask]);
+diff --git a/src/lj_str.h b/src/lj_str.h
+index 0e21432e..cc045e13 100644
+--- a/src/lj_str.h
++++ b/src/lj_str.h
+@@ -26,4 +26,10 @@ LJ_FUNC void LJ_FASTCALL lj_str_free(global_State *g, GCstr *s);
+ 
+ MSize lj_str_indep_hash(GCstr *str);
+ 
++typedef MSize (*lj_str_hashfn) (const char *, size_t);
++
++extern lj_str_hashfn lj_str_hash;
++
++extern MSize lj_str_hash_default(const char *str, size_t lenx);
++
+ #endif
+diff --git a/src/x64/src/lj_str_hash_x64.h b/src/lj_str_hash.c
+similarity index 76%
+rename from src/x64/src/lj_str_hash_x64.h
+rename to src/lj_str_hash.c
+index cf37a2d2..97eb2a77 100644
+--- a/src/x64/src/lj_str_hash_x64.h
++++ b/src/lj_str_hash.c
+@@ -5,18 +5,18 @@
+  * to 128 bytes of given string.
+  */
+ 
+-#ifndef _LJ_STR_HASH_X64_H_
+-#define _LJ_STR_HASH_X64_H_
+-
+-#if defined(__SSE4_2__) && defined(__x86_64) && defined(__GNUC__)
+-
+ #include <stdint.h>
+ #include <sys/types.h>
+ #include <unistd.h>
+ #include <time.h>
+ #include <smmintrin.h>
+ 
+-#include "../../lj_def.h"
++#include "lj_def.h"
++#include "lj_str.h"
++
++#if defined(__SSE4_2__) && defined(__x86_64) && defined(__GNUC__)
++#define lj_crc32_u32 _mm_crc32_u32
++#define lj_crc32_u64 _mm_crc32_u64
+ 
+ #undef LJ_AINLINE
+ #define LJ_AINLINE
+@@ -48,7 +48,7 @@ static LJ_AINLINE uint32_t lj_str_hash_1_4(const char* str, uint32_t len)
+   v = (v << 8) | str[len >> 1];
+   v = (v << 8) | str[len - 1];
+   v = (v << 8) | len;
+-  return _mm_crc32_u32(0, v);
++  return lj_crc32_u32(0, v);
+ #else
+   uint32_t a, b, h = len;
+ 
+@@ -78,9 +78,9 @@ static LJ_AINLINE uint32_t lj_str_hash_4_16(const char* str, uint32_t len)
+     v2 = *cast_uint32p(str + len - 4);
+   }
+ 
+-  h = _mm_crc32_u32(0, len);
+-  h = _mm_crc32_u64(h, v1);
+-  h = _mm_crc32_u64(h, v2);
++  h = lj_crc32_u32(0, len);
++  h = lj_crc32_u64(h, v1);
++  h = lj_crc32_u64(h, v2);
+   return h;
+ }
+ 
+@@ -90,18 +90,18 @@ static uint32_t lj_str_hash_16_128(const char* str, uint32_t len)
+   uint64_t h1, h2;
+   uint32_t i;
+ 
+-  h1 = _mm_crc32_u32(0, len);
++  h1 = lj_crc32_u32(0, len);
+   h2 = 0;
+ 
+   for (i = 0; i < len - 16; i += 16) {
+-    h1 += _mm_crc32_u64(h1, *cast_uint64p(str + i));
+-    h2 += _mm_crc32_u64(h2, *cast_uint64p(str + i + 8));
++    h1 += lj_crc32_u64(h1, *cast_uint64p(str + i));
++    h2 += lj_crc32_u64(h2, *cast_uint64p(str + i + 8));
+   };
+ 
+-  h1 = _mm_crc32_u64(h1, *cast_uint64p(str + len - 16));
+-  h2 = _mm_crc32_u64(h2, *cast_uint64p(str + len - 8));
++  h1 = lj_crc32_u64(h1, *cast_uint64p(str + len - 16));
++  h2 = lj_crc32_u64(h2, *cast_uint64p(str + len - 8));
+ 
+-  return _mm_crc32_u32(h1, h2);
++  return lj_crc32_u32(h1, h2);
+ }
+ 
+ /* **************************************************************************
+@@ -155,8 +155,8 @@ static void x64_init_random(void)
+   }
+ 
+   /* Init seed */
+-  seed = _mm_crc32_u32(0, getpid());
+-  seed = _mm_crc32_u32(seed, time(NULL));
++  seed = lj_crc32_u32(0, getpid());
++  seed = lj_crc32_u32(seed, time(NULL));
+   srandom(seed);
+ 
+   /* Now start to populate the random_pos[][]. */
+@@ -216,7 +216,7 @@ static LJ_NOINLINE uint32_t lj_str_hash_128_above(const char* str,
+   pos1 = get_random_pos_unsafe(chunk_sz_log2, 0);
+   pos2 = get_random_pos_unsafe(chunk_sz_log2, 1);
+ 
+-  h1 = _mm_crc32_u32(0, len);
++  h1 = lj_crc32_u32(0, len);
+   h2 = 0;
+ 
+   /* loop over 14 chunks, 2 chunks at a time */
+@@ -224,29 +224,29 @@ static LJ_NOINLINE uint32_t lj_str_hash_128_above(const char* str,
+        chunk_ptr += chunk_sz, i++) {
+ 
+     v = *cast_uint64p(chunk_ptr + pos1);
+-    h1 = _mm_crc32_u64(h1, v);
++    h1 = lj_crc32_u64(h1, v);
+ 
+     v = *cast_uint64p(chunk_ptr + chunk_sz + pos2);
+-    h2 = _mm_crc32_u64(h2, v);
++    h2 = lj_crc32_u64(h2, v);
+   }
+ 
+   /* the last two chunks */
+   v = *cast_uint64p(chunk_ptr + pos1);
+-  h1 = _mm_crc32_u64(h1, v);
++  h1 = lj_crc32_u64(h1, v);
+ 
+   v = *cast_uint64p(chunk_ptr + chunk_sz - 8 - pos2);
+-  h2 = _mm_crc32_u64(h2, v);
++  h2 = lj_crc32_u64(h2, v);
+ 
+   /* process the trailing part */
+-  h1 = _mm_crc32_u64(h1, *cast_uint64p(str));
+-  h2 = _mm_crc32_u64(h2, *cast_uint64p(str + len - 8));
++  h1 = lj_crc32_u64(h1, *cast_uint64p(str));
++  h2 = lj_crc32_u64(h2, *cast_uint64p(str + len - 8));
+ 
+-  h1 = _mm_crc32_u32(h1, h2);
++  h1 = lj_crc32_u32(h1, h2);
+   return h1;
+ }
+ 
+ /* NOTE: the "len" should not be zero */
+-static LJ_AINLINE uint32_t lj_str_hash(const char* str, size_t len)
++static LJ_AINLINE uint32_t lj_str_hash_opt(const char* str, size_t len)
+ {
+   if (len < 128) {
+     if (len >= 16) { /* [16, 128) */
+@@ -264,8 +264,36 @@ static LJ_AINLINE uint32_t lj_str_hash(const char* str, size_t len)
+   return lj_str_hash_128_above(str, len);
+ }
+ 
+-#define LJ_ARCH_STR_HASH lj_str_hash
++lj_str_hashfn lj_str_hash = lj_str_hash_opt;
+ #else
+-#undef LJ_ARCH_STR_HASH
++lj_str_hashfn lj_str_hash = lj_str_hash_default;
+ #endif
+-#endif /*_LJ_STR_HASH_X64_H_*/
++
++MSize
++lj_str_hash_default(const char *str, size_t lenx)
++{
++  MSize len = (MSize)lenx;
++  MSize a, b, h = len;
++
++  /* Compute string hash. Constants taken from lookup3 hash by Bob Jenkins. */
++  if (len >= 4) {  /* Caveat: unaligned access! */
++    a = lj_getu32(str);
++    h ^= lj_getu32(str+len-4);
++    b = lj_getu32(str+(len>>1)-2);
++    h ^= b; h -= lj_rol(b, 14);
++    b += lj_getu32(str+(len>>2)-1);
++  } else if (len > 0) {
++    a = *(const uint8_t *)str;
++    h ^= *(const uint8_t *)(str+len-1);
++    b = *(const uint8_t *)(str+(len>>1));
++    h ^= b; h -= lj_rol(b, 14);
++  } else {
++    return 0;
++  }
++
++  a ^= h; a -= lj_rol(h, 11);
++  b ^= a; b -= lj_rol(a, 25);
++  h ^= b; h -= lj_rol(b, 16);
++
++  return h;
++}
+-- 
+2.21.0
+
+
+From e44776bd2162062da0fece5ca0aa68907bccf199 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Thu, 5 Sep 2019 16:13:21 +0530
+Subject: [PATCH 23/34] Detect SSE4.2 support dynamically
+
+Move the cpu detection code out into its own module and run the
+routine as a constructor.  Make the flags available as a global
+LJ_CPU_FLAGS.
+---
+ src/Makefile      |  13 ++++--
+ src/lib_jit.c     | 108 +++-------------------------------------------
+ src/lj_arch.h     |   3 ++
+ src/lj_init.c     | 101 +++++++++++++++++++++++++++++++++++++++++++
+ src/lj_jit.h      |   1 +
+ src/lj_state.c    |   5 +++
+ src/lj_str.c      |  35 +++++++++++++++
+ src/lj_str.h      |   2 +
+ src/lj_str_hash.c |  50 ++++++---------------
+ 9 files changed, 176 insertions(+), 142 deletions(-)
+ create mode 100644 src/lj_init.c
+
+diff --git a/src/Makefile b/src/Makefile
+index b22e325c..a74cda7f 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -509,7 +509,14 @@ LJCORE_O= lj_gc.o lj_err.o lj_char.o lj_bc.o lj_obj.o lj_buf.o \
+ 	  lj_ctype.o lj_cdata.o lj_cconv.o lj_ccall.o lj_ccallback.o \
+ 	  lj_carith.o lj_clib.o lj_cparse.o \
+ 	  lj_lib.o lj_alloc.o lib_aux.o \
+-	  $(LJLIB_O) lib_init.o lj_str_hash.o
++	  $(LJLIB_O) lib_init.o lj_init.o
++
++ifeq (x64,$(TARGET_LJARCH))
++  LJCORE_O += lj_str_hash.o
++  lj_str_hash-CFLAGS = -msse4.2
++endif
++
++F_CFLAGS = $($(patsubst %.c,%-CFLAGS,$<))
+ 
+ LJVMCORE_O= $(LJVM_O) $(LJCORE_O)
+ LJVMCORE_DYNO= $(LJVMCORE_O:.o=_dyn.o)
+@@ -693,8 +700,8 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
+ 
+ %.o: %.c
+ 	$(E) "CC        $@"
+-	$(Q)$(TARGET_DYNCC) $(TARGET_ACFLAGS) -c -o $(@:.o=_dyn.o) $<
+-	$(Q)$(TARGET_CC) $(TARGET_ACFLAGS) -c -o $@ $<
++	$(Q)$(TARGET_DYNCC) $(TARGET_ACFLAGS) $(F_CFLAGS) -c -o $(@:.o=_dyn.o) $<
++	$(Q)$(TARGET_CC) $(TARGET_ACFLAGS) $(F_CFLAGS) -c -o $@ $<
+ 
+ %.o: %.S
+ 	$(E) "ASM       $@"
+diff --git a/src/lib_jit.c b/src/lib_jit.c
+index b84efa13..5bf44276 100644
+--- a/src/lib_jit.c
++++ b/src/lib_jit.c
+@@ -663,116 +663,20 @@ JIT_PARAMDEF(JIT_PARAMINIT)
+ };
+ #endif
+ 
+-#if LJ_TARGET_ARM && LJ_TARGET_LINUX
+-#include <sys/utsname.h>
+-#endif
+-
+-/* Arch-dependent CPU detection. */
+-static uint32_t jit_cpudetect(lua_State *L)
++/* Initialize JIT compiler. */
++static void jit_init(lua_State *L)
+ {
+-  uint32_t flags = 0;
+-#if LJ_TARGET_X86ORX64
+-  uint32_t vendor[4];
+-  uint32_t features[4];
+-  if (lj_vm_cpuid(0, vendor) && lj_vm_cpuid(1, features)) {
+-#if !LJ_HASJIT
+-#define JIT_F_SSE2	2
+-#endif
+-    flags |= ((features[3] >> 26)&1) * JIT_F_SSE2;
++  extern uint32_t LJ_CPU_FLAGS;
+ #if LJ_HASJIT
+-    flags |= ((features[2] >> 0)&1) * JIT_F_SSE3;
+-    flags |= ((features[2] >> 19)&1) * JIT_F_SSE4_1;
+-    if (vendor[2] == 0x6c65746e) {  /* Intel. */
+-      if ((features[0] & 0x0fff0ff0) == 0x000106c0)  /* Atom. */
+-	flags |= JIT_F_LEA_AGU;
+-    } else if (vendor[2] == 0x444d4163) {  /* AMD. */
+-      uint32_t fam = (features[0] & 0x0ff00f00);
+-      if (fam >= 0x00000f00)  /* K8, K10. */
+-	flags |= JIT_F_PREFER_IMUL;
+-    }
+-    if (vendor[0] >= 7) {
+-      uint32_t xfeatures[4];
+-      lj_vm_cpuid(7, xfeatures);
+-      flags |= ((xfeatures[1] >> 8)&1) * JIT_F_BMI2;
+-    }
+-#endif
+-  }
++  jit_State *J = L2J(L);
+   /* Check for required instruction set support on x86 (unnecessary on x64). */
+ #if LJ_TARGET_X86
+-  if (!(flags & JIT_F_SSE2))
++  if (!(LJ_CPU_FLAGS & JIT_F_SSE2))
+     luaL_error(L, "CPU with SSE2 required");
+ #endif
+-#elif LJ_TARGET_ARM
+-#if LJ_HASJIT
+-  int ver = LJ_ARCH_VERSION;  /* Compile-time ARM CPU detection. */
+-#if LJ_TARGET_LINUX
+-  if (ver < 70) {  /* Runtime ARM CPU detection. */
+-    struct utsname ut;
+-    uname(&ut);
+-    if (strncmp(ut.machine, "armv", 4) == 0) {
+-      if (ut.machine[4] >= '7')
+-	ver = 70;
+-      else if (ut.machine[4] == '6')
+-	ver = 60;
+-    }
+-  }
+-#endif
+-  flags |= ver >= 70 ? JIT_F_ARMV7 :
+-	   ver >= 61 ? JIT_F_ARMV6T2_ :
+-	   ver >= 60 ? JIT_F_ARMV6_ : 0;
+-  flags |= LJ_ARCH_HASFPU == 0 ? 0 : ver >= 70 ? JIT_F_VFPV3 : JIT_F_VFPV2;
+-#endif
+-#elif LJ_TARGET_ARM64
+-  /* No optional CPU features to detect (for now). */
+-#elif LJ_TARGET_PPC
+-#if LJ_HASJIT
+-#if LJ_ARCH_SQRT
+-  flags |= JIT_F_SQRT;
+-#endif
+-#if LJ_ARCH_ROUND
+-  flags |= JIT_F_ROUND;
+-#endif
+-#endif
+-#elif LJ_TARGET_MIPS
+-#if LJ_HASJIT
+-  /* Compile-time MIPS CPU detection. */
+-#if LJ_ARCH_VERSION >= 20
+-  flags |= JIT_F_MIPSXXR2;
+-#endif
+-  /* Runtime MIPS CPU detection. */
+-#if defined(__GNUC__)
+-  if (!(flags & JIT_F_MIPSXXR2)) {
+-    int x;
+-#ifdef __mips16
+-    x = 0;  /* Runtime detection is difficult. Ensure optimal -march flags. */
+-#else
+-    /* On MIPS32R1 rotr is treated as srl. rotr r2,r2,1 -> srl r2,r2,1. */
+-    __asm__("li $2, 1\n\t.long 0x00221042\n\tmove %0, $2" : "=r"(x) : : "$2");
+-#endif
+-    if (x) flags |= JIT_F_MIPSXXR2;  /* Either 0x80000000 (R2) or 0 (R1). */
+-  }
+-#endif
+-#endif
+-#elif LJ_TARGET_S390X
+-  /* No optional CPU features to detect (for now). */
+-#else
+-#error "Missing CPU detection for this architecture"
+-#endif
+-  UNUSED(L);
+-  return flags;
+-}
+-
+-/* Initialize JIT compiler. */
+-static void jit_init(lua_State *L)
+-{
+-  uint32_t flags = jit_cpudetect(L);
+-#if LJ_HASJIT
+-  jit_State *J = L2J(L);
+-  J->flags = flags | JIT_F_ON | JIT_F_OPT_DEFAULT;
++  J->flags = LJ_CPU_FLAGS | JIT_F_ON | JIT_F_OPT_DEFAULT;
+   memcpy(J->param, jit_param_default, sizeof(J->param));
+   lj_dispatch_update(G(L));
+-#else
+-  UNUSED(flags);
+ #endif
+ }
+ 
+diff --git a/src/lj_arch.h b/src/lj_arch.h
+index 19dd258f..2a61af9a 100644
+--- a/src/lj_arch.h
++++ b/src/lj_arch.h
+@@ -191,6 +191,9 @@
+ #ifdef LUAJIT_ENABLE_GC64
+ #define LJ_TARGET_GC64		1
+ #endif
++#ifdef __GNUC__
++#define LJ_HAS_OPTIMISED_HASH	1
++#endif
+ 
+ #elif LUAJIT_TARGET == LUAJIT_ARCH_ARM
+ 
+diff --git a/src/lj_init.c b/src/lj_init.c
+new file mode 100644
+index 00000000..bc706a26
+--- /dev/null
++++ b/src/lj_init.c
+@@ -0,0 +1,101 @@
++#include <stdint.h>
++#include "lj_arch.h"
++#include "lj_jit.h"
++#include "lj_vm.h"
++#include "lj_str.h"
++
++uint32_t LJ_CPU_FLAGS = 0;
++
++#if LJ_TARGET_ARM && LJ_TARGET_LINUX
++#include <sys/utsname.h>
++#endif
++
++/* Arch-dependent CPU detection. */
++static void __attribute__((constructor)) lj_cpudetect(void)
++{
++  uint32_t flags = 0;
++#if LJ_TARGET_X86ORX64
++  uint32_t vendor[4];
++  uint32_t features[4];
++  if (lj_vm_cpuid(0, vendor) && lj_vm_cpuid(1, features)) {
++#if !LJ_HASJIT
++#define JIT_F_SSE2	2
++#endif
++    flags |= ((features[3] >> 26)&1) * JIT_F_SSE2;
++#if LJ_HASJIT
++    flags |= ((features[2] >> 0)&1) * JIT_F_SSE3;
++    flags |= ((features[2] >> 19)&1) * JIT_F_SSE4_1;
++    flags |= ((features[2] >> 20)&1) * JIT_F_SSE4_2;
++    if (vendor[2] == 0x6c65746e) {  /* Intel. */
++      if ((features[0] & 0x0fff0ff0) == 0x000106c0)  /* Atom. */
++	flags |= JIT_F_LEA_AGU;
++    } else if (vendor[2] == 0x444d4163) {  /* AMD. */
++      uint32_t fam = (features[0] & 0x0ff00f00);
++      if (fam >= 0x00000f00)  /* K8, K10. */
++	flags |= JIT_F_PREFER_IMUL;
++    }
++    if (vendor[0] >= 7) {
++      uint32_t xfeatures[4];
++      lj_vm_cpuid(7, xfeatures);
++      flags |= ((xfeatures[1] >> 8)&1) * JIT_F_BMI2;
++    }
++#endif
++  }
++#elif LJ_TARGET_ARM
++#if LJ_HASJIT
++  int ver = LJ_ARCH_VERSION;  /* Compile-time ARM CPU detection. */
++#if LJ_TARGET_LINUX
++  if (ver < 70) {  /* Runtime ARM CPU detection. */
++    struct utsname ut;
++    uname(&ut);
++    if (strncmp(ut.machine, "armv", 4) == 0) {
++      if (ut.machine[4] >= '7')
++	ver = 70;
++      else if (ut.machine[4] == '6')
++	ver = 60;
++    }
++  }
++#endif
++  flags |= ver >= 70 ? JIT_F_ARMV7 :
++	   ver >= 61 ? JIT_F_ARMV6T2_ :
++	   ver >= 60 ? JIT_F_ARMV6_ : 0;
++  flags |= LJ_ARCH_HASFPU == 0 ? 0 : ver >= 70 ? JIT_F_VFPV3 : JIT_F_VFPV2;
++#endif
++#elif LJ_TARGET_ARM64
++  /* No optional CPU features to detect (for now). */
++#elif LJ_TARGET_PPC
++#if LJ_HASJIT
++#if LJ_ARCH_SQRT
++  flags |= JIT_F_SQRT;
++#endif
++#if LJ_ARCH_ROUND
++  flags |= JIT_F_ROUND;
++#endif
++#endif
++#elif LJ_TARGET_MIPS
++#if LJ_HASJIT
++  /* Compile-time MIPS CPU detection. */
++#if LJ_ARCH_VERSION >= 20
++  flags |= JIT_F_MIPSXXR2;
++#endif
++  /* Runtime MIPS CPU detection. */
++#if defined(__GNUC__)
++  if (!(flags & JIT_F_MIPSXXR2)) {
++    int x;
++#ifdef __mips16
++    x = 0;  /* Runtime detection is difficult. Ensure optimal -march flags. */
++#else
++    /* On MIPS32R1 rotr is treated as srl. rotr r2,r2,1 -> srl r2,r2,1. */
++    __asm__("li $2, 1\n\t.long 0x00221042\n\tmove %0, $2" : "=r"(x) : : "$2");
++#endif
++    if (x) flags |= JIT_F_MIPSXXR2;  /* Either 0x80000000 (R2) or 0 (R1). */
++  }
++#endif
++#endif
++#elif LJ_TARGET_S390X
++  /* No optional CPU features to detect (for now). */
++#else
++#error "Missing CPU detection for this architecture"
++#endif
++  LJ_CPU_FLAGS = flags;
++}
+diff --git a/src/lj_jit.h b/src/lj_jit.h
+index 5d41ef4b..919c58ee 100644
+--- a/src/lj_jit.h
++++ b/src/lj_jit.h
+@@ -20,6 +20,7 @@
+ #define JIT_F_PREFER_IMUL	0x00000080
+ #define JIT_F_LEA_AGU		0x00000100
+ #define JIT_F_BMI2		0x00000200
++#define JIT_F_SSE4_2		0x00000400
+ 
+ /* Names for the CPU-specific flags. Must match the order above. */
+ #define JIT_F_CPU_FIRST		JIT_F_SSE2
+diff --git a/src/lj_state.c b/src/lj_state.c
+index a0fba2ac..9be16cb3 100644
+--- a/src/lj_state.c
++++ b/src/lj_state.c
+@@ -189,6 +189,11 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
+   GG_State *GG = (GG_State *)f(ud, NULL, 0, sizeof(GG_State));
+   lua_State *L = &GG->L;
+   global_State *g = &GG->g;
++  extern uint32_t LJ_CPU_FLAGS;
++
++#ifdef LJ_HAS_OPTIMISED_HASH
++  lj_str_hash_init (LJ_CPU_FLAGS);
++#endif
+   if (GG == NULL || !checkptrGC(GG)) return NULL;
+   memset(GG, 0, sizeof(GG_State));
+   L->gct = ~LJ_TTHREAD;
+diff --git a/src/lj_str.c b/src/lj_str.c
+index d13477cd..5598a0f7 100644
+--- a/src/lj_str.c
++++ b/src/lj_str.c
+@@ -118,6 +118,41 @@ void lj_str_resize(lua_State *L, MSize newmask)
+   g->strhash = newhash;
+ }
+ 
++#ifdef LJ_HAS_OPTIMISED_HASH
++lj_str_hashfn lj_str_hash = lj_str_hash_default;
++#else
++#define lj_str_hash lj_str_hash_default
++#endif
++
++MSize
++lj_str_hash_default(const char *str, size_t lenx)
++{
++  MSize len = (MSize)lenx;
++  MSize a, b, h = len;
++
++  /* Compute string hash. Constants taken from lookup3 hash by Bob Jenkins. */
++  if (len >= 4) {  /* Caveat: unaligned access! */
++    a = lj_getu32(str);
++    h ^= lj_getu32(str+len-4);
++    b = lj_getu32(str+(len>>1)-2);
++    h ^= b; h -= lj_rol(b, 14);
++    b += lj_getu32(str+(len>>2)-1);
++  } else if (len > 0) {
++    a = *(const uint8_t *)str;
++    h ^= *(const uint8_t *)(str+len-1);
++    b = *(const uint8_t *)(str+(len>>1));
++    h ^= b; h -= lj_rol(b, 14);
++  } else {
++    return 0;
++  }
++
++  a ^= h; a -= lj_rol(h, 11);
++  b ^= a; b -= lj_rol(a, 25);
++  h ^= b; h -= lj_rol(b, 16);
++
++  return h;
++}
++
+ MSize
+ lj_str_indep_hash(GCstr *str)
+ {
+diff --git a/src/lj_str.h b/src/lj_str.h
+index cc045e13..3dcad85a 100644
+--- a/src/lj_str.h
++++ b/src/lj_str.h
+@@ -32,4 +32,6 @@ extern lj_str_hashfn lj_str_hash;
+ 
+ extern MSize lj_str_hash_default(const char *str, size_t lenx);
+ 
++extern void lj_str_hash_init(uint32_t flags);
++
+ #endif
+diff --git a/src/lj_str_hash.c b/src/lj_str_hash.c
+index 97eb2a77..87a6d66c 100644
+--- a/src/lj_str_hash.c
++++ b/src/lj_str_hash.c
+@@ -13,8 +13,14 @@
+ 
+ #include "lj_def.h"
+ #include "lj_str.h"
++#include "lj_jit.h"
++#include "lj_arch.h"
++
++#ifdef LJ_HAS_OPTIMISED_HASH
++#if !defined(__SSE4_2__)
++#error "This file must be built with -msse4.2"
++#endif
+ 
+-#if defined(__SSE4_2__) && defined(__x86_64) && defined(__GNUC__)
+ #define lj_crc32_u32 _mm_crc32_u32
+ #define lj_crc32_u64 _mm_crc32_u64
+ 
+@@ -144,7 +150,7 @@ static LJ_AINLINE uint32_t log2_floor(uint32_t n)
+ /* This function is to populate `random_pos` such that random_pos[i][*]
+  * contains random value in the range of [2**i, 2**(i+1)).
+  */
+-static void x64_init_random(void)
++static void str_hash_init_random(void)
+ {
+   int i, seed, rml;
+ 
+@@ -185,11 +191,6 @@ static void x64_init_random(void)
+ }
+ #undef POW2_MASK
+ 
+-void __attribute__((constructor)) x64_init_random_constructor()
+-{
+-    x64_init_random();
+-}
+-
+ /* Return a pre-computed random number in the range of [1**chunk_sz_order,
+  * 1**(chunk_sz_order+1)). It is "unsafe" in the sense that the return value
+  * may be greater than chunk-size; it is up to the caller to make sure
+@@ -264,36 +265,11 @@ static LJ_AINLINE uint32_t lj_str_hash_opt(const char* str, size_t len)
+   return lj_str_hash_128_above(str, len);
+ }
+ 
+-lj_str_hashfn lj_str_hash = lj_str_hash_opt;
+-#else
+-lj_str_hashfn lj_str_hash = lj_str_hash_default;
+-#endif
+-
+-MSize
+-lj_str_hash_default(const char *str, size_t lenx)
++void lj_str_hash_init(uint32_t flags)
+ {
+-  MSize len = (MSize)lenx;
+-  MSize a, b, h = len;
+-
+-  /* Compute string hash. Constants taken from lookup3 hash by Bob Jenkins. */
+-  if (len >= 4) {  /* Caveat: unaligned access! */
+-    a = lj_getu32(str);
+-    h ^= lj_getu32(str+len-4);
+-    b = lj_getu32(str+(len>>1)-2);
+-    h ^= b; h -= lj_rol(b, 14);
+-    b += lj_getu32(str+(len>>2)-1);
+-  } else if (len > 0) {
+-    a = *(const uint8_t *)str;
+-    h ^= *(const uint8_t *)(str+len-1);
+-    b = *(const uint8_t *)(str+(len>>1));
+-    h ^= b; h -= lj_rol(b, 14);
+-  } else {
+-    return 0;
++  if (flags & JIT_F_SSE4_2) {
++    lj_str_hash = lj_str_hash_opt;
++    str_hash_init_random();
+   }
+-
+-  a ^= h; a -= lj_rol(h, 11);
+-  b ^= a; b -= lj_rol(a, 25);
+-  h ^= b; h -= lj_rol(b, 16);
+-
+-  return h;
+ }
++#endif
+-- 
+2.21.0
+
+
+From c7e0e64eb8311c56f7757fb5ffd696b0bb79e379 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Mon, 16 Sep 2019 06:50:27 +0530
+Subject: [PATCH 24/34] Fix up lj_str_hash smoke tests
+
+Make the lj_str_hash test include and run the right sources.  This
+should go into $srcdir/tests/ in my repo but keep it here for now.
+---
+ src/lj_str_hash.c     | 4 +++-
+ src/x64/test/Makefile | 2 +-
+ src/x64/test/test.cpp | 7 +++++--
+ 3 files changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/src/lj_str_hash.c b/src/lj_str_hash.c
+index 87a6d66c..1c16116a 100644
+--- a/src/lj_str_hash.c
++++ b/src/lj_str_hash.c
+@@ -16,7 +16,7 @@
+ #include "lj_jit.h"
+ #include "lj_arch.h"
+ 
+-#ifdef LJ_HAS_OPTIMISED_HASH
++#if defined(LJ_HAS_OPTIMISED_HASH) || defined(SMOKETEST)
+ #if !defined(__SSE4_2__)
+ #error "This file must be built with -msse4.2"
+ #endif
+@@ -268,7 +268,9 @@ static LJ_AINLINE uint32_t lj_str_hash_opt(const char* str, size_t len)
+ void lj_str_hash_init(uint32_t flags)
+ {
+   if (flags & JIT_F_SSE4_2) {
++#ifndef SMOKETEST
+     lj_str_hash = lj_str_hash_opt;
++#endif
+     str_hash_init_random();
+   }
+ }
+diff --git a/src/x64/test/Makefile b/src/x64/test/Makefile
+index 3ec44eae..c5adfcbe 100644
+--- a/src/x64/test/Makefile
++++ b/src/x64/test/Makefile
+@@ -24,7 +24,7 @@ CXXFLAGS := -O3 -MD -g -msse4.2 -Wall -I../src -I../../../src
+ test: $(TEST_PROGRAM)
+ 	@echo "some unit test"
+ 	$(VALGRIND) ./$(TEST_PROGRAM)
+-	./unit_test.sh
++	bash ./unit_test.sh
+ 
+ 	@echo "smoke test"
+ 	../../luajit test_str_comp.lua
+diff --git a/src/x64/test/test.cpp b/src/x64/test/test.cpp
+index bc92acbb..5f03bfb6 100644
+--- a/src/x64/test/test.cpp
++++ b/src/x64/test/test.cpp
+@@ -3,13 +3,16 @@
+ #include <stdlib.h>
+ #include <map>
+ #include "test_util.hpp"
+-#include "lj_str_hash_x64.h"
++
++#define SMOKETEST
++#include "../../lj_str_hash.c"
+ 
+ using namespace std;
+ 
+ static bool
+ smoke_test()
+ {
++  lj_str_hash_init(JIT_F_SSE4_2);
+   fprintf(stdout, "running smoke tests...\n");
+ 	char buf[1024];
+   char c = getpid() % 'a';
+@@ -22,7 +25,7 @@ smoke_test()
+                      255, 256, 257};
+   for (unsigned i = 0; i < sizeof(lens)/sizeof(lens[0]); i++) {
+     string s(buf, lens[i]);
+-    test_printf("%d", lj_str_hash(s.c_str(), lens[i]));
++    test_printf("%d", lj_str_hash_opt(s.c_str(), lens[i]));
+   }
+ 
+   return true;
+-- 
+2.21.0
+
+
+From a83ed45abee436a6fc7ac8fcc27a9df3c5e9f71f Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Thu, 19 Sep 2019 13:25:54 -0700
+Subject: [PATCH 25/34] Do not call ldconfig on OpenBSD
+
+OpenBSD ldconfig does not have the -n flag, so there's no point in
+calling ldconfig; the manual symlinks should be good enough.
+
+Solves LuaJIT/LuaJIT#515
+---
+ Makefile | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index f4b84081..024e35c9 100644
+--- a/Makefile
++++ b/Makefile
+@@ -104,6 +104,10 @@ ifeq (Darwin,$(TARGET_SYS))
+   LDCONFIG= :
+ endif
+ 
++ifeq (OpenBSD,$(TARGET_SYS))
++  LDCONFIG= :
++endif
++
+ ##############################################################################
+ 
+ LUAJIT_BIN= src/luajit
+-- 
+2.21.0
+
+
+From 1c9bf3c6e07d90b2ddfe38deef78b0ccbbe1afd7 Mon Sep 17 00:00:00 2001
+From: xiabin <snyh@snyh.org>
+Date: Mon, 1 Jul 2019 09:09:04 +0800
+Subject: [PATCH 26/34] typo:  add the forgotten delay slot hint
+
+---
+ src/vm_mips.dasc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/vm_mips.dasc b/src/vm_mips.dasc
+index f3248125..952cc192 100644
+--- a/src/vm_mips.dasc
++++ b/src/vm_mips.dasc
+@@ -399,7 +399,7 @@ static void build_subroutines(BuildCtx *ctx)
+   |  xori AT, TMP0, FRAME_C
+   |   and TMP2, PC, TMP2
+   |  bnez AT, ->vm_returnp
+-  |   subu TMP2, BASE, TMP2		// TMP2 = previous base.
++  |.  subu TMP2, BASE, TMP2		// TMP2 = previous base.
+   |
+   |  addiu TMP1, RD, -8
+   |   sw TMP2, L->base
+-- 
+2.21.0
+
+
+From 7d76ffcaede1a1887efa57b51d80f524b67ff2ba Mon Sep 17 00:00:00 2001
+From: "s.ostanevich" <s.ostanevich@sostanevich.local>
+Date: Thu, 8 Aug 2019 15:33:17 +0300
+Subject: [PATCH 27/34] fix #505: prevent propagation through SNEW
+
+folder can propagate pointer of original string in case
+SNEW is done with literal offset of 0 - this causes pointer
+arithmetics problems later on
+---
+ src/lj_ffrecord.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/lj_ffrecord.c b/src/lj_ffrecord.c
+index 242d5d51..d42609e6 100644
+--- a/src/lj_ffrecord.c
++++ b/src/lj_ffrecord.c
+@@ -950,8 +950,9 @@ static void LJ_FASTCALL recff_string_find(jit_State *J, RecordFFData *rd)
+ 		    str->len-(MSize)start, pat->len)) {
+       TRef pos;
+       emitir(IRTG(IR_NE, IRT_PGC), tr, trp0);
+-      pos = emitir(IRTI(IR_SUB), tr, emitir(IRT(IR_STRREF, IRT_PGC), trstr, tr0));
+-      J->base[0] = emitir(IRTI(IR_ADD), pos, lj_ir_kint(J, 1));
++      /* Caveat: can't use STRREF trstr 0 here because that might be pointing into a wrong string due to folding. */
++      pos = emitir(IRTI(IR_SUB), tr, trsptr);
++      J->base[0] = emitir(IRTI(IR_ADD), pos, emitir(IRTI(IR_ADD), trstart, lj_ir_kint(J, 1)));
+       J->base[1] = emitir(IRTI(IR_ADD), pos, trplen);
+       rd->nres = 2;
+     } else {
+-- 
+2.21.0
+
+
+From 0f898472a2d545fa720d49abf4440134e5bdfc03 Mon Sep 17 00:00:00 2001
+From: "s.ostanevich" <s.ostanevich@sostanevich.local>
+Date: Thu, 5 Sep 2019 17:05:34 +0300
+Subject: [PATCH 28/34] follow-up for the LUAJit folder problem
+
+The original patch did not provide correct ending of patch from
+string:find() call. Sent to review to @mraleph as part of
+LUAJit gh-505
+
+fixes: #4476
+---
+ src/lj_ffrecord.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lj_ffrecord.c b/src/lj_ffrecord.c
+index d42609e6..5b1f184e 100644
+--- a/src/lj_ffrecord.c
++++ b/src/lj_ffrecord.c
+@@ -953,7 +953,7 @@ static void LJ_FASTCALL recff_string_find(jit_State *J, RecordFFData *rd)
+       /* Caveat: can't use STRREF trstr 0 here because that might be pointing into a wrong string due to folding. */
+       pos = emitir(IRTI(IR_SUB), tr, trsptr);
+       J->base[0] = emitir(IRTI(IR_ADD), pos, emitir(IRTI(IR_ADD), trstart, lj_ir_kint(J, 1)));
+-      J->base[1] = emitir(IRTI(IR_ADD), pos, trplen);
++      J->base[1] = emitir(IRTI(IR_ADD), pos, emitir(IRTI(IR_ADD), trplen, trstart));
+       rd->nres = 2;
+     } else {
+       emitir(IRTG(IR_EQ, IRT_PGC), tr, trp0);
+-- 
+2.21.0
+
+
+From 6a91b0dd5d136f7f61d172e76881f5e47cd55e27 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Tue, 24 Sep 2019 04:52:29 -0700
+Subject: [PATCH 29/34] Add test for string.find
+
+This test is for LuaJIT/LuaJIT#505
+
+Signed-off-by: s.ostanevich <s.ostanevich@sostanevich.local>
+---
+ test/lib/string/find.lua | 10 ++++++++++
+ test/lib/string/index    |  1 +
+ 2 files changed, 11 insertions(+)
+ create mode 100644 test/lib/string/find.lua
+
+diff --git a/test/lib/string/find.lua b/test/lib/string/find.lua
+new file mode 100644
+index 00000000..81fd2c32
+--- /dev/null
++++ b/test/lib/string/find.lua
+@@ -0,0 +1,10 @@
++do --- find relative
++  jit.opt.start("hotloop=1")
++  for _ = 1, 20 do
++    local value = "abc"
++    local pos_c = string.find(value, "c", 1, true)
++    local value2 = string.sub(value, 1, pos_c - 1)
++    local pos_b = string.find(value2, "b", 2, true)
++    assert(pos_b == 2, "FAIL: position of 'b' is " .. pos_b)
++  end
++end
+diff --git a/test/lib/string/index b/test/lib/string/index
+index c0638e9c..83796e84 100644
+--- a/test/lib/string/index
++++ b/test/lib/string/index
+@@ -2,6 +2,7 @@ metatable.lua
+ byte.lua
+ char.lua
+ dump.lua
++find.lua
+ format
+ len.lua
+ lower_upper.lua
+-- 
+2.21.0
+
+
+From 2a5ee45ecd4d40caa6ba16b24e30dc048b53755e Mon Sep 17 00:00:00 2001
+From: Julien Desgats <julien@cloudflare.com>
+Date: Wed, 14 Aug 2019 09:58:13 +0100
+Subject: [PATCH 30/34] Attempt to fix erratic profiler behaviour when called
+ during GC
+
+It turns out that calling the hook profiler while a Lua finalizer is
+running causes some issues with VM internal hook flags and dispatch
+table. Hooks are restored but not dispatch table, which causes both to
+be out-of-sync. This patch ensures that the dispatch table stays in sync
+and that we will not call the profiling hook when a finalizer is
+running.
+
+The extra dispatch table updates are nearly no-ops most of the time. as
+the flags would not match only when the `HOOK_PROFILE` is set (which
+should be quite unusual). Experiments at 100Hz with a extremely GC
+intensive script showed an overhead of about 1%. The actual effect on a
+production workload should be lower.
+
+fixes LuaJIT/LuaJIT#512
+---
+ src/lj_gc.c      | 2 ++
+ src/lj_obj.h     | 2 +-
+ src/lj_profile.c | 2 +-
+ 3 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/lj_gc.c b/src/lj_gc.c
+index 2aaf5b2c..449db4a6 100644
+--- a/src/lj_gc.c
++++ b/src/lj_gc.c
+@@ -466,6 +466,7 @@ static void gc_call_finalizer(global_State *g, lua_State *L,
+   TValue *top;
+   lj_trace_abort(g);
+   hook_entergc(g);  /* Disable hooks and new traces during __gc. */
++  lj_dispatch_update(g);
+   g->gc.threshold = LJ_MAX_MEM;  /* Prevent GC steps. */
+   top = L->top;
+   copyTV(L, top++, mo);
+@@ -474,6 +475,7 @@ static void gc_call_finalizer(global_State *g, lua_State *L,
+   L->top = top+1;
+   errcode = lj_vm_pcall(L, top, 1+0, -1);  /* Stack: |mo|o| -> | */
+   hook_restore(g, oldh);
++  lj_dispatch_update(g);
+   g->gc.threshold = oldt;  /* Restore GC threshold. */
+   if (errcode)
+     lj_err_throw(L, errcode);  /* Propagate errors. */
+diff --git a/src/lj_obj.h b/src/lj_obj.h
+index 3f674db2..6b06b4a1 100644
+--- a/src/lj_obj.h
++++ b/src/lj_obj.h
+@@ -638,7 +638,7 @@ typedef struct global_State {
+ #define HOOK_PROFILE		0x80
+ #define hook_active(g)		((g)->hookmask & HOOK_ACTIVE)
+ #define hook_enter(g)		((g)->hookmask |= HOOK_ACTIVE)
+-#define hook_entergc(g)		((g)->hookmask |= (HOOK_ACTIVE|HOOK_GC))
++#define hook_entergc(g)		((g)->hookmask = ((g)->hookmask | (HOOK_ACTIVE|HOOK_GC)) & ~HOOK_PROFILE)
+ #define hook_vmevent(g)		((g)->hookmask |= (HOOK_ACTIVE|HOOK_VMEVENT))
+ #define hook_leave(g)		((g)->hookmask &= ~HOOK_ACTIVE)
+ #define hook_save(g)		((g)->hookmask & ~HOOK_EVENTMASK)
+diff --git a/src/lj_profile.c b/src/lj_profile.c
+index 3223697f..e2966e0c 100644
+--- a/src/lj_profile.c
++++ b/src/lj_profile.c
+@@ -153,7 +153,7 @@ static void profile_trigger(ProfileState *ps)
+   profile_lock(ps);
+   ps->samples++;  /* Always increment number of samples. */
+   mask = g->hookmask;
+-  if (!(mask & (HOOK_PROFILE|HOOK_VMEVENT))) {  /* Set profile hook. */
++  if (!(mask & (HOOK_PROFILE|HOOK_VMEVENT|HOOK_GC))) {  /* Set profile hook. */
+     int st = g->vmstate;
+     ps->vmstate = st >= 0 ? 'N' :
+ 		  st == ~LJ_VMST_INTERP ? 'I' :
+-- 
+2.21.0
+
+
+From d83ef2b043f0a63903f9b44f81822b1e585e189b Mon Sep 17 00:00:00 2001
+From: Priya Seth <sethp@us.ibm.com>
+Date: Tue, 24 Sep 2019 05:03:18 -0700
+Subject: [PATCH 31/34] Fix BC_POW on ppc64le
+
+---
+ src/vm_ppc.dasc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/vm_ppc.dasc b/src/vm_ppc.dasc
+index 31ed39a5..c63f15c3 100644
+--- a/src/vm_ppc.dasc
++++ b/src/vm_ppc.dasc
+@@ -4538,7 +4538,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+     |  addi BASEP4, BASE, 4
+     |.endif
+     |  lwzx CARG1, BASE_HI, RB
+-    |  lwzx CARG3, BASE, RC
++    |  lwzx CARG3, BASE_HI, RC
+     |.if FPU
+     |   lfdx FARG1, BASE, RB
+     |   lfdx FARG2, BASE, RC
+-- 
+2.21.0
+
+
+From 1022c08bbc0101eb4227191f304ce9c74150ade5 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Tue, 24 Sep 2019 05:09:17 -0700
+Subject: [PATCH 32/34] tests: Enable unportable math tests
+
+They caught a POW bug in ppc64le, so they're useful enough.  We will
+figure out a fix if they're found to be broken.
+---
+ test/index                       |  1 +
+ test/unportable/math_special.lua | 37 ++++++++++++++++++--------------
+ 2 files changed, 22 insertions(+), 16 deletions(-)
+
+diff --git a/test/index b/test/index
+index bd4081e3..b1580c83 100644
+--- a/test/index
++++ b/test/index
+@@ -4,3 +4,4 @@ bc +luajit>=2
+ computations.lua
+ trace +jit
+ opt +jit
++unportable
+diff --git a/test/unportable/math_special.lua b/test/unportable/math_special.lua
+index 49161014..bdf22f01 100644
+--- a/test/unportable/math_special.lua
++++ b/test/unportable/math_special.lua
+@@ -31,24 +31,29 @@ local powcheck = {
+   "+inf +inf +inf +inf +1 +1 +0 +0 nan",
+   "nan nan nan nan +1 nan nan nan nan",
+ }
+-for j=1,#inp do
+-  local y = inp[j]
+-  check(function(x) return x^y end, powcheck[j])
++
++do --- math.pow
++  for j=1,#inp do
++    local y = inp[j]
++    check(function(x) return x^y end, powcheck[j])
++  end
+ end
+ 
+-check(math.abs, "+0 +0 +0.5 +0.5 +1 +1 +inf +inf nan")
+-check(math.floor, "+0 -0 +0 -1 +1 -1 +inf -inf nan")
+-check(math.ceil, "+0 -0 +1 -0 +1 -1 +inf -inf nan")
+-check(math.sqrt, "+0 -0 +0.70711 nan +1 nan +inf nan nan")
+-check(math.sin, "+0 -0 +0.47943 -0.47943 +0.84147 -0.84147 nan nan nan")
+-check(math.cos, "+1 +1 +0.87758 +0.87758 +0.5403 +0.5403 nan nan nan")
+-check(math.tan, "+0 -0 +0.5463 -0.5463 +1.5574 -1.5574 nan nan nan")
+-check(math.asin, "+0 -0 +0.5236 -0.5236 +1.5708 -1.5708 nan nan nan")
+-check(math.acos, "+1.5708 +1.5708 +1.0472 +2.0944 +0 +3.1416 nan nan nan")
+-check(math.atan, "+0 -0 +0.46365 -0.46365 +0.7854 -0.7854 +1.5708 -1.5708 nan")
+-check(math.log, "-inf -inf -0.69315 nan +0 nan +inf nan nan")
+-check(math.log10, "-inf -inf -0.30103 nan +0 nan +inf nan nan")
+-check(math.exp, "+1 +1 +1.6487 +0.60653 +2.7183 +0.36788 +inf +0 nan")
++do --- math functions
++  check(math.abs, "+0 +0 +0.5 +0.5 +1 +1 +inf +inf nan")
++  check(math.floor, "+0 -0 +0 -1 +1 -1 +inf -inf nan")
++  check(math.ceil, "+0 -0 +1 -0 +1 -1 +inf -inf nan")
++  check(math.sqrt, "+0 -0 +0.70711 nan +1 nan +inf nan nan")
++  check(math.sin, "+0 -0 +0.47943 -0.47943 +0.84147 -0.84147 nan nan nan")
++  check(math.cos, "+1 +1 +0.87758 +0.87758 +0.5403 +0.5403 nan nan nan")
++  check(math.tan, "+0 -0 +0.5463 -0.5463 +1.5574 -1.5574 nan nan nan")
++  check(math.asin, "+0 -0 +0.5236 -0.5236 +1.5708 -1.5708 nan nan nan")
++  check(math.acos, "+1.5708 +1.5708 +1.0472 +2.0944 +0 +3.1416 nan nan nan")
++  check(math.atan, "+0 -0 +0.46365 -0.46365 +0.7854 -0.7854 +1.5708 -1.5708 nan")
++  check(math.log, "-inf -inf -0.69315 nan +0 nan +inf nan nan")
++  check(math.log10, "-inf -inf -0.30103 nan +0 nan +inf nan nan")
++  check(math.exp, "+1 +1 +1.6487 +0.60653 +2.7183 +0.36788 +inf +0 nan")
++end
+ 
+ -- Pointless: deg, rad, min, max, pow
+ -- LATER: %, fmod, frexp, ldexp, modf, sinh, cosh, tanh
+-- 
+2.21.0
+
+
+From c5838c12bc125c3c75197e2de068c5b948515602 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 25 Sep 2019 11:33:58 -0700
+Subject: [PATCH 33/34] test: Add the index file
+
+Oops.
+---
+ test/unportable/index | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 test/unportable/index
+
+diff --git a/test/unportable/index b/test/unportable/index
+new file mode 100644
+index 00000000..2549a068
+--- /dev/null
++++ b/test/unportable/index
+@@ -0,0 +1 @@
++math_special.lua
+-- 
+2.21.0
+
+
+From 7489a362a404421b413b3907f0521901de8818a8 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 25 Sep 2019 11:34:51 -0700
+Subject: [PATCH 34/34] Avoid build warning
+
+LJ_CPU_FLAGS is only needed when the optimised hash algorithm is being
+built.
+---
+ src/lj_state.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lj_state.c b/src/lj_state.c
+index 9be16cb3..e664959e 100644
+--- a/src/lj_state.c
++++ b/src/lj_state.c
+@@ -189,9 +189,9 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
+   GG_State *GG = (GG_State *)f(ud, NULL, 0, sizeof(GG_State));
+   lua_State *L = &GG->L;
+   global_State *g = &GG->g;
+-  extern uint32_t LJ_CPU_FLAGS;
+ 
+ #ifdef LJ_HAS_OPTIMISED_HASH
++  extern uint32_t LJ_CPU_FLAGS;
+   lj_str_hash_init (LJ_CPU_FLAGS);
+ #endif
+   if (GG == NULL || !checkptrGC(GG)) return NULL;
+-- 
+2.21.0
+
+From 22b8b09962be279f81cd1f4afd43964e82e072e1 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 25 Sep 2019 12:08:02 -0700
+Subject: [PATCH 1/2] Fix more build warnings for non-x86
+
+---
+ src/lib_jit.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lib_jit.c b/src/lib_jit.c
+index 5bf44276..5754f3c6 100644
+--- a/src/lib_jit.c
++++ b/src/lib_jit.c
+@@ -666,8 +666,8 @@ JIT_PARAMDEF(JIT_PARAMINIT)
+ /* Initialize JIT compiler. */
+ static void jit_init(lua_State *L)
+ {
+-  extern uint32_t LJ_CPU_FLAGS;
+ #if LJ_HASJIT
++  extern uint32_t LJ_CPU_FLAGS;
+   jit_State *J = L2J(L);
+   /* Check for required instruction set support on x86 (unnecessary on x64). */
+ #if LJ_TARGET_X86
+-- 
+2.21.0
+
+
+From 968fa8e5600ec9e91e9c67bcbe65bc76e09352e3 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 25 Sep 2019 12:08:15 -0700
+Subject: [PATCH 2/2] test: Run string.find test only when JIT is enabled in
+ build
+
+---
+ test/lib/string/find.lua | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/lib/string/find.lua b/test/lib/string/find.lua
+index 81fd2c32..8e8a4ba1 100644
+--- a/test/lib/string/find.lua
++++ b/test/lib/string/find.lua
+@@ -1,4 +1,4 @@
+-do --- find relative
++do --- find relative +jit
+   jit.opt.start("hotloop=1")
+   for _ = 1, 20 do
+     local value = "abc"
+-- 
+2.21.0
+
+From a10d0321a30d285907d0b400b00bbc6e058aa518 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 25 Sep 2019 12:27:11 -0700
+Subject: [PATCH] fix make amalg
+
+The amalg target builds everything into a single object file with the
+hope of producing better code.  Add the lj_init and lj_str_hash
+sources in there as well.
+
+Eventually we need to see if just doing LTO is better since this is
+really just a hack.
+---
+ src/Makefile  | 2 +-
+ src/ljamalg.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/Makefile b/src/Makefile
+index a74cda7f..a1fad2fa 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -623,7 +623,7 @@ default all:	$(TARGET_T)
+ 
+ amalg:
+ 	@grep "^[+|]" ljamalg.c
+-	$(MAKE) all "LJCORE_O=ljamalg.o"
++	$(MAKE) all "LJCORE_O=ljamalg.o lj_str_hash.o"
+ 
+ clean:
+ 	$(HOST_RM) $(ALL_RM)
+diff --git a/src/ljamalg.c b/src/ljamalg.c
+index f1f28623..1e1f1b9d 100644
+--- a/src/ljamalg.c
++++ b/src/ljamalg.c
+@@ -94,4 +94,4 @@
+ #include "lib_jit.c"
+ #include "lib_ffi.c"
+ #include "lib_init.c"
+-
++#include "lj_init.c"
+-- 
+2.21.0
+
+From 18fd03af8d9228a88b9164926558ed53700e85d8 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 25 Sep 2019 13:00:36 -0700
+Subject: [PATCH] Always build lj_str_hash
+
+Fix up Makefile and lj_str_hash.c to make it safe to always build the
+file.  It will only have a meaningful implementation for -msse4.2 for
+now.
+---
+ src/Makefile      | 3 +--
+ src/lj_str_hash.c | 6 +++---
+ 2 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/src/Makefile b/src/Makefile
+index a1fad2fa..fe94858c 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -509,10 +509,9 @@ LJCORE_O= lj_gc.o lj_err.o lj_char.o lj_bc.o lj_obj.o lj_buf.o \
+ 	  lj_ctype.o lj_cdata.o lj_cconv.o lj_ccall.o lj_ccallback.o \
+ 	  lj_carith.o lj_clib.o lj_cparse.o \
+ 	  lj_lib.o lj_alloc.o lib_aux.o \
+-	  $(LJLIB_O) lib_init.o lj_init.o
++	  $(LJLIB_O) lib_init.o lj_init.o lj_str_hash.o
+ 
+ ifeq (x64,$(TARGET_LJARCH))
+-  LJCORE_O += lj_str_hash.o
+   lj_str_hash-CFLAGS = -msse4.2
+ endif
+ 
+diff --git a/src/lj_str_hash.c b/src/lj_str_hash.c
+index 1c16116a..6612065b 100644
+--- a/src/lj_str_hash.c
++++ b/src/lj_str_hash.c
+@@ -5,6 +5,9 @@
+  * to 128 bytes of given string.
+  */
+ 
++#include "lj_arch.h"
++
++#if defined(LJ_HAS_OPTIMISED_HASH) || defined(SMOKETEST)
+ #include <stdint.h>
+ #include <sys/types.h>
+ #include <unistd.h>
+@@ -14,9 +17,6 @@
+ #include "lj_def.h"
+ #include "lj_str.h"
+ #include "lj_jit.h"
+-#include "lj_arch.h"
+-
+-#if defined(LJ_HAS_OPTIMISED_HASH) || defined(SMOKETEST)
+ #if !defined(__SSE4_2__)
+ #error "This file must be built with -msse4.2"
+ #endif
+-- 
+2.21.0
+
+From 1d9200ca48196e7792ffaa8c57375ab78675e341 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@gotplt.org>
+Date: Wed, 25 Sep 2019 13:05:47 -0700
+Subject: [PATCH] Include lj_dispatch.h
+
+---
+ src/lj_gc.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/lj_gc.c b/src/lj_gc.c
+index 449db4a6..fe3a4bad 100644
+--- a/src/lj_gc.c
++++ b/src/lj_gc.c
+@@ -20,6 +20,7 @@
+ #include "lj_meta.h"
+ #include "lj_state.h"
+ #include "lj_frame.h"
++#include "lj_dispatch.h"
+ #if LJ_HASFFI
+ #include "lj_ctype.h"
+ #include "lj_cdata.h"
+-- 
+2.21.0
+

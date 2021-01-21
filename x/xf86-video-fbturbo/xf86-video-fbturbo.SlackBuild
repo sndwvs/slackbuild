@@ -92,8 +92,7 @@ find $PKG | xargs file | grep -e "executable" -e "shared object" \
   | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
 rm $PKG/etc/X11/xorg.conf.d/xorg.conf
-install -m644 -D xorg.conf $PKG/etc/X11/xorg.conf.d/20-fbturbo.conf.new
-cp -a $CWD/udev $PKG/etc/
+install -m644 -D $CWD/20-fbturbo.conf $PKG/etc/X11/xorg.conf.d/20-fbturbo.conf.new
 
 # Compress manual pages:
 find $PKG/usr/man -type f -exec gzip -9 {} \;

@@ -1,0 +1,31 @@
+From 5c911998a3c85d024a8006feafc68d0b4c962fd8 Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Thu, 10 Jan 2019 12:32:08 +0100
+Subject: [PATCH 56/72] DynASM/MIPS: Fix shadowed variable.
+
+Cleanup only, bug cannot trigger.
+Thanks to Domingo Alvarez Duarte.
+---
+ dynasm/dasm_mips.lua | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/dynasm/dasm_mips.lua b/dynasm/dasm_mips.lua
+index 8e250ce..af53042 100644
+--- a/dynasm/dasm_mips.lua
++++ b/dynasm/dasm_mips.lua
+@@ -757,9 +757,9 @@ map_op[".template__"] = function(params, template, nparams)
+     elseif p == "X" then
+       op = op + parse_index(params[n]); n = n + 1
+     elseif p == "B" or p == "J" then
+-      local mode, n, s = parse_label(params[n], false)
+-      if p == "B" then n = n + 2048 end
+-      waction("REL_"..mode, n, s, 1)
++      local mode, m, s = parse_label(params[n], false)
++      if p == "B" then m = m + 2048 end
++      waction("REL_"..mode, m, s, 1)
+       n = n + 1
+     elseif p == "A" then
+       op = op + parse_imm(params[n], 5, 6, 0, false); n = n + 1
+-- 
+2.20.1
+

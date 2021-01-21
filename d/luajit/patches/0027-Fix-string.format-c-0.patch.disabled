@@ -1,0 +1,15 @@
+commit 4660dbfa8a4f9eea5218b739075d04faadfeeef6
+Merge: 58d0dde 430d9f8
+Author: Mike Pall <mike>
+Date:   Sun Jan 14 14:26:10 2018 +0100
+
+    Merge branch 'master' into v2.1
+
+From 430d9f8f7ebb779948dbd43944b876b1a3f58551 Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Sun, 14 Jan 2018 14:11:59 +0100
+Subject: [PATCH 27/72] Fix string.format("%c", 0).
+
+---
+ src/lib_string.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)

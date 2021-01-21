@@ -1,0 +1,26 @@
+From 8071aa4ad65cf09e3b7adda4a7787d8897e5314c Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Mon, 29 Jan 2018 12:12:29 +0100
+Subject: [PATCH 30/72] MIPS64: Fix soft-float +-0.0 vs. +-0.0 comparison.
+
+Thanks to Stefan Pejic.
+---
+ src/vm_mips64.dasc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/vm_mips64.dasc b/src/vm_mips64.dasc
+index a78cd25..0a3f8e5 100644
+--- a/src/vm_mips64.dasc
++++ b/src/vm_mips64.dasc
+@@ -2661,7 +2661,7 @@ static void build_subroutines(BuildCtx *ctx)
+   |.  slt CRET1, CARG2, CARG1
+   |8:
+   |  jr ra
+-  |.  nop
++  |.  li CRET1, 0
+   |9:
+   |  jr ra
+   |.  move CRET1, CRET2
+-- 
+2.20.1
+

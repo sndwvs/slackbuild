@@ -1,0 +1,35 @@
+From 2d4d73df7f04c0e3cb6ec2983d23e418342f17d9 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Mon, 17 Jun 2019 13:50:57 +0530
+Subject: [PATCH] test: Check for package.searchers only in compat5.2
+
+LuaJIT version check for lua will return true for +lua<5.2 since it
+does not fully implement 5.2.  Move the (not package.searchers) check
+to +compat5.2 instead of the version check since it is implemented by
+compat5.2.
+---
+ test/lib/contents.lua | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/test/lib/contents.lua b/test/lib/contents.lua
+index 2baacd5c..09866f6f 100644
+--- a/test/lib/contents.lua
++++ b/test/lib/contents.lua
+@@ -121,10 +121,13 @@ end
+ 
+ do --- pre-5.2 package +lua<5.2
+   assert(package.loaders)
+-  assert(not package.searchers)
+   assert(package.seeall)
+ end
+ 
++do --- 5.2 compat package +compat5.2
++  assert(package.searchers)
++end
++
+ do --- 5.2 package +lua>=5.2
+   assert(not package.loaders)
+   assert(package.searchers)
+-- 
+2.21.0
+

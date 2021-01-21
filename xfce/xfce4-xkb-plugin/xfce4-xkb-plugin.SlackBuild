@@ -65,6 +65,8 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
+xzcat $CWD/xfce4-xkb-plugin-0.8.1-panel-4.15.patch.xz | patch -p1 --verbose || exit 1
+
 [[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
 
 # Configuration

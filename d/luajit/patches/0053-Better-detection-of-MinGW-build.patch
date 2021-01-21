@@ -1,0 +1,27 @@
+From 3404183e2387f48e3464bd79116d3e8021ca781e Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Thu, 10 Jan 2019 12:02:15 +0100
+Subject: [PATCH 53/72] Better detection of MinGW build.
+
+---
+ src/Makefile | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/Makefile b/src/Makefile
+index 24e8c0e..962aa94 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -165,6 +165,10 @@ else
+     HOST_SYS= Windows
+     HOST_MSYS= mingw
+   endif
++  ifneq (,$(findstring MSYS,$(HOST_SYS)))
++    HOST_SYS= Windows
++    HOST_MSYS= mingw
++  endif
+   ifneq (,$(findstring CYGWIN,$(HOST_SYS)))
+     HOST_SYS= Windows
+     HOST_MSYS= cygwin
+-- 
+2.20.1
+

@@ -1,0 +1,387 @@
+From cf7a0540a3a9f80fc729211eb21d1e9b72acc89c Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Wed, 25 Apr 2018 12:07:08 +0200
+Subject: [PATCH 38/72] Bump copyright date to 2018.
+
+---
+ doc/bluequad-print.css     | 2 +-
+ doc/bluequad.css           | 2 +-
+ doc/changes.html           | 5 ++---
+ doc/contact.html           | 7 +++----
+ doc/ext_c_api.html         | 5 ++---
+ doc/ext_ffi.html           | 5 ++---
+ doc/ext_ffi_api.html       | 5 ++---
+ doc/ext_ffi_semantics.html | 5 ++---
+ doc/ext_ffi_tutorial.html  | 5 ++---
+ doc/ext_jit.html           | 5 ++---
+ doc/extensions.html        | 5 ++---
+ doc/faq.html               | 5 ++---
+ doc/install.html           | 5 ++---
+ doc/luajit.html            | 7 +++----
+ doc/running.html           | 5 ++---
+ doc/status.html            | 5 ++---
+ 16 files changed, 32 insertions(+), 46 deletions(-)
+
+diff --git a/doc/bluequad-print.css b/doc/bluequad-print.css
+index 62e1c16..d5a3ea3 100644
+--- a/doc/bluequad-print.css
++++ b/doc/bluequad-print.css
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 2004-2017 Mike Pall.
++/* Copyright (C) 2004-2018 Mike Pall.
+  *
+  * You are welcome to use the general ideas of this design for your own sites.
+  * But please do not steal the stylesheet, the layout or the color scheme.
+diff --git a/doc/bluequad.css b/doc/bluequad.css
+index be2c4bf..cfc889a 100644
+--- a/doc/bluequad.css
++++ b/doc/bluequad.css
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 2004-2017 Mike Pall.
++/* Copyright (C) 2004-2018 Mike Pall.
+  *
+  * You are welcome to use the general ideas of this design for your own sites.
+  * But please do not steal the stylesheet, the layout or the color scheme.
+diff --git a/doc/changes.html b/doc/changes.html
+index 4a4d4fb..c1848e8 100644
+--- a/doc/changes.html
++++ b/doc/changes.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>LuaJIT Change History</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -1010,7 +1009,7 @@ This is the initial non-public release of LuaJIT.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/contact.html b/doc/contact.html
+index 5e07bde..54ddf74 100644
+--- a/doc/contact.html
++++ b/doc/contact.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>Contact</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -91,7 +90,7 @@ xD("fyZKB8xv\"FJytmz8.KAB0u52D")
+ <h2>Copyright</h2>
+ <p>
+ All documentation is
+-Copyright &copy; 2005-2017 Mike Pall.
++Copyright &copy; 2005-2018 Mike Pall.
+ </p>
+ 
+ 
+@@ -99,7 +98,7 @@ Copyright &copy; 2005-2017 Mike Pall.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/ext_c_api.html b/doc/ext_c_api.html
+index 4bb8251..3825956 100644
+--- a/doc/ext_c_api.html
++++ b/doc/ext_c_api.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>Lua/C API Extensions</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -177,7 +176,7 @@ Also note that this mechanism is not without overhead.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/ext_ffi.html b/doc/ext_ffi.html
+index d48d77f..74ca294 100644
+--- a/doc/ext_ffi.html
++++ b/doc/ext_ffi.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>FFI Library</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -320,7 +319,7 @@ without undue conversion penalties.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/ext_ffi_api.html b/doc/ext_ffi_api.html
+index 566897c..10f2d02 100644
+--- a/doc/ext_ffi_api.html
++++ b/doc/ext_ffi_api.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>ffi.* API Functions</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -556,7 +555,7 @@ named <tt>i</tt>.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/ext_ffi_semantics.html b/doc/ext_ffi_semantics.html
+index ae3c037..218049d 100644
+--- a/doc/ext_ffi_semantics.html
++++ b/doc/ext_ffi_semantics.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>FFI Semantics</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -1235,7 +1234,7 @@ compiled.</li>
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/ext_ffi_tutorial.html b/doc/ext_ffi_tutorial.html
+index 29cf549..cd455cf 100644
+--- a/doc/ext_ffi_tutorial.html
++++ b/doc/ext_ffi_tutorial.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>FFI Tutorial</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -591,7 +590,7 @@ it to a local variable in the function scope is unnecessary.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/ext_jit.html b/doc/ext_jit.html
+index 5017e3c..ce6dcd6 100644
+--- a/doc/ext_jit.html
++++ b/doc/ext_jit.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>jit.* Library</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -189,7 +188,7 @@ if you want to know more.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/extensions.html b/doc/extensions.html
+index 3d9e82b..fa412e0 100644
+--- a/doc/extensions.html
++++ b/doc/extensions.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>Extensions</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -398,7 +397,7 @@ lead to the termination of the process.</li>
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/faq.html b/doc/faq.html
+index afeff94..9338be4 100644
+--- a/doc/faq.html
++++ b/doc/faq.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>Frequently Asked Questions (FAQ)</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -174,7 +173,7 @@ the development of certain features, if they are important to you.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/install.html b/doc/install.html
+index 4bcc506..befffa7 100644
+--- a/doc/install.html
++++ b/doc/install.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>Installation</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -636,7 +635,7 @@ to me (the upstream) and not you (the package maintainer), anyway.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/luajit.html b/doc/luajit.html
+index 0003008..d8f531d 100644
+--- a/doc/luajit.html
++++ b/doc/luajit.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>LuaJIT</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -150,7 +149,7 @@ Lua is a powerful, dynamic and light-weight programming language.
+ It may be embedded or used as a general-purpose, stand-alone language.
+ </p>
+ <p>
+-LuaJIT is Copyright &copy; 2005-2017 Mike Pall, released under the
++LuaJIT is Copyright &copy; 2005-2018 Mike Pall, released under the
+ <a href="http://www.opensource.org/licenses/mit-license.php"><span class="ext">&raquo;</span>&nbsp;MIT open source license</a>.
+ </p>
+ <p>
+@@ -224,7 +223,7 @@ Please select a sub-topic in the navigation bar to learn more about LuaJIT.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/running.html b/doc/running.html
+index 331c22d..08d7f71 100644
+--- a/doc/running.html
++++ b/doc/running.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>Running LuaJIT</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -296,7 +295,7 @@ Here are the parameters and their default settings:
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+diff --git a/doc/status.html b/doc/status.html
+index aa8df93..ea61db1 100644
+--- a/doc/status.html
++++ b/doc/status.html
+@@ -3,8 +3,7 @@
+ <head>
+ <title>Status</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+-<meta name="Author" content="Mike Pall">
+-<meta name="Copyright" content="Copyright (C) 2005-2017, Mike Pall">
++<meta name="Copyright" content="Copyright (C) 2005-2018">
+ <meta name="Language" content="en">
+ <link rel="stylesheet" type="text/css" href="bluequad.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="bluequad-print.css" media="print">
+@@ -100,7 +99,7 @@ garbage collector.
+ </div>
+ <div id="foot">
+ <hr class="hide">
+-Copyright &copy; 2005-2017 Mike Pall
++Copyright &copy; 2005-2018
+ <span class="noprint">
+ &middot;
+ <a href="contact.html">Contact</a>
+-- 
+2.20.1
+

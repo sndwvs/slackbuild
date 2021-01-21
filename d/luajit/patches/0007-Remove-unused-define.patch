@@ -1,0 +1,28 @@
+From 6a71e71c1430e5a8f794a52cb2da66e2693db796 Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Sun, 11 Jun 2017 10:02:08 +0200
+Subject: [PATCH 07/72] Remove unused define.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Suggested by 罗泽轩.
+---
+ src/lj_def.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/lj_def.h b/src/lj_def.h
+index 2d8fff6..e67bb24 100644
+--- a/src/lj_def.h
++++ b/src/lj_def.h
+@@ -80,7 +80,6 @@ typedef unsigned int uintptr_t;
+ #define LJ_MIN_SBUF	32		/* Min. string buffer length. */
+ #define LJ_MIN_VECSZ	8		/* Min. size for growable vectors. */
+ #define LJ_MIN_IRSZ	32		/* Min. size for growable IR. */
+-#define LJ_MIN_K64SZ	16		/* Min. size for chained K64Array. */
+ 
+ /* JIT compiler limits. */
+ #define LJ_MAX_JSLOTS	250		/* Max. # of stack slots for a trace. */
+-- 
+2.20.1
+

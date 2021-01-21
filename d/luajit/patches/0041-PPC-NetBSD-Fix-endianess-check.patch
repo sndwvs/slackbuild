@@ -1,0 +1,33 @@
+commit d36afcfea57c29fb51060c24679f3b2c07806545
+Merge: b708297 b025b01
+Author: Mike Pall <mike>
+Date:   Tue Jun 5 11:39:10 2018 +0200
+
+    Merge branch 'master' into v2.1
+
+From b025b01c5b9d23f6218c7d72b7aafa3f1ab1e08a Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Tue, 5 Jun 2018 11:36:18 +0200
+Subject: [PATCH 41/72] PPC/NetBSD: Fix endianess check.
+
+Thanks to he32 and daurnimator.
+---
+ src/lj_arch.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lj_arch.h b/src/lj_arch.h
+index e04c4ee..5f7e445 100644
+--- a/src/lj_arch.h
++++ b/src/lj_arch.h
+@@ -339,7 +339,7 @@
+ #error "No support for ILP32 model on ARM64"
+ #endif
+ #elif LJ_TARGET_PPC
+-#if !LJ_ARCH_PPC64 && LJ_ARCH_ENDIAN == LUAJIT_LE
++#if !LJ_ARCH_PPC64 && (defined(_LITTLE_ENDIAN) && (!defined(_BYTE_ORDER) || (_BYTE_ORDER == _LITTLE_ENDIAN)))
+ #error "No support for little-endian PPC32"
+ #endif
+ #if LJ_ARCH_PPC64
+-- 
+2.20.1
+

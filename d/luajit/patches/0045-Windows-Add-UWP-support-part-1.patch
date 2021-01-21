@@ -1,0 +1,359 @@
+From c3c54ce1aef782823936808a75460e6b53aada2c Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Tue, 5 Jun 2018 17:03:08 +0200
+Subject: [PATCH 45/72] Windows: Add UWP support, part 1.
+
+Contributed by Ben Pye.
+---
+ doc/ext_ffi_api.html |  2 ++
+ src/lib_ffi.c        |  3 +++
+ src/lib_io.c         |  4 ++--
+ src/lib_package.c    | 24 +++++++++++++++++++++++-
+ src/lj_alloc.c       |  6 +++---
+ src/lj_arch.h        | 19 +++++++++++++++++++
+ src/lj_ccallback.c   |  4 ++--
+ src/lj_clib.c        | 20 ++++++++++++++++----
+ src/lj_mcode.c       |  8 ++++----
+ src/lj_profile.c     |  8 ++++----
+ 10 files changed, 78 insertions(+), 20 deletions(-)
+
+diff --git a/doc/ext_ffi_api.html b/doc/ext_ffi_api.html
+index 25cc974..54ff0ce 100644
+--- a/doc/ext_ffi_api.html
++++ b/doc/ext_ffi_api.html
+@@ -468,6 +468,8 @@ otherwise. The following parameters are currently defined:
+ <tr class="odd">
+ <td class="abiparam">win</td><td class="abidesc">Windows variant of the standard ABI</td></tr>
+ <tr class="even">
++<td class="abiparam">uwp</td><td class="abidesc">Universal Windows Platform</td></tr>
++<tr class="odd">
+ <td class="abiparam">gc64</td><td class="abidesc">64 bit GC references</td></tr>
+ </table>
+ 
+diff --git a/src/lib_ffi.c b/src/lib_ffi.c
+index 199cfc9..8032411 100644
+--- a/src/lib_ffi.c
++++ b/src/lib_ffi.c
+@@ -746,6 +746,9 @@ LJLIB_CF(ffi_abi)	LJLIB_REC(.)
+ #endif
+ #if LJ_ABI_WIN
+   case H_(4ab624a8,4ab624a8): b = 1; break;  /* win */
++#endif
++#if LJ_TARGET_UWP
++  case H_(a40f0bcb,a40f0bcb): b = 1; break;  /* uwp */
+ #endif
+   case H_(3af93066,1f001464): b = 1; break;  /* le/be */
+ #if LJ_GC64
+diff --git a/src/lib_io.c b/src/lib_io.c
+index 9763ed4..73fd932 100644
+--- a/src/lib_io.c
++++ b/src/lib_io.c
+@@ -99,7 +99,7 @@ static int io_file_close(lua_State *L, IOFileUD *iof)
+     int stat = -1;
+ #if LJ_TARGET_POSIX
+     stat = pclose(iof->fp);
+-#elif LJ_TARGET_WINDOWS && !LJ_TARGET_XBOXONE
++#elif LJ_TARGET_WINDOWS && !LJ_TARGET_XBOXONE && !LJ_TARGET_UWP
+     stat = _pclose(iof->fp);
+ #else
+     lua_assert(0);
+@@ -406,7 +406,7 @@ LJLIB_CF(io_open)
+ 
+ LJLIB_CF(io_popen)
+ {
+-#if LJ_TARGET_POSIX || (LJ_TARGET_WINDOWS && !LJ_TARGET_XBOXONE)
++#if LJ_TARGET_POSIX || (LJ_TARGET_WINDOWS && !LJ_TARGET_XBOXONE && !LJ_TARGET_UWP)
+   const char *fname = strdata(lj_lib_checkstr(L, 1));
+   GCstr *s = lj_lib_optstr(L, 2);
+   const char *mode = s ? strdata(s) : "r";
+diff --git a/src/lib_package.c b/src/lib_package.c
+index 6fac43e..bedd6d7 100644
+--- a/src/lib_package.c
++++ b/src/lib_package.c
+@@ -76,6 +76,20 @@ static const char *ll_bcsym(void *lib, const char *sym)
+ BOOL WINAPI GetModuleHandleExA(DWORD, LPCSTR, HMODULE*);
+ #endif
+ 
++#if LJ_TARGET_UWP
++void *LJ_WIN_LOADLIBA(const char *path)
++{
++  DWORD err = GetLastError();
++  wchar_t wpath[256];
++  HANDLE lib = NULL;
++  if (MultiByteToWideChar(CP_ACP, 0, path, -1, wpath, 256) > 0) {
++    lib = LoadPackagedLibrary(wpath, 0);
++  }
++  SetLastError(err);
++  return lib;
++}
++#endif
++
+ #undef setprogdir
+ 
+ static void setprogdir(lua_State *L)
+@@ -119,7 +133,7 @@ static void ll_unloadlib(void *lib)
+ 
+ static void *ll_load(lua_State *L, const char *path, int gl)
+ {
+-  HINSTANCE lib = LoadLibraryExA(path, NULL, 0);
++  HINSTANCE lib = LJ_WIN_LOADLIBA(path);
+   if (lib == NULL) pusherror(L);
+   UNUSED(gl);
+   return lib;
+@@ -132,17 +146,25 @@ static lua_CFunction ll_sym(lua_State *L, void *lib, const char *sym)
+   return f;
+ }
+ 
++#if LJ_TARGET_UWP
++EXTERN_C IMAGE_DOS_HEADER __ImageBase;
++#endif
++
+ static const char *ll_bcsym(void *lib, const char *sym)
+ {
+   if (lib) {
+     return (const char *)GetProcAddress((HINSTANCE)lib, sym);
+   } else {
++#if LJ_TARGET_UWP
++    return (const char *)GetProcAddress((HINSTANCE)&__ImageBase, sym);
++#else
+     HINSTANCE h = GetModuleHandleA(NULL);
+     const char *p = (const char *)GetProcAddress(h, sym);
+     if (p == NULL && GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+ 					(const char *)ll_bcsym, &h))
+       p = (const char *)GetProcAddress(h, sym);
+     return p;
++#endif
+   }
+ }
+ 
+diff --git a/src/lj_alloc.c b/src/lj_alloc.c
+index 9fc761c..f3b6a54 100644
+--- a/src/lj_alloc.c
++++ b/src/lj_alloc.c
+@@ -167,7 +167,7 @@ static void *DIRECT_MMAP(size_t size)
+ static void *CALL_MMAP(size_t size)
+ {
+   DWORD olderr = GetLastError();
+-  void *ptr = VirtualAlloc(0, size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
++  void *ptr = LJ_WIN_VALLOC(0, size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+   SetLastError(olderr);
+   return ptr ? ptr : MFAIL;
+ }
+@@ -176,8 +176,8 @@ static void *CALL_MMAP(size_t size)
+ static void *DIRECT_MMAP(size_t size)
+ {
+   DWORD olderr = GetLastError();
+-  void *ptr = VirtualAlloc(0, size, MEM_RESERVE|MEM_COMMIT|MEM_TOP_DOWN,
+-			   PAGE_READWRITE);
++  void *ptr = LJ_WIN_VALLOC(0, size, MEM_RESERVE|MEM_COMMIT|MEM_TOP_DOWN,
++			    PAGE_READWRITE);
+   SetLastError(olderr);
+   return ptr ? ptr : MFAIL;
+ }
+diff --git a/src/lj_arch.h b/src/lj_arch.h
+index e796912..31a1159 100644
+--- a/src/lj_arch.h
++++ b/src/lj_arch.h
+@@ -135,6 +135,13 @@
+ #define LJ_TARGET_GC64		1
+ #endif
+ 
++#ifdef _UWP
++#define LJ_TARGET_UWP		1
++#if LUAJIT_TARGET == LUAJIT_ARCH_X64
++#define LJ_TARGET_GC64		1
++#endif
++#endif
++
+ #define LJ_NUMMODE_SINGLE	0	/* Single-number mode only. */
+ #define LJ_NUMMODE_SINGLE_DUAL	1	/* Default to single-number mode. */
+ #define LJ_NUMMODE_DUAL		2	/* Dual-number mode only. */
+@@ -570,6 +577,18 @@
+ #define LJ_NO_UNWIND		1
+ #endif
+ 
++#if LJ_TARGET_WINDOWS
++#if LJ_TARGET_UWP
++#define LJ_WIN_VALLOC	VirtualAllocFromApp
++#define LJ_WIN_VPROTECT	VirtualProtectFromApp
++extern void *LJ_WIN_LOADLIBA(const char *path);
++#else
++#define LJ_WIN_VALLOC	VirtualAlloc
++#define LJ_WIN_VPROTECT	VirtualProtect
++#define LJ_WIN_LOADLIBA(path)	LoadLibraryExA((path), NULL, 0)
++#endif
++#endif
++
+ /* Compatibility with Lua 5.1 vs. 5.2. */
+ #ifdef LUAJIT_ENABLE_LUA52COMPAT
+ #define LJ_52			1
+diff --git a/src/lj_ccallback.c b/src/lj_ccallback.c
+index 03494a7..412dbf8 100644
+--- a/src/lj_ccallback.c
++++ b/src/lj_ccallback.c
+@@ -267,7 +267,7 @@ static void callback_mcode_new(CTState *cts)
+   if (CALLBACK_MAX_SLOT == 0)
+     lj_err_caller(cts->L, LJ_ERR_FFI_CBACKOV);
+ #if LJ_TARGET_WINDOWS
+-  p = VirtualAlloc(NULL, sz, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
++  p = LJ_WIN_VALLOC(NULL, sz, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+   if (!p)
+     lj_err_caller(cts->L, LJ_ERR_FFI_CBACKOV);
+ #elif LJ_TARGET_POSIX
+@@ -285,7 +285,7 @@ static void callback_mcode_new(CTState *cts)
+ #if LJ_TARGET_WINDOWS
+   {
+     DWORD oprot;
+-    VirtualProtect(p, sz, PAGE_EXECUTE_READ, &oprot);
++    LJ_WIN_VPROTECT(p, sz, PAGE_EXECUTE_READ, &oprot);
+   }
+ #elif LJ_TARGET_POSIX
+   mprotect(p, sz, (PROT_READ|PROT_EXEC));
+diff --git a/src/lj_clib.c b/src/lj_clib.c
+index 6142659..f016b06 100644
+--- a/src/lj_clib.c
++++ b/src/lj_clib.c
+@@ -158,11 +158,13 @@ BOOL WINAPI GetModuleHandleExA(DWORD, LPCSTR, HMODULE*);
+ /* Default libraries. */
+ enum {
+   CLIB_HANDLE_EXE,
++#if !LJ_TARGET_UWP
+   CLIB_HANDLE_DLL,
+   CLIB_HANDLE_CRT,
+   CLIB_HANDLE_KERNEL32,
+   CLIB_HANDLE_USER32,
+   CLIB_HANDLE_GDI32,
++#endif
+   CLIB_HANDLE_MAX
+ };
+ 
+@@ -208,7 +210,7 @@ static const char *clib_extname(lua_State *L, const char *name)
+ static void *clib_loadlib(lua_State *L, const char *name, int global)
+ {
+   DWORD oldwerr = GetLastError();
+-  void *h = (void *)LoadLibraryExA(clib_extname(L, name), NULL, 0);
++  void *h = LJ_WIN_LOADLIBA(clib_extname(L, name));
+   if (!h) clib_error(L, "cannot load module " LUA_QS ": %s", name);
+   SetLastError(oldwerr);
+   UNUSED(global);
+@@ -218,6 +220,7 @@ static void *clib_loadlib(lua_State *L, const char *name, int global)
+ static void clib_unloadlib(CLibrary *cl)
+ {
+   if (cl->handle == CLIB_DEFHANDLE) {
++#if !LJ_TARGET_UWP
+     MSize i;
+     for (i = CLIB_HANDLE_KERNEL32; i < CLIB_HANDLE_MAX; i++) {
+       void *h = clib_def_handle[i];
+@@ -226,11 +229,16 @@ static void clib_unloadlib(CLibrary *cl)
+ 	FreeLibrary((HINSTANCE)h);
+       }
+     }
++#endif
+   } else if (cl->handle) {
+     FreeLibrary((HINSTANCE)cl->handle);
+   }
+ }
+ 
++#if LJ_TARGET_UWP
++EXTERN_C IMAGE_DOS_HEADER __ImageBase;
++#endif
++
+ static void *clib_getsym(CLibrary *cl, const char *name)
+ {
+   void *p = NULL;
+@@ -239,6 +247,9 @@ static void *clib_getsym(CLibrary *cl, const char *name)
+     for (i = 0; i < CLIB_HANDLE_MAX; i++) {
+       HINSTANCE h = (HINSTANCE)clib_def_handle[i];
+       if (!(void *)h) {  /* Resolve default library handles (once). */
++#if LJ_TARGET_UWP
++	h = (HINSTANCE)&__ImageBase;
++#else
+ 	switch (i) {
+ 	case CLIB_HANDLE_EXE: GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, NULL, &h); break;
+ 	case CLIB_HANDLE_DLL:
+@@ -249,11 +260,12 @@ static void *clib_getsym(CLibrary *cl, const char *name)
+ 	  GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+ 			     (const char *)&_fmode, &h);
+ 	  break;
+-	case CLIB_HANDLE_KERNEL32: h = LoadLibraryExA("kernel32.dll", NULL, 0); break;
+-	case CLIB_HANDLE_USER32: h = LoadLibraryExA("user32.dll", NULL, 0); break;
+-	case CLIB_HANDLE_GDI32: h = LoadLibraryExA("gdi32.dll", NULL, 0); break;
++	case CLIB_HANDLE_KERNEL32: h = LJ_WIN_LOADLIBA("kernel32.dll"); break;
++	case CLIB_HANDLE_USER32: h = LJ_WIN_LOADLIBA("user32.dll"); break;
++	case CLIB_HANDLE_GDI32: h = LJ_WIN_LOADLIBA("gdi32.dll"); break;
+ 	}
+ 	if (!h) continue;
++#endif
+ 	clib_def_handle[i] = (void *)h;
+       }
+       p = (void *)GetProcAddress(h, name);
+diff --git a/src/lj_mcode.c b/src/lj_mcode.c
+index e46e3ef..64b0ca9 100644
+--- a/src/lj_mcode.c
++++ b/src/lj_mcode.c
+@@ -66,8 +66,8 @@ void lj_mcode_sync(void *start, void *end)
+ 
+ static void *mcode_alloc_at(jit_State *J, uintptr_t hint, size_t sz, DWORD prot)
+ {
+-  void *p = VirtualAlloc((void *)hint, sz,
+-			 MEM_RESERVE|MEM_COMMIT|MEM_TOP_DOWN, prot);
++  void *p = LJ_WIN_VALLOC((void *)hint, sz,
++			  MEM_RESERVE|MEM_COMMIT|MEM_TOP_DOWN, prot);
+   if (!p && !hint)
+     lj_trace_err(J, LJ_TRERR_MCODEAL);
+   return p;
+@@ -82,7 +82,7 @@ static void mcode_free(jit_State *J, void *p, size_t sz)
+ static int mcode_setprot(void *p, size_t sz, DWORD prot)
+ {
+   DWORD oprot;
+-  return !VirtualProtect(p, sz, prot, &oprot);
++  return !LJ_WIN_VPROTECT(p, sz, prot, &oprot);
+ }
+ 
+ #elif LJ_TARGET_POSIX
+@@ -255,7 +255,7 @@ static void *mcode_alloc(jit_State *J, size_t sz)
+ /* All memory addresses are reachable by relative jumps. */
+ static void *mcode_alloc(jit_State *J, size_t sz)
+ {
+-#ifdef __OpenBSD__
++#if defined(__OpenBSD__) || LJ_TARGET_UWP
+   /* Allow better executable memory allocation for OpenBSD W^X mode. */
+   void *p = mcode_alloc_at(J, 0, sz, MCPROT_RUN);
+   if (p && mcode_setprot(p, sz, MCPROT_GEN)) {
+diff --git a/src/lj_profile.c b/src/lj_profile.c
+index 116998e..3223697 100644
+--- a/src/lj_profile.c
++++ b/src/lj_profile.c
+@@ -247,7 +247,7 @@ static DWORD WINAPI profile_thread(void *psx)
+ {
+   ProfileState *ps = (ProfileState *)psx;
+   int interval = ps->interval;
+-#if LJ_TARGET_WINDOWS
++#if LJ_TARGET_WINDOWS && !LJ_TARGET_UWP
+   ps->wmm_tbp(interval);
+ #endif
+   while (1) {
+@@ -255,7 +255,7 @@ static DWORD WINAPI profile_thread(void *psx)
+     if (ps->abort) break;
+     profile_trigger(ps);
+   }
+-#if LJ_TARGET_WINDOWS
++#if LJ_TARGET_WINDOWS && !LJ_TARGET_UWP
+   ps->wmm_tep(interval);
+ #endif
+   return 0;
+@@ -264,9 +264,9 @@ static DWORD WINAPI profile_thread(void *psx)
+ /* Start profiling timer thread. */
+ static void profile_timer_start(ProfileState *ps)
+ {
+-#if LJ_TARGET_WINDOWS
++#if LJ_TARGET_WINDOWS && !LJ_TARGET_UWP
+   if (!ps->wmm) {  /* Load WinMM library on-demand. */
+-    ps->wmm = LoadLibraryExA("winmm.dll", NULL, 0);
++    ps->wmm = LJ_WIN_LOADLIBA("winmm.dll");
+     if (ps->wmm) {
+       ps->wmm_tbp = (WMM_TPFUNC)GetProcAddress(ps->wmm, "timeBeginPeriod");
+       ps->wmm_tep = (WMM_TPFUNC)GetProcAddress(ps->wmm, "timeEndPeriod");
+-- 
+2.20.1
+

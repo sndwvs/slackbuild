@@ -1,0 +1,56 @@
+From 49f19e7b31fc033ac1e9208580b5be31e2b66b19 Mon Sep 17 00:00:00 2001
+From: Siddhesh Poyarekar <siddhesh@sourceware.org>
+Date: Thu, 14 Mar 2019 23:08:24 +0530
+Subject: [PATCH 67/72] Revert "FFI: Make FP to U64 conversions match JIT
+ backend behavior."
+
+This reverts commit f5d424afe8b9395f0df05aba905e0e1f6a2262b8.
+
+The patch breaks test 279, i.e.
+
+  assert(tostring(bit.band(1ll, 1, 1ull, -1)) == "1ULL")
+
+The patch was put in to make the JIT and interpreter behaviour
+consistent[1] for float to unsigned int conversions but it ended up
+making things worse.  There needs to be a better fix for this.
+
+[1] https://github.com/LuaJIT/LuaJIT/pull/415
+---
+ src/lj_obj.h | 18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
+
+diff --git a/src/lj_obj.h b/src/lj_obj.h
+index 72b7ace..c7e4742 100644
+--- a/src/lj_obj.h
++++ b/src/lj_obj.h
+@@ -942,22 +942,14 @@ static LJ_AINLINE int32_t lj_num2bit(lua_Number n)
+ 
+ #define lj_num2int(n)   ((int32_t)(n))
+ 
+-/*
+-** This must match the JIT backend behavior. In particular for archs
+-** that don't have a common hardware instruction for this conversion.
+-** Note that signed FP to unsigned int conversions have an undefined
+-** result and should never be relied upon in portable FFI code.
+-** See also: C99 or C11 standard, 6.3.1.4, footnote of (1).
+-*/
+ static LJ_AINLINE uint64_t lj_num2u64(lua_Number n)
+ {
+-#if LJ_TARGET_X86ORX64 || LJ_TARGET_MIPS
+-  int64_t i = (int64_t)n;
+-  if (i < 0) i = (int64_t)(n - 18446744073709551616.0);
+-  return (uint64_t)i;
+-#else
+-  return (uint64_t)n;
++#ifdef _MSC_VER
++  if (n >= 9223372036854775808.0)  /* They think it's a feature. */
++    return (uint64_t)(int64_t)(n - 18446744073709551616.0);
++  else
+ #endif
++    return (uint64_t)n;
+ }
+ 
+ static LJ_AINLINE int32_t numberVint(cTValue *o)
+-- 
+2.20.1
+

@@ -1,0 +1,33 @@
+From 82151a4514e6538086f3f5e01cb8d4b22287b14f Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Mon, 12 Jun 2017 09:24:00 +0200
+Subject: [PATCH 08/72] Modify fix for warning from 'ar'.
+
+---
+ src/Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/Makefile b/src/Makefile
+index f7f81a4..24e8c0e 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -208,7 +208,7 @@ TARGET_CC= $(STATIC_CC)
+ TARGET_STCC= $(STATIC_CC)
+ TARGET_DYNCC= $(DYNAMIC_CC)
+ TARGET_LD= $(CROSS)$(CC)
+-TARGET_AR= $(CROSS)ar rcus 2>/dev/null
++TARGET_AR= $(CROSS)ar rcus
+ TARGET_STRIP= $(CROSS)strip
+ 
+ TARGET_LIBPATH= $(or $(PREFIX),/usr/local)/$(or $(MULTILIB),lib)
+@@ -293,6 +293,7 @@ ifeq (Windows,$(TARGET_SYS))
+   TARGET_XSHLDFLAGS= -shared
+   TARGET_DYNXLDOPTS=
+ else
++  TARGET_AR+= 2>/dev/null
+ ifeq (,$(shell $(TARGET_CC) -o /dev/null -c -x c /dev/null -fno-stack-protector 2>/dev/null || echo 1))
+   TARGET_XCFLAGS+= -fno-stack-protector
+ endif
+-- 
+2.20.1
+

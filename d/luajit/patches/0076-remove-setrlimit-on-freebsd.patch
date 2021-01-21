@@ -1,0 +1,35 @@
+commit 320b751a3ec8c2495503ec0b9270f61e3459283a
+Author: myfreeweb <greg@unrelenting.technology>
+Date:   Mon May 20 21:53:04 2019 +0300
+
+    Remove setrlimit on FreeBSD
+    
+    An embeddable interpreter setting a limit that's inherited by spawned child processes is a disaster.. (in fact, the weird limit in Neovim's terminal was what caused me to discover this.)
+    
+    This code is a relic from the FreeBSD <10 days, and the check for FreeBSD version was not correct (__FreeBSD_kernel__ is defined anyway on newer versions). Let's just get rid of this.
+
+diff --git a/src/lj_alloc.c b/src/lj_alloc.c
+index 33a2eb8f..73913011 100644
+--- a/src/lj_alloc.c
++++ b/src/lj_alloc.c
+@@ -344,20 +344,6 @@ static void *CALL_MMAP(size_t size)
+ }
+ #endif
+ 
+-#if LJ_64 && !LJ_GC64 && ((defined(__FreeBSD__) && __FreeBSD__ < 10) || defined(__FreeBSD_kernel__)) && !LJ_TARGET_PS4
+-
+-#include <sys/resource.h>
+-
+-static void init_mmap(void)
+-{
+-  struct rlimit rlim;
+-  rlim.rlim_cur = rlim.rlim_max = 0x10000;
+-  setrlimit(RLIMIT_DATA, &rlim);  /* Ignore result. May fail later. */
+-}
+-#define INIT_MMAP()	init_mmap()
+-
+-#endif
+-
+ static int CALL_MUNMAP(void *ptr, size_t size)
+ {
+   int olderr = errno;

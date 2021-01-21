@@ -70,12 +70,8 @@ patch -p1 -i $CWD/liblua.so.patch || exit 1
 # Configuration
 sed "s/%VER%/${VERSION%.*}/g;s/%REL%/${VERSION}/g;s/\/lib/\/lib${LIBDIRSUFFIX}/g" $CWD/lua.pc > lua.pc
 
-# Lua 5.3.4 has wrong release version in its Makefile. Fix it.
-sed "s/^R= \$V.4/R= \$V.5/" -i Makefile
-
 # Compilation
-# quite a lot of packages still use lua 5.1 API, enable 5.1 compat mode
-make MYCFLAGS="$CFLAGS -fPIC -DLUA_COMPAT_5_2 -DLUA_COMPAT_5_1" MYLDFLAGS="$LDFLAGS" linux
+make MYCFLAGS="$SLACFLAGS -fPIC" MYLDFLAGS="$LDFLAGS" linux-readline
 
 make \
     TO_LIB="liblua.a liblua.so liblua.so.${VERSION%.*} liblua.so.${VERSION}" \
@@ -90,10 +86,10 @@ ln -sf lua $PKG/usr/bin/lua${VERSION%.*}
 ln -sf luac $PKG/usr/bin/luac${VERSION%.*}
 ln -sf liblua.so.${VERSION} $PKG/usr/lib${LIBDIRSUFFIX}/liblua${VERSION%.*}.so
 
-install -Dm644 lua.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}53.pc
-ln -sf ${NAME}53.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}.pc
-ln -sf ${NAME}53.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}5.3.pc
-ln -sf ${NAME}53.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}-5.3.pc
+install -Dm644 lua.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}54.pc
+ln -sf ${NAME}54.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}.pc
+ln -sf ${NAME}54.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}5.4.pc
+ln -sf ${NAME}54.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}-5.4.pc
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la

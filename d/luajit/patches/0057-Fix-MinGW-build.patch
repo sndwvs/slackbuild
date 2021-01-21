@@ -1,0 +1,26 @@
+From 61464b0a5b685489bee7b6680c0e9663f2143a84 Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Thu, 10 Jan 2019 12:37:09 +0100
+Subject: [PATCH 57/72] Fix MinGW build.
+
+Thanks to Victor Bombi.
+---
+ src/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/Makefile b/src/Makefile
+index 962aa94..2c780de 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -194,7 +194,7 @@ CCOPTIONS= $(CCDEBUG) $(CCOPT) $(CCWARN) $(XCFLAGS) $(CFLAGS)
+ LDOPTIONS= $(CCDEBUG) $(LDFLAGS)
+ 
+ HOST_CC= $(CC)
+-HOST_RM= rm -f
++HOST_RM?= rm -f
+ # If left blank, minilua is built and used. You can supply an installed
+ # copy of (plain) Lua 5.1 or 5.2, plus Lua BitOp. E.g. with: HOST_LUA=lua
+ HOST_LUA=
+-- 
+2.20.1
+

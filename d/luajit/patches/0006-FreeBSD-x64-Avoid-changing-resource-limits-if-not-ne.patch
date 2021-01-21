@@ -1,0 +1,26 @@
+From b0ecc6dd65a0b40e1868f20719c4f7c4880dc32d Mon Sep 17 00:00:00 2001
+From: Mike Pall <mike>
+Date: Thu, 8 Jun 2017 00:15:15 +0200
+Subject: [PATCH 06/72] FreeBSD/x64: Avoid changing resource limits, if not
+ needed.
+
+---
+ src/lj_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lj_alloc.c b/src/lj_alloc.c
+index 95d15d0..9fc761c 100644
+--- a/src/lj_alloc.c
++++ b/src/lj_alloc.c
+@@ -343,7 +343,7 @@ static void *CALL_MMAP(size_t size)
+ }
+ #endif
+ 
+-#if (defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && !LJ_TARGET_PS4
++#if LJ_64 && !LJ_GC64 && ((defined(__FreeBSD__) && __FreeBSD__ < 10) || defined(__FreeBSD_kernel__)) && !LJ_TARGET_PS4
+ 
+ #include <sys/resource.h>
+ 
+-- 
+2.20.1
+
