@@ -2,12 +2,12 @@
 
 CWD=$(pwd)
 
-NAME="lua"
-VERSION=${VERSION:-5.4.2}
+NAME="python-efl"
+VERSION=${VERSION:-1.25.0}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
-wget -c https://www.lua.org/ftp/$NAME-$VERSION.tar.gz
+wget -c https://download.enlightenment.org/rel/bindings/python/$NAME-$VERSION.tar.xz
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
 
@@ -67,31 +67,12 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-patch -p1 -i $CWD/liblua.so.patch || exit 1
+[[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
 
 # Configuration
-sed "s/%VER%/${VERSION%.*}/g;s/%REL%/${VERSION}/g;s/\/lib/\/lib${LIBDIRSUFFIX}/g" $CWD/lua.pc > lua.pc
-
-# Compilation
-make MYCFLAGS="$SLACFLAGS -fPIC" MYLDFLAGS="$LDFLAGS" linux-readline
-
-make \
-    TO_LIB="liblua.a liblua.so liblua.so.${VERSION%.*} liblua.so.${VERSION}" \
-    INSTALL_DATA='cp -d' \
-    INSTALL_TOP=$PKG/usr \
-    INSTALL_LIB=$PKG/usr/lib${LIBDIRSUFFIX} \
-    INSTALL_CMOD=$PKG/usr/lib${LIBDIRSUFFIX}/${NAME}/${VERSION%.*} \
-    INSTALL_MAN=$PKG/usr/man/man1 \
-    install
-
-ln -sf lua $PKG/usr/bin/lua${VERSION%.*}
-ln -sf luac $PKG/usr/bin/luac${VERSION%.*}
-ln -sf liblua.so.${VERSION} $PKG/usr/lib${LIBDIRSUFFIX}/liblua${VERSION%.*}.so
-
-install -Dm644 lua.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}54.pc
-ln -sf ${NAME}54.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}.pc
-ln -sf ${NAME}54.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}5.4.pc
-ln -sf ${NAME}54.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}-5.4.pc
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+python3 setup.py install --root=$PKG
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
@@ -111,7 +92,6 @@ done
 mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
 cp -fav \
   LICENSE README \
-  doc/*.{gif,png,css,html} \
   $PKG/usr/doc/$NAME-$VERSION/
 cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
 
