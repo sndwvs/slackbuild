@@ -77,6 +77,9 @@ cd build
         -DBUILD_SHARED_LIBS=ON \
         -DINSTALL_LIBS=ON \
         -DINSTALL_EXTRA_LIBS=ON \
+        -DBUILD_BULLET2_DEMOS=OFF \
+        -DBUILD_UNIT_TESTS=OFF \
+        -DBUILD_EXTRAS=OFF \
         -DCMAKE_BUILD_TYPE=Release ..
   # Compilation
   make $NUMJOBS || exit 1

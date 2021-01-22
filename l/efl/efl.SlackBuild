@@ -74,11 +74,21 @@ export SLKCFLAGS="$SLKCFLAGS -fvisibility=hidden"
 meson . build \
     --prefix=/usr/ \
     --libdir=/usr/lib${LIBDIRSUFFIX} \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --mandir=/usr/man \
+    -Davahi=false \
+    -Ddrm=false \
+    -Dfb=true \
+    -Ddrm-deprecated=false \
+    -Dopengl=full \
     -Dsystemd=false \
+    -Dwl=false \
+    -Dglib=true \
     -Dbindings= \
     -Dbuild-examples=false \
     -Dbuild-tests=false \
-    -Decore-imf-loaders-disabler= \
+    -Decore-imf-loaders-disabler=scim \
     $CONFIG \
     -Dbuild-id="$TARGET"
 

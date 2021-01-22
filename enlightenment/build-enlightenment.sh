@@ -11,7 +11,7 @@
 INSTALL=yes
 
 TMP=${TMP:-/tmp/enlightenment}
-OUTPUT=${OUTPUT:-/tmp}
+OUTPUT=${OUTPUT:-/tmp/enlightenment}
 
 ENLIGHTENMENT_ROOT=$(pwd)
 
