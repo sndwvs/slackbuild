@@ -1,0 +1,15 @@
+--- a/data/etc/system.conf	2021-01-24 01:17:23.963419372 +0200
++++ b/data/etc/system.conf	2021-01-24 01:18:41.027377767 +0200
+@@ -73,6 +73,12 @@
+ group:    colord    allow: *
+ group:    input     allow: *
+ group:    sudo      allow: *
++# members of operator, staff and admin groups should be able to do all
++group:    users  allow: backlight
++group:    users  allow: ddc
++group:    users  allow: rfkill
++group:    users  allow: l2ping
++group:    users  allow: cpufreq
+ 
+ # deny everyone else by default
+ user:     *         deny:  *

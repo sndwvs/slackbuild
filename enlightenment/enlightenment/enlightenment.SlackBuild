@@ -67,6 +67,22 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
+# PATCH-FIX-OPENSUSE - enlightenment-0.16.999.65256-dont_require_suidbit.patch sleep_walker@opensuse.org -- upstream insist on having suidbit
+patch -Np0 -i $CWD/patches/enlightenment-0.16.999.65256-dont_require_suidbit.patch || exit 1
+# PATCH-FEATURE-OPENSUSE dont_offer_updates.patch -- don't offer updates, that's up to package manager -- sleep_walker@opensuse.org
+patch -Np1 -i $CWD/patches/dont_offer_updates.patch || exit 1
+# PATCH-FEATURE-OPENSUSE as we use Network Manager rather then connman offline mode doesn't do anything so Hide the menu option
+patch -Np1 -i $CWD/patches/feature-suse-disable-offline-menu.patch || exit 1
+# boo#1003939 don't ask for language if we can use the current system one
+patch -Np1 -i $CWD/patches/feature-wizard-auto-lang.patch || exit 1
+patch -Np1 -i $CWD/patches/feature-wizard-keylayout-from-sys.patch || exit 1
+patch -Np1 -i $CWD/patches/feature-qt-apps-gtk2-theme.patch || exit 1
+patch -Np1 -i $CWD/patches/system.conf.patch || exit 1
+
+# Copy In new Network Wizard
+rm src/modules/wizard/page_110.c
+cp -v $CWD/network_manager_wizard.c src/modules/wizard/page_110.c
+
 SLKCFLAGS="$SLKCFLAGS -fcommon" # https://wiki.gentoo.org/wiki/Gcc_10_porting_notes/fno_common
 SLKCFLAGS="$SLKCFLAGS -fvisibility=hidden"
 
@@ -93,6 +109,9 @@ mv $PKG/etc/xdg/menus/e-applications.menu $PKG/etc/xdg/menus/e-applications.menu
 
 # Handle the xinitrc file
 install -Dm755 $CWD/xinitrc.enlightenment $PKG/etc/X11/xinit/xinitrc.enlightenment.new
+
+# PAM configuration
+install -Dm644 $CWD/enlightenment.pam $PKG/etc/pam.d/enlightenment.pam.new
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
