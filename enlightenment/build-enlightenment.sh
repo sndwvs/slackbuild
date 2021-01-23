@@ -24,6 +24,7 @@ for dir in \
   python-efl \
   enlightenment \
   terminology \
+  evisum \
   ; do
   # Get the package name
   package=$(echo $dir | cut -f2- -d /)
