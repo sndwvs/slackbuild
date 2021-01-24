@@ -4,10 +4,12 @@ CWD=$(pwd)
 
 NAME="efl"
 VERSION=${VERSION:-1.25.1}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 PACKAGER=${PACKAGER:-mara}
 
+FLAT_THEME="e-flat-theme-0_pre20210121.edj"
 wget -c https://download.enlightenment.org/rel/libs/efl/$NAME-$VERSION.tar.xz
+wget -c https://dev.gentoo.org/~juippis/distfiles/$FLAT_THEME
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
 
@@ -97,6 +99,8 @@ DESTDIR=$PKG ninja -C build install
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
+
+install -Dm644 $CWD/$FLAT_THEME $PKG/usr/share/elementary/themes/flat-0.edj || exit 1
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
