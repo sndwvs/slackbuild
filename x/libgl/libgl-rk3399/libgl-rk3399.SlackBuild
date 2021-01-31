@@ -6,7 +6,7 @@ NAME="libmali"
 _NAME="libgl-rk3399"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 _VERSION=${_VERSION:-r14p0}
-BUILD=${BUILD:-3}
+BUILD=${BUILD:-5}
 PACKAGER=${PACKAGER:-mara}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}

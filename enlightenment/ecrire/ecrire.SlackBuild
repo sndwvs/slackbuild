@@ -2,14 +2,10 @@
 
 CWD=$(pwd)
 
-NAME="efl"
-VERSION=${VERSION:-1.25.1}
-BUILD=${BUILD:-3}
+NAME="ecrire"
+VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
+BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
-
-FLAT_THEME="e-flat-theme-0_pre20210121.edj"
-wget -c https://download.enlightenment.org/rel/libs/efl/$NAME-$VERSION.tar.xz
-wget -c https://dev.gentoo.org/~juippis/distfiles/$FLAT_THEME
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
 
@@ -59,9 +55,9 @@ mkdir -p $PKG
 
 # Delete a directory previous build / create new and change rights
 cd $TMP
-rm -rf ${NAME}-$VERSION
+rm -rf $NAME-$VERSION
 tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
-cd ${NAME}-$VERSION || exit 1
+cd $NAME-$VERSION || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -69,38 +65,21 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-export SLKCFLAGS="$SLKCFLAGS -fvisibility=hidden"
-[[ $ARCH != "aarch64" ]] && CONFIG="-Dnative-arch-optimization=false"
+mkdir -p build
+cd build
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  ..
 
-# Configuration
-meson . build \
-    --prefix=/usr/ \
-    --libdir=/usr/lib${LIBDIRSUFFIX} \
-    --sysconfdir=/etc \
-    --localstatedir=/var \
-    --mandir=/usr/man \
-    -Davahi=false \
-    -Ddrm=false \
-    -Dfb=true \
-    -Ddrm-deprecated=false \
-    -Dopengl=full \
-    -Dsystemd=false \
-    -Dwl=false \
-    -Dglib=true \
-    -Dbindings= \
-    -Dbuild-examples=false \
-    -Dbuild-tests=false \
-    -Decore-imf-loaders-disabler=scim \
-    $CONFIG \
-    -Dbuild-id="$TARGET"
-
-ninja -C build -v
-DESTDIR=$PKG ninja -C build install
+# Compilation
+make $NUMJOBS || exit 1
+make install DESTDIR=$PKG
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
-
-install -Dm644 $CWD/$FLAT_THEME $PKG/usr/share/elementary/themes/flat-0.edj || exit 1
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
