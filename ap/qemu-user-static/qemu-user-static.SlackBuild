@@ -1,21 +1,16 @@
 #!/bin/bash
 
-# Slackware build script for VLC media player
-# Written by Andrea De Pasquale <andrea@de-pasquale.name>
-# Based on Eric Hameleers' Slackware build script,
-# modified to build VLC only, shared libraries needed.
-#
-# Modified for slarm64
-
 CWD=$(pwd)
 
-NAME="vlc"
+NAME="qemu"
+_NAME="${NAME}-user-static"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
 
+KVMGROUP=${KVMGROUP:-users}
 
 # Automatically determine the architecture we're building on:
 MARCH=$( uname -m )
@@ -42,16 +37,12 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3 -fPIC"
-  LIBDIRSUFFIX="64"
-elif [ "$ARCH" = "riscv64" ]; then
-  SLKCFLAGS="-O3 -fPIC"
+  SLKCFLAGS="-O3"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
   LIBDIRSUFFIX=""
 fi
-SLKLDFLAGS="-lrt"
 
 case "$ARCH" in
     arm*) TARGET=$ARCH-slackware-linux-gnueabihf ;;
@@ -60,7 +51,7 @@ esac
 
 # Establishment tmp directory for
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-$NAME
+PKG=$TMP/package-${_NAME}
 rm -rf $PKG
 mkdir -p $PKG
 
@@ -76,71 +67,69 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-# In an ordinary virtual machine, since a different kernal is running,
-# a unique dbus id is needed.
-# However with LXC, the same kernel is used in each container,
-# so we insert an arbitrary value
-#
-grep "container=" /etc/rc.d/rc.S >/dev/null 2>/dev/null
-if [ $? -eq 0 ]; then
-  mkdir -p /var/lib/dbus/
-  echo "c6a18f2e9370da38e62fd5d859b58122" > /var/lib/dbus/machine-id
-fi
-
-wayland="--disable-wayland" ; [ "${WAYLAND:-no}" != "no" ] && wayland="--enable-wayland"
-
-opencv=""
-if [ "${OPENCV:-yes}" != "yes" ]; then
-  opencv="--disable-opencv" ;
-else
-  if pkg-config --exists opencv4 ; then
-    opencv="--enable-opencv"
-    patch -p0 < $CWD/patch-opencv4.diff || exit 1
-    mv modules/video_filter/opencv_wrapper.c modules/video_filter/opencv_wrapper.cpp
-  elif pkg-config --exists opencv ; then
-    # opencv-legacy
-    opencv="--enable-opencv"
-  else
-    opencv="--disable-opencv"
-  fi
-fi
-
-patch -p0 < $CWD/patch-dvdread-503.diff || exit 1
-patch -p0 < $CWD/patch-dvdnav-503.diff || exit 1
-patch -p0 < $CWD/patch-projectM-fontpath.diff || exit 1
-patch -p0 < $CWD/patch_vlc_cache_gen.diff || exit 1
-
-autoreconf -fiv
-
 # Configuration
-CC="clang" \
-CXX="clang++" \
-LDFLAGS=$SLKLDFLAGS \
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
   --mandir=/usr/man \
+  --sysconfdir=/etc \
   --localstatedir=/var \
-  --docdir=/usr/doc/$NAME-$VERSION \
-  --enable-qt=5 \
-  $wayland \
-  $opencv \
-  --enable-run-as-root \
-  --enable-merge-ffmpeg \
-  --enable-libva=yes \
-  --enable-lua=no \
-  --with-kde-solid=no \
-  --build=$TARGET
+  --libexecdir=/usr/libexec/qemu \
+  --docdir=/usr/doc/${_NAME}-$VERSION \
+  --enable-linux-user \
+  --disable-debug-info \
+  --disable-bsd-user \
+  --disable-werror \
+  --disable-system \
+  --disable-tools \
+  --disable-docs \
+  --disable-gtk \
+  --disable-gnutls \
+  --disable-nettle \
+  --disable-gcrypt \
+  --disable-glusterfs \
+  --disable-libnfs \
+  --disable-libiscsi \
+  --disable-vnc \
+  --disable-kvm \
+  --disable-libssh \
+  --disable-libxml2 \
+  --disable-vde \
+  --disable-sdl \
+  --disable-opengl \
+  --disable-xen \
+  --disable-fdt \
+  --disable-vhost-net \
+  --disable-vhost-crypto \
+  --disable-vhost-user \
+  --disable-vhost-vsock \
+  --disable-vhost-scsi \
+  --disable-tpm \
+  --disable-qom-cast-debug \
+  --disable-capstone \
+  --disable-zstd \
+  --disable-linux-io-uring \
+  --static
 
 # Compilation
-make $NUMJOBS || exit 1
+make ARFLAGS="rc" || exit 1
 make install DESTDIR=$PKG
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
+
+# remove conflicting /var/run directory
+rm -rf $PKG/var
+
+# Remove BIOS files etc...
+rm -rf $PKG/usr/share
+# Rename static qemu binaries
+cd $PKG/usr/bin/
+ls -1 | while read f; do
+    mv "$f" "$f-static"
+done
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
@@ -154,19 +143,17 @@ for i in $( find $PKG/usr/man -type l ) ; do
 done
 
 # Copy docs
-mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
+mkdir -vpm755 $PKG/usr/doc/${_NAME}-$VERSION
 cp -fav \
-  ABOUT-NLS AUTHORS COPYING INSTALL NEWS README THANKS \
-  $PKG/usr/doc/$NAME-$VERSION/
-cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
+  LICENSE README \
+  $PKG/usr/doc/${_NAME}-$VERSION/
+cat $CWD/${_NAME}.SlackBuild > $PKG/usr/doc/${_NAME}-$VERSION/${_NAME}.SlackBuild
 
 # Description and installation script
 mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 cat $CWD/slack-desc > $PKG/install/slack-desc
-# fixed LIBDIRSUFFIX
-xzcat $CWD/doinst.sh.xz | sed -e s/%LIBDIRSUFFIX%/$LIBDIRSUFFIX/g > $PKG/install/doinst.sh
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
-
+makepkg -l n -c n $TMP/${_NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
