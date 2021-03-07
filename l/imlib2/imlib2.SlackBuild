@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="iperf"
+NAME="imlib2"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -68,16 +68,22 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-[[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
+sed -i 's/@my_libs@//' imlib2-config.in
+
+[ $ARCH = "i?86" ] && EXTRAOPTS="--enable-mmx"
+[ $ARCH = "x86_64" ] && EXTRAOPTS="--enable-amd64"
 
 # Configuration
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
+  --sysconfdir=/etc/$NAME \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --mandir=/usr/man \
   --docdir=/usr/doc/$NAME-$VERSION \
+  --x-libraries=/usr/lib${LIBDIRSUFFIX} \
+  $EXTRAOPTS \
   --build=$TARGET
 
 # Compilation
