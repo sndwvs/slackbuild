@@ -2,12 +2,11 @@
 
 CWD=$(pwd)
 
-NAME="lua"
-VERSION=${VERSION:-5.4.3}
+NAME="lua-event"
+VERSION=${VERSION:-$(echo ${NAME/-/}-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
-
-wget -c https://www.lua.org/ftp/$NAME-$VERSION.tar.gz
+LUA=5.4
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
 
@@ -25,25 +24,19 @@ if [ -z "$ARCH" ]; then
 fi
 
 if [ "$ARCH" = "i686" ]; then
-  SLKCFLAGS="-O3 -march=i686 -mtune=i686"
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O3 -fPIC"
+  SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX="64"
-elif [ "$ARCH" = "armv7hl" ]; then
-  SLKCFLAGS="-O3 -march=armv7-a -mfpu=vfpv3-d16"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "arm" ]; then
-  SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
-  LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3 -fPIC"
+  SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX="64"
 elif [ "$ARCH" = "riscv64" ]; then
-  SLKCFLAGS="-O3 -fPIC"
+  SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX="64"
 else
-  SLKCFLAGS="-O2"
+  SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX=""
 fi
 
@@ -60,9 +53,9 @@ mkdir -p $PKG
 
 # Delete a directory previous build / create new and change rights
 cd $TMP
-rm -rf $NAME-$VERSION
-tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
-cd $NAME-$VERSION || exit 1
+rm -rf ${NAME/-/}-$VERSION
+tar xvf $CWD/${NAME/-/}-$VERSION.tar.?z* || exit 1
+cd ${NAME/-/}-$VERSION || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -70,31 +63,13 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-patch -p1 -i $CWD/liblua.so.patch || exit 1
-
 # Configuration
-sed "s/%VER%/${VERSION%.*}/g;s/%REL%/${VERSION}/g;s/\/lib/\/lib${LIBDIRSUFFIX}/g" $CWD/lua.pc > lua.pc
-
 # Compilation
-make MYCFLAGS="$SLACFLAGS -fPIC" MYLDFLAGS="$LDFLAGS" linux-readline
+make CFLAGS="${SLKCFLAGS}" LUA_INC_DIR="/usr/include/lua$LUA" || exit 1
 
-make \
-    TO_LIB="liblua.a liblua.so liblua.so.${VERSION%.*} liblua.so.${VERSION}" \
-    INSTALL_DATA='cp -d' \
-    INSTALL_TOP=$PKG/usr \
-    INSTALL_LIB=$PKG/usr/lib${LIBDIRSUFFIX} \
-    INSTALL_CMOD=$PKG/usr/lib${LIBDIRSUFFIX}/${NAME}/${VERSION%.*} \
-    INSTALL_MAN=$PKG/usr/man/man1 \
-    install
-
-ln -sf lua $PKG/usr/bin/lua${VERSION%.*}
-ln -sf luac $PKG/usr/bin/luac${VERSION%.*}
-ln -sf liblua.so.${VERSION} $PKG/usr/lib${LIBDIRSUFFIX}/liblua${VERSION%.*}.so
-
-install -Dm644 lua.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}54.pc
-ln -sf ${NAME}54.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}.pc
-ln -sf ${NAME}54.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}5.4.pc
-ln -sf ${NAME}54.pc $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/${NAME}-5.4.pc
+make install \
+  INSTALL_DIR_BIN=/usr/lib${LIBDIRSUFFIX}/lua/$LUA \
+  DESTDIR=$PKG
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
@@ -114,7 +89,6 @@ done
 mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
 cp -fav \
   LICENSE README \
-  doc/*.{gif,png,css,html} \
   $PKG/usr/doc/$NAME-$VERSION/
 cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
 
