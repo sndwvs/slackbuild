@@ -1,0 +1,10 @@
+--- a/init.in	2021-06-10 22:18:00.718370221 +0300
++++ b/init.in	2021-06-10 22:38:03.364920033 +0300
+@@ -1,6 +1,6 @@
+ #!/bin/sh
+ 
+-PATH=/usr/bin:/usr/sbin
++PATH=/bin:/sbin:/usr/bin:/usr/sbin
+ export PATH
+ 
+ problem()

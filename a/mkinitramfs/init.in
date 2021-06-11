@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PATH=/bin:/usr/bin:/sbin:/usr/sbin
+PATH=/usr/bin:/usr/sbin
 export PATH
 
 problem()
@@ -33,10 +33,11 @@ do_mount_root()
    rootflags="$rootflags$ro"
 
    case "$root" in
-      /dev/* ) device=$root ;;
-      UUID=* ) eval $root; device="/dev/disk/by-uuid/$UUID"  ;;
-      LABEL=*) eval $root; device="/dev/disk/by-label/$LABEL" ;;
-      ""     ) echo "No root device specified." ; problem    ;;
+      /dev/*    ) device=$root ;;
+      UUID=*    ) eval $root; device="/dev/disk/by-uuid/$UUID" ;;
+      PARTUUID=*) eval $root; device="/dev/disk/by-partuuid/$PARTUUID" ;;
+      LABEL=*   ) eval $root; device="/dev/disk/by-label/$LABEL" ;;
+      ""        ) echo "No root device specified." ; problem ;;
    esac
 
    while [ ! -b "$device" ] ; do

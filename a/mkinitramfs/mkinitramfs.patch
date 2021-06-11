@@ -1,0 +1,241 @@
+--- a/mkinitramfs	2021-06-10 22:17:56.734306317 +0300
++++ b/mkinitramfs	2021-06-11 21:16:34.194870278 +0300
+@@ -7,13 +7,17 @@
+   local file
+ 
+   if [ "$2" = "lib" ]; then
+-    file=$(PATH=/usr/lib type -p $1)
++    file=$(PATH=/lib type -p $1)
++    if [ -n $file ]; then
++        file=$(PATH=/lib64 type -p $1)
++    fi
+   else
+     file=$(type -p $1)
+   fi
+ 
+   if [ -n "$file" ] ; then
+-    cp $file $WDIR/usr/$2
++    echo "cp $file $WDIR/$2"
++    cp $file $WDIR/$2
+   else
+     echo "Missing required file: $1 for directory $2"
+     rm -rf $WDIR
+@@ -28,7 +32,7 @@
+   INITRAMFS_FILE=initrd.img-$KERNEL_VERSION
+ fi
+ 
+-if [ -n "$KERNEL_VERSION" ] && [ ! -d "/usr/lib/modules/$1" ] ; then
++if [ -n "$KERNEL_VERSION" ] && [ ! -d "/lib/modules/$1" ] ; then
+   echo "No modules directory named $1"
+   exit 1
+ fi
+@@ -40,18 +44,18 @@
+ binfiles="$binfiles readlink basename"
+ 
+ # Systemd installs udevadm in /bin. Other udev implementations have it in /sbin
+-if [ -x /usr/bin/udevadm ] ; then binfiles="$binfiles udevadm"; fi
++if [ -x /bin/udevadm ] ; then binfiles="$binfiles udevadm"; fi
+ 
+ sbinfiles="modprobe blkid switch_root"
+ 
+ # Optional files and locations
+ for f in mdadm mdmon udevd udevadm; do
+-  if [ -x /usr/sbin/$f ] ; then sbinfiles="$sbinfiles $f"; fi
++  if [ -x /sbin/$f ] ; then sbinfiles="$sbinfiles $f"; fi
+ done
+ 
+ # Add lvm if present (cannot be done with the others because it
+ # also needs dmsetup
+-if [ -x /usr/sbin/lvm ] ; then sbinfiles="$sbinfiles lvm dmsetup"; fi
++if [ -x /sbin/lvm ] ; then sbinfiles="$sbinfiles lvm dmsetup"; fi
+ 
+ unsorted=$(mktemp /tmp/unsorted.XXXXXXXXXX)
+ 
+@@ -62,13 +66,13 @@
+ WDIR=$(mktemp -d /tmp/initrd-work.XXXXXXXXXX)
+ 
+ # Create base directory structure
+-mkdir -p $WDIR/{dev,run,sys,proc,usr/{bin,lib/{firmware,modules},sbin}}
++mkdir -p $WDIR/{dev,run,sys,proc,lib/{firmware,modules},bin,sbin}
+ mkdir -p $WDIR/etc/{modprobe.d,udev/rules.d}
+ touch $WDIR/etc/modprobe.d/modprobe.conf
+-ln -s usr/bin  $WDIR/bin
+-ln -s usr/lib  $WDIR/lib
+-ln -s usr/sbin $WDIR/sbin
+-ln -s lib      $WDIR/lib64
++#ln -s /bin      $WDIR/bin
++#ln -s /lib      $WDIR/lib
++#ln -s /sbin     $WDIR/sbin
++ln -s $WDIR/lib -r  $WDIR/lib64
+ 
+ # Create necessary device nodes
+ mknod -m 640 $WDIR/dev/console c 5 1
+@@ -84,7 +88,7 @@
+ done
+ 
+ # Install any firmware present
+-cp -a /usr/lib/firmware $WDIR/usr/lib
++cp -a /lib/firmware $WDIR/lib
+ 
+ # Copy the RAID configuration file if present
+ if [ -f /etc/mdadm.conf ] ; then
+@@ -95,8 +99,8 @@
+ install -m0755 $DATADIR/$INITIN $WDIR/init
+ 
+ if [  -n "$KERNEL_VERSION" ] ; then
+-  if [ -x /usr/bin/kmod ] ; then
+-    binfiles="$binfiles kmod"
++  if [ -x /sbin/kmod ] ; then
++    sbinfiles="$sbinfiles kmod"
+   else
+     binfiles="$binfiles lsmod"
+     sbinfiles="$sbinfiles insmod"
+@@ -105,49 +109,48 @@
+ 
+ # Install basic binaries
+ for f in $binfiles ; do
+-  ldd /usr/bin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
+-  copy /usr/bin/$f bin
++  ldd /bin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
++  copy /bin/$f bin
+ done
+ 
+ for f in $sbinfiles ; do
+-  ldd /usr/sbin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
++  ldd /sbin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
+   copy $f sbin
+ done
+ 
+ # Add udevd libraries if not in /usr/sbin
+-if [ -x /usr/lib/udev/udevd ] ; then
+-  ldd /usr/lib/udev/udevd | sed "s/\t//" | cut -d " " -f1 >> $unsorted
+-elif [ -x /usr/lib/systemd/systemd-udevd ] ; then
+-  ldd /usr/lib/systemd/systemd-udevd | sed "s/\t//" | cut -d " " -f1 >> $unsorted
++if [ -x /lib/udev/udevd ] ; then
++  ldd /lib/udev/udevd | sed "s/\t//" | cut -d " " -f1 >> $unsorted
++elif [ -x /lib/systemd/systemd-udevd ] ; then
++  ldd /lib/systemd/systemd-udevd | sed "s/\t//" | cut -d " " -f1 >> $unsorted
+ fi
+ 
+ # Add module symlinks if appropriate
+-if [ -n "$KERNEL_VERSION" ] && [ -x /usr/bin/kmod ] ; then
+-  ln -s kmod $WDIR/usr/bin/lsmod
+-  ln -s kmod $WDIR/usr/bin/insmod
++if [ -n "$KERNEL_VERSION" ] && [ -x /sbin/kmod ] ; then
++  ln -s /sbin/kmod -r $WDIR/bin/lsmod
++  ln -s /sbin/kmod -r $WDIR/bin/insmod
+ fi
+ 
+ # Add lvm symlinks if appropriate
+ # Also copy the lvm.conf file
+-if  [ -x /usr/sbin/lvm ] ; then
+-  ln -s lvm $WDIR/usr/sbin/lvchange
+-  ln -s lvm $WDIR/usr/sbin/lvrename
+-  ln -s lvm $WDIR/usr/sbin/lvextend
+-  ln -s lvm $WDIR/usr/sbin/lvcreate
+-  ln -s lvm $WDIR/usr/sbin/lvdisplay
+-  ln -s lvm $WDIR/usr/sbin/lvscan
+-
+-  ln -s lvm $WDIR/usr/sbin/pvchange
+-  ln -s lvm $WDIR/usr/sbin/pvck
+-  ln -s lvm $WDIR/usr/sbin/pvcreate
+-  ln -s lvm $WDIR/usr/sbin/pvdisplay
+-  ln -s lvm $WDIR/usr/sbin/pvscan
+-
+-  ln -s lvm $WDIR/usr/sbin/vgchange
+-  ln -s lvm $WDIR/usr/sbin/vgcreate
+-  ln -s lvm $WDIR/usr/sbin/vgscan
+-  ln -s lvm $WDIR/usr/sbin/vgrename
+-  ln -s lvm $WDIR/usr/sbin/vgck
++if  [ -x /sbin/lvm ] ; then
++  ln -s /sbin/lvm -r $WDIR/sbin/lvchange
++  ln -s /sbin/lvm -r $WDIR/sbin/lvrename
++  ln -s /sbin/lvm -r $WDIR/sbin/lvextend
++  ln -s /sbin/lvm -r $WDIR/sbin/lvcreate
++  ln -s /sbin/lvm -r $WDIR/sbin/lvdisplay
++  ln -s /sbin/lvm -r $WDIR/sbin/lvscan
++
++  ln -s /sbin/lvm -r $WDIR/sbin/pvchange
++  ln -s /sbin/lvm -r $WDIR/sbin/pvck
++  ln -s /sbin/lvm -r $WDIR/sbin/pvcreate
++  ln -s /sbin/lvm -r $WDIR/sbin/pvdisplay
++  ln -s /sbin/lvm -r $WDIR/sbin/pvscan
++  ln -s /sbin/lvm -r $WDIR/sbin/vgchange
++  ln -s /sbin/lvm -r $WDIR/sbin/vgcreate
++  ln -s /sbin/lvm -r $WDIR/sbin/vgscan
++  ln -s /sbin/lvm -r $WDIR/sbin/vgrename
++  ln -s /sbin/lvm -r $WDIR/sbin/vgck
+   # Conf file(s)
+   cp -a /etc/lvm $WDIR/etc
+ fi
+@@ -166,27 +169,30 @@
+   copy $library lib
+ done
+ 
+-if [ -d /usr/lib/udev ]; then
+-  cp -a /usr/lib/udev $WDIR/usr/lib
++if [ -d /lib/udev ]; then
++  cp -a /lib/udev $WDIR/lib
+ fi
+-if [ -d /usr/lib/systemd ]; then
+-  cp -a /usr/lib/systemd $WDIR/usr/lib
++if [ -d /lib/systemd ]; then
++  cp -a /lib/systemd $WDIR/lib
+ fi
+-if [ -d /usr/lib/elogind ]; then
+-  cp -a /usr/lib/elogind $WDIR/usr/lib
++if [ -d /lib/elogind ]; then
++  cp -a /lib/elogind $WDIR/lib
++fi
++if [ -d /lib64/elogind ]; then
++  cp -a /lib64/elogind $WDIR/lib64
+ fi
+ 
+ # Install the kernel modules if requested
+ if [ -n "$KERNEL_VERSION" ]; then
+   find                                                                        \
+-     /usr/lib/modules/$KERNEL_VERSION/kernel/{crypto,fs,lib}                      \
+-     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/{block,ata,md,firewire}      \
+-     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/{scsi,message,pcmcia,virtio} \
+-     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/usb/{host,storage}           \
++     /lib/modules/$KERNEL_VERSION/kernel/{crypto,fs,lib}                      \
++     /lib/modules/$KERNEL_VERSION/kernel/drivers/{block,ata,md,firewire}      \
++     /lib/modules/$KERNEL_VERSION/kernel/drivers/{scsi,message,pcmcia,virtio} \
++     /lib/modules/$KERNEL_VERSION/kernel/drivers/usb/{host,storage}           \
+      -type f 2> /dev/null | cpio --make-directories -p --quiet $WDIR
+ 
+-  cp /usr/lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
+-            $WDIR/usr/lib/modules/$KERNEL_VERSION
++  cp /lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
++            $WDIR/lib/modules/$KERNEL_VERSION
+ 
+   depmod -b $WDIR $KERNEL_VERSION
+ fi
+@@ -194,8 +200,8 @@
+ ( cd $WDIR ; find . | cpio -o -H newc --quiet | gzip -9 ) > $INITRAMFS_FILE
+ 
+ # Prepare early loading of microcode if available
+-if ls /usr/lib/firmware/intel-ucode/* >/dev/null 2>&1 ||
+-   ls /usr/lib/firmware/amd-ucode/*   >/dev/null 2>&1; then
++if ls /lib/firmware/intel-ucode/* >/dev/null 2>&1 ||
++   ls /lib/firmware/amd-ucode/*   >/dev/null 2>&1; then
+ 
+ # first empty WDIR to reuse it
+   rm -r $WDIR/*
+@@ -203,12 +209,12 @@
+   DSTDIR=$WDIR/kernel/x86/microcode
+   mkdir -p $DSTDIR
+ 
+-  if [ -d /usr/lib/firmware/amd-ucode ]; then
+-    cat /usr/lib/firmware/amd-ucode/microcode_amd*.bin > $DSTDIR/AuthenticAMD.bin
++  if [ -d /lib/firmware/amd-ucode ]; then
++    cat /lib/firmware/amd-ucode/microcode_amd*.bin > $DSTDIR/AuthenticAMD.bin
+   fi
+ 
+-  if [ -d /usr/lib/firmware/intel-ucode ]; then
+-    cat /usr/lib/firmware/intel-ucode/* > $DSTDIR/GenuineIntel.bin
++  if [ -d /lib/firmware/intel-ucode ]; then
++    cat /lib/firmware/intel-ucode/* > $DSTDIR/GenuineIntel.bin
+   fi
+ 
+   ( cd $WDIR; find . | cpio -o -H newc --quiet ) > microcode.img
