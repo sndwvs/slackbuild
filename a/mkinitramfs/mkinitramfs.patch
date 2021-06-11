@@ -1,6 +1,6 @@
 --- a/mkinitramfs	2021-06-10 22:17:56.734306317 +0300
-+++ b/mkinitramfs	2021-06-11 21:16:34.194870278 +0300
-@@ -7,13 +7,17 @@
++++ b/mkinitramfs	2021-06-11 22:36:39.786107210 +0300
+@@ -7,13 +7,16 @@
    local file
  
    if [ "$2" = "lib" ]; then
@@ -16,11 +16,10 @@
    if [ -n "$file" ] ; then
 -    cp $file $WDIR/usr/$2
 +    echo "cp $file $WDIR/$2"
-+    cp $file $WDIR/$2
    else
      echo "Missing required file: $1 for directory $2"
      rm -rf $WDIR
-@@ -28,7 +32,7 @@
+@@ -28,7 +31,7 @@
    INITRAMFS_FILE=initrd.img-$KERNEL_VERSION
  fi
  
@@ -29,7 +28,7 @@
    echo "No modules directory named $1"
    exit 1
  fi
-@@ -40,18 +44,18 @@
+@@ -40,18 +43,18 @@
  binfiles="$binfiles readlink basename"
  
  # Systemd installs udevadm in /bin. Other udev implementations have it in /sbin
@@ -51,7 +50,7 @@
  
  unsorted=$(mktemp /tmp/unsorted.XXXXXXXXXX)
  
-@@ -62,13 +66,13 @@
+@@ -62,13 +65,13 @@
  WDIR=$(mktemp -d /tmp/initrd-work.XXXXXXXXXX)
  
  # Create base directory structure
@@ -70,7 +69,7 @@
  
  # Create necessary device nodes
  mknod -m 640 $WDIR/dev/console c 5 1
-@@ -84,7 +88,7 @@
+@@ -84,7 +87,7 @@
  done
  
  # Install any firmware present
@@ -79,7 +78,7 @@
  
  # Copy the RAID configuration file if present
  if [ -f /etc/mdadm.conf ] ; then
-@@ -95,8 +99,8 @@
+@@ -95,8 +98,8 @@
  install -m0755 $DATADIR/$INITIN $WDIR/init
  
  if [  -n "$KERNEL_VERSION" ] ; then
@@ -90,7 +89,7 @@
    else
      binfiles="$binfiles lsmod"
      sbinfiles="$sbinfiles insmod"
-@@ -105,49 +109,48 @@
+@@ -105,49 +108,48 @@
  
  # Install basic binaries
  for f in $binfiles ; do
@@ -168,7 +167,7 @@
    # Conf file(s)
    cp -a /etc/lvm $WDIR/etc
  fi
-@@ -166,27 +169,30 @@
+@@ -166,27 +168,30 @@
    copy $library lib
  done
  
@@ -211,7 +210,7 @@
  
    depmod -b $WDIR $KERNEL_VERSION
  fi
-@@ -194,8 +200,8 @@
+@@ -194,8 +199,8 @@
  ( cd $WDIR ; find . | cpio -o -H newc --quiet | gzip -9 ) > $INITRAMFS_FILE
  
  # Prepare early loading of microcode if available
@@ -222,7 +221,7 @@
  
  # first empty WDIR to reuse it
    rm -r $WDIR/*
-@@ -203,12 +209,12 @@
+@@ -203,12 +208,12 @@
    DSTDIR=$WDIR/kernel/x86/microcode
    mkdir -p $DSTDIR
  
