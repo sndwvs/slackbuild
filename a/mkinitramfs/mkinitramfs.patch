@@ -1,5 +1,5 @@
 --- a/mkinitramfs	2021-06-10 22:17:56.734306317 +0300
-+++ b/mkinitramfs	2021-06-13 03:27:25.812012601 +0300
++++ b/mkinitramfs	2021-06-13 13:21:15.529423206 +0300
 @@ -1,19 +1,63 @@
  #!/bin/bash
  # This file based in part on the mkinitramfs script for the LFS LiveCD
@@ -66,7 +66,7 @@
    else
      echo "Missing required file: $1 for directory $2"
      rm -rf $WDIR
-@@ -21,15 +65,14 @@
+@@ -21,54 +65,53 @@
    fi
  }
  
@@ -85,7 +85,11 @@
    exit 1
  fi
  
-@@ -40,35 +83,35 @@
+-printf "Creating $INITRAMFS_FILE... "
++printf "Creating $INITRAMFS_FILE...\n"
+ 
+ binfiles="sh cat cp dd killall ls mkdir mknod mount "
+ binfiles="$binfiles umount sed sleep ln rm uname"
  binfiles="$binfiles readlink basename"
  
  # Systemd installs udevadm in /bin. Other udev implementations have it in /sbin
@@ -230,7 +234,7 @@
    # Conf file(s)
    cp -a /etc/lvm $WDIR/etc
  fi
-@@ -166,36 +205,49 @@
+@@ -166,36 +205,57 @@
    copy $library lib
  done
  
@@ -238,22 +242,22 @@
 -  cp -a /usr/lib/udev $WDIR/usr/lib
 +if [ -d /lib/udev ]; then
 +  cp -a /lib/udev $WDIR/lib
- fi
--if [ -d /usr/lib/systemd ]; then
--  cp -a /usr/lib/systemd $WDIR/usr/lib
++fi
 +if [ -d /lib/systemd ]; then
 +  cp -a /lib/systemd $WDIR/lib
  fi
--if [ -d /usr/lib/elogind ]; then
--  cp -a /usr/lib/elogind $WDIR/usr/lib
+-if [ -d /usr/lib/systemd ]; then
+-  cp -a /usr/lib/systemd $WDIR/usr/lib
 +if [ -d /lib/elogind ]; then
 +  cp -a /lib/elogind $WDIR/lib
-+fi
+ fi
+-if [ -d /usr/lib/elogind ]; then
+-  cp -a /usr/lib/elogind $WDIR/usr/lib
 +if [ -d /lib64/elogind ]; then
 +  cp -a /lib64/elogind $WDIR/lib64
  fi
  
--# Install the kernel modules if requested
+ # Install the kernel modules if requested
 -if [ -n "$KERNEL_VERSION" ]; then
 -  find                                                                        \
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/{crypto,fs,lib}                      \
@@ -261,27 +265,36 @@
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/{scsi,message,pcmcia,virtio} \
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/usb/{host,storage}           \
 -     -type f 2> /dev/null | cpio --make-directories -p --quiet $WDIR
-+# Install the kernel modules and firmware if requested
-+IFS=':' read -r -a MODULES_ARRAY <<< ${MODULES}
-+unset IFS=':'
- 
+-
 -  cp /usr/lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
 -            $WDIR/usr/lib/modules/$KERNEL_VERSION
-+for MODULE in ${MODULES_ARRAY[*]}; do
-+    MODULES_FIRMWARE+=$(modprobe -S $KERNEL_VERSION --show-depends $MODULE | cut -d ' ' -f2-)
-+    MODULES_FIRMWARE+=$(modinfo -k $KERNEL_VERSION -F firmware $MODULE | sed 's:^\(.*\):\/lib\/firmware\/\1 :g')
-+done
- 
+-
 -  depmod -b $WDIR $KERNEL_VERSION
-+for file in ${MODULES_FIRMWARE[*]}; do
-+    type=module
-+    [[ $file =~ "firmware" ]] && type=firmware
-+    if $(cp -a --parents "${file}" $WDIR 2>/dev/null) ; then
-+        echo "OK: added $type $file"
-+    else
-+        echo "WARNING: missing $type $file"
-+    fi
-+done
++while read -r -a MODULE;
++do
++    while read -r -a file;
++    do
++        if $(cp -a --parents "${file}" $WDIR 2>/dev/null) ; then
++            echo "OK: added module $file"
++        else
++            echo "WARNING: missing module $file"
++        fi
++    done <<< $(modprobe -S $KERNEL_VERSION --show-depends $MODULE | cut -d ' ' -f2-)
++done <<< $(tr ':' '\n' <<< ${MODULES})
++
++# Install the kernel firmware if requested
++while read -r -a MODULE;
++do
++    while read -r -a file;
++    do
++        [[ -z "${file}" ]] && continue
++        if $(cp -a --parents "${file}" $WDIR 2>/dev/null) ; then
++            echo "OK: added firmware $file"
++        else
++            echo "WARNING: missing firmware $file"
++        fi
++    done <<< $(modinfo -k $KERNEL_VERSION -F firmware $MODULE | sed 's:^\(.*\):\/lib\/firmware\/\1 :g')
++done <<< $(tr ':' '\n' <<< ${MODULES})
 +
 +if [ ! -z ${MODULES} ] ; then
 +    cp /lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
@@ -299,7 +312,7 @@
  
  # first empty WDIR to reuse it
    rm -r $WDIR/*
-@@ -203,12 +255,12 @@
+@@ -203,12 +263,12 @@
    DSTDIR=$WDIR/kernel/x86/microcode
    mkdir -p $DSTDIR
  
@@ -316,8 +329,3 @@
    fi
  
    ( cd $WDIR; find . | cpio -o -H newc --quiet ) > microcode.img
-@@ -220,4 +272,3 @@
- # Remove the temporary directories and files
- rm -rf $WDIR $unsorted
- printf "done.\n"
--
