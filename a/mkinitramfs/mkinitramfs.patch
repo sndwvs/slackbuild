@@ -1,6 +1,53 @@
 --- a/mkinitramfs	2021-06-10 22:17:56.734306317 +0300
-+++ b/mkinitramfs	2021-06-11 22:36:39.786107210 +0300
-@@ -7,13 +7,16 @@
++++ b/mkinitramfs	2021-06-13 03:27:25.812012601 +0300
+@@ -1,19 +1,63 @@
+ #!/bin/bash
+ # This file based in part on the mkinitramfs script for the LFS LiveCD
+ # written by Alexander E. Patrakov and Jeremy Huntwork.
++#
++# added installation of certain module with dependencies and firmwared
++# mara
++
++usage() {
++    echo
++    echo "usage: $(basename $0) [-k 5.12.1] [-m xfs:ext4:tun]"
++    echo "       -k      specify the kernel version"
++    echo "       -m      specify kernel modules by separating them \":\""
++    echo "       -b      specify the build directory, by default \"/tmp\" "
++    echo "       -h      displays this message "
++    echo
++    exit 1
++}
++
++while [ -n "$1" ]; do # while loop starts
++    case "$1" in
++    -k)
++        KERNEL_VERSION="$2"
++        shift
++        ;;
++    -m)
++        MODULES="$2"
++        shift
++        ;;
++    -b)
++        BUILD_DIR="$2"
++        shift
++        ;;
++    -h) usage ;;
++    --)
++        shift # The double dash makes them parameters
++        break
++        ;;
++     *) usage ;;
++    esac
++    shift
++done
++
++KERNEL_VERSION=${KERNEL_VERSION:-$(uname -r)}
++BUILD_DIR=${BUILD_DIR:-/tmp}
+ 
+ copy()
+ {
    local file
  
    if [ "$2" = "lib" ]; then
@@ -15,20 +62,30 @@
  
    if [ -n "$file" ] ; then
 -    cp $file $WDIR/usr/$2
-+    echo "cp $file $WDIR/$2"
++    cp $file $WDIR/$2
    else
      echo "Missing required file: $1 for directory $2"
      rm -rf $WDIR
-@@ -28,7 +31,7 @@
+@@ -21,15 +65,14 @@
+   fi
+ }
+ 
+-if [ -z $1 ] ; then
++if [ -z ${MODULES} ] ; then
+   INITRAMFS_FILE=initrd.img-no-kmods
+ else
+-  KERNEL_VERSION=$1
    INITRAMFS_FILE=initrd.img-$KERNEL_VERSION
  fi
  
 -if [ -n "$KERNEL_VERSION" ] && [ ! -d "/usr/lib/modules/$1" ] ; then
-+if [ -n "$KERNEL_VERSION" ] && [ ! -d "/lib/modules/$1" ] ; then
-   echo "No modules directory named $1"
+-  echo "No modules directory named $1"
++if [ ! -d "/lib/modules/$KERNEL_VERSION" ] ; then
++  echo "No modules directory named $KERNEL_VERSION"
    exit 1
  fi
-@@ -40,18 +43,18 @@
+ 
+@@ -40,35 +83,35 @@
  binfiles="$binfiles readlink basename"
  
  # Systemd installs udevadm in /bin. Other udev implementations have it in /sbin
@@ -48,10 +105,15 @@
 -if [ -x /usr/sbin/lvm ] ; then sbinfiles="$sbinfiles lvm dmsetup"; fi
 +if [ -x /sbin/lvm ] ; then sbinfiles="$sbinfiles lvm dmsetup"; fi
  
- unsorted=$(mktemp /tmp/unsorted.XXXXXXXXXX)
+-unsorted=$(mktemp /tmp/unsorted.XXXXXXXXXX)
++unsorted=$(mktemp ${BUILD_DIR}/unsorted.XXXXXXXXXX)
  
-@@ -62,13 +65,13 @@
- WDIR=$(mktemp -d /tmp/initrd-work.XXXXXXXXXX)
+ DATADIR=/usr/share/mkinitramfs
+ INITIN=init.in
+ 
+ # Create a temporary working directory
+-WDIR=$(mktemp -d /tmp/initrd-work.XXXXXXXXXX)
++WDIR=$(mktemp -d ${BUILD_DIR}/initrd-work.XXXXXXXXXX)
  
  # Create base directory structure
 -mkdir -p $WDIR/{dev,run,sys,proc,usr/{bin,lib/{firmware,modules},sbin}}
@@ -69,16 +131,17 @@
  
  # Create necessary device nodes
  mknod -m 640 $WDIR/dev/console c 5 1
-@@ -84,7 +87,7 @@
+@@ -83,9 +126,6 @@
+   cp $file $WDIR/etc/udev/rules.d
  done
  
- # Install any firmware present
+-# Install any firmware present
 -cp -a /usr/lib/firmware $WDIR/usr/lib
-+cp -a /lib/firmware $WDIR/lib
- 
+-
  # Copy the RAID configuration file if present
  if [ -f /etc/mdadm.conf ] ; then
-@@ -95,8 +98,8 @@
+   cp /etc/mdadm.conf $WDIR/etc
+@@ -95,8 +135,8 @@
  install -m0755 $DATADIR/$INITIN $WDIR/init
  
  if [  -n "$KERNEL_VERSION" ] ; then
@@ -89,7 +152,7 @@
    else
      binfiles="$binfiles lsmod"
      sbinfiles="$sbinfiles insmod"
-@@ -105,49 +108,48 @@
+@@ -105,49 +145,48 @@
  
  # Install basic binaries
  for f in $binfiles ; do
@@ -167,7 +230,7 @@
    # Conf file(s)
    cp -a /etc/lvm $WDIR/etc
  fi
-@@ -166,27 +168,30 @@
+@@ -166,36 +205,49 @@
    copy $library lib
  done
  
@@ -190,27 +253,42 @@
 +  cp -a /lib64/elogind $WDIR/lib64
  fi
  
- # Install the kernel modules if requested
- if [ -n "$KERNEL_VERSION" ]; then
-   find                                                                        \
+-# Install the kernel modules if requested
+-if [ -n "$KERNEL_VERSION" ]; then
+-  find                                                                        \
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/{crypto,fs,lib}                      \
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/{block,ata,md,firewire}      \
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/{scsi,message,pcmcia,virtio} \
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/usb/{host,storage}           \
-+     /lib/modules/$KERNEL_VERSION/kernel/{crypto,fs,lib}                      \
-+     /lib/modules/$KERNEL_VERSION/kernel/drivers/{block,ata,md,firewire}      \
-+     /lib/modules/$KERNEL_VERSION/kernel/drivers/{scsi,message,pcmcia,virtio} \
-+     /lib/modules/$KERNEL_VERSION/kernel/drivers/usb/{host,storage}           \
-      -type f 2> /dev/null | cpio --make-directories -p --quiet $WDIR
+-     -type f 2> /dev/null | cpio --make-directories -p --quiet $WDIR
++# Install the kernel modules and firmware if requested
++IFS=':' read -r -a MODULES_ARRAY <<< ${MODULES}
++unset IFS=':'
  
 -  cp /usr/lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
 -            $WDIR/usr/lib/modules/$KERNEL_VERSION
-+  cp /lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
-+            $WDIR/lib/modules/$KERNEL_VERSION
++for MODULE in ${MODULES_ARRAY[*]}; do
++    MODULES_FIRMWARE+=$(modprobe -S $KERNEL_VERSION --show-depends $MODULE | cut -d ' ' -f2-)
++    MODULES_FIRMWARE+=$(modinfo -k $KERNEL_VERSION -F firmware $MODULE | sed 's:^\(.*\):\/lib\/firmware\/\1 :g')
++done
  
-   depmod -b $WDIR $KERNEL_VERSION
+-  depmod -b $WDIR $KERNEL_VERSION
++for file in ${MODULES_FIRMWARE[*]}; do
++    type=module
++    [[ $file =~ "firmware" ]] && type=firmware
++    if $(cp -a --parents "${file}" $WDIR 2>/dev/null) ; then
++        echo "OK: added $type $file"
++    else
++        echo "WARNING: missing $type $file"
++    fi
++done
++
++if [ ! -z ${MODULES} ] ; then
++    cp /lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
++                $WDIR/lib/modules/$KERNEL_VERSION
++    depmod -a -b $WDIR $KERNEL_VERSION
  fi
-@@ -194,8 +199,8 @@
+ 
  ( cd $WDIR ; find . | cpio -o -H newc --quiet | gzip -9 ) > $INITRAMFS_FILE
  
  # Prepare early loading of microcode if available
@@ -221,7 +299,7 @@
  
  # first empty WDIR to reuse it
    rm -r $WDIR/*
-@@ -203,12 +208,12 @@
+@@ -203,12 +255,12 @@
    DSTDIR=$WDIR/kernel/x86/microcode
    mkdir -p $DSTDIR
  
@@ -238,3 +316,8 @@
    fi
  
    ( cd $WDIR; find . | cpio -o -H newc --quiet ) > microcode.img
+@@ -220,4 +272,3 @@
+ # Remove the temporary directories and files
+ rm -rf $WDIR $unsorted
+ printf "done.\n"
+-
