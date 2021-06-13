@@ -1,0 +1,97 @@
+#!/bin/bash
+# utility for finding missing packages for a program of distributions:
+# slackware (i586), slackware64 (x86_64), slackwarearm (arm),
+# slarm64 (aarch64), slarm64-riscv64 (riscv64)
+# written by mara
+#
+
+export LANG=C
+
+usage() {
+    echo
+    echo "usage: $(basename $0) [-p /bin/sh] [-l xfs:ext4:tun]"
+    echo "       -p      search for missing packages for the program (default)"
+    echo "       -a      search for all packages for a program"
+    echo "       -h      displays this message "
+    echo
+    exit 1
+}
+
+while [ -n "$1" ]; do # while loop starts
+    case "$1" in
+    -p)
+        PROGRAM="$2"
+        shift
+        ;;
+    -a)
+        ALL="yes"
+        ;;
+    -h) usage
+        ;;
+    --)
+        shift # The double dash makes them parameters
+        break
+        ;;
+     *) usage
+        ;;
+    esac
+    shift
+done
+
+if [[ -z "$PROGRAM" ]]; then
+    usage
+    exit 1
+fi
+
+if [[ ! -e "$PROGRAM" ]]; then
+    echo "Program: '$PROGRAM' missing"
+    exit 1
+fi
+
+# Automatically determine the architecture we're building on:
+MARCH=$( uname -m )
+if [ -z "$ARCH" ]; then
+  case "$MARCH" in
+    i?86)    export ARCH=i586 ;;
+    armv7hl) export ARCH=$MARCH ;;
+    arm*)    export ARCH=arm ;;
+    # Unless $ARCH is already set, use uname -m for all other archs:
+    *)       export ARCH=$MARCH ;;
+  esac
+fi
+
+WORK_DIR=${WORK_DIR:-/tmp}
+MANIFEST=${MANIFEST:-MANIFEST}
+COMPRESSION=${COMPRESSION:-.bz2}
+if [[ -z $ALL ]]; then
+    MISSING="not found"
+fi
+
+# Create a temporary working directory
+WDIR=$(mktemp -d ${WORK_DIR}/deppkg.XXXXXXXXXX)
+
+# distribution kit depending on architecture
+if [[ "$ARCH" == "i586" ]]; then
+    MANIFEST_URL="http://slackware.uk/slackware/slackware64-current/slackware64/"
+elif [[ "$ARCH" == "x86_64" ]]; then
+    MANIFEST_URL="http://slackware.uk/slackware/slackware-current/slackware/"
+elif [[ "$ARCH" == "arm" ]]; then
+    MANIFEST_URL="http://slackware.uk/slackwarearm/slackwarearm-current/"
+elif [[ "$ARCH" == "aarch64" ]]; then
+    MANIFEST_URL="http://slackware.uk/slarm64/slarm64-current/slarm64/"
+elif [[ "$ARCH" == "riscv64" ]]; then
+    MANIFEST_URL="http://slackware.uk/slarm64/slarm64-current/slarm64/"
+fi
+
+# download MANIFEST
+wget --no-check-certificate -q -c -nc -nd -np "${MANIFEST_URL}${MANIFEST}${COMPRESSION}" -P $WDIR/ 2>/dev/null
+[[ ${PIPESTATUS[0]} != 0 ]] && echo "Download error: ${MANIFEST_URL}${MANIFEST}${COMPRESSION}" && exit 1
+
+bzip2 -d "${WDIR}/${MANIFEST}${COMPRESSION}" 2>/dev/null
+[[ ${PIPESTATUS[0]} != 0 ]] && echo "Decompression error: ${WDIR}/${MANIFEST}${COMPRESSION}" && exit 1
+
+# find packages
+ldd "$PROGRAM" | grep "${MISSING}" | sed "s/\t//;s/.*\/\(.*\)/\1/g" | cut -d " " -f1 | xargs -I LIB sed -e '/./{H;$!d;}' -e 'x;/LIB/!d;' "${WDIR}/${MANIFEST}" | grep "Package:" | cut -d '/' -f3- | sort | uniq
+
+[[ -d $WDIR ]] && rm -rf $WDIR
+
