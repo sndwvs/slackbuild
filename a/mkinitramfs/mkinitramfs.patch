@@ -1,6 +1,6 @@
 --- a/mkinitramfs	2021-06-10 22:17:56.734306317 +0300
-+++ b/mkinitramfs	2021-06-13 13:21:15.529423206 +0300
-@@ -1,19 +1,63 @@
++++ b/mkinitramfs	2021-06-14 20:43:27.361087580 +0300
+@@ -1,19 +1,73 @@
  #!/bin/bash
  # This file based in part on the mkinitramfs script for the LFS LiveCD
  # written by Alexander E. Patrakov and Jeremy Huntwork.
@@ -10,10 +10,10 @@
 +
 +usage() {
 +    echo
-+    echo "usage: $(basename $0) [-k 5.12.1] [-m xfs:ext4:tun]"
++    echo "usage: $(basename $0) [-k 5.12.1] [-m xfs:ext4:tun] [-b /home/user]"
 +    echo "       -k      specify the kernel version"
 +    echo "       -m      specify kernel modules by separating them \":\""
-+    echo "       -b      specify the build directory, by default \"/tmp\" "
++    echo "       -b      specify the build directory, by default \"/tmp\""
 +    echo "       -h      displays this message "
 +    echo
 +    exit 1
@@ -45,6 +45,16 @@
 +
 +KERNEL_VERSION=${KERNEL_VERSION:-$(uname -r)}
 +BUILD_DIR=${BUILD_DIR:-/tmp}
++
++# Automatically determine the architecture we're building on:
++if [ -z "$ARCH" ]; then
++  case "$( uname -m )" in
++    i?86) export ARCH=i586 ;;
++    arm*) export ARCH=arm ;;
++    # Unless $ARCH is already set, use uname -m for all other archs:
++       *) export ARCH=$( uname -m ) ;;
++  esac
++fi
  
  copy()
  {
@@ -66,7 +76,7 @@
    else
      echo "Missing required file: $1 for directory $2"
      rm -rf $WDIR
-@@ -21,54 +65,53 @@
+@@ -21,54 +75,53 @@
    fi
  }
  
@@ -135,7 +145,7 @@
  
  # Create necessary device nodes
  mknod -m 640 $WDIR/dev/console c 5 1
-@@ -83,9 +126,6 @@
+@@ -83,9 +136,6 @@
    cp $file $WDIR/etc/udev/rules.d
  done
  
@@ -145,7 +155,7 @@
  # Copy the RAID configuration file if present
  if [ -f /etc/mdadm.conf ] ; then
    cp /etc/mdadm.conf $WDIR/etc
-@@ -95,8 +135,8 @@
+@@ -95,8 +145,8 @@
  install -m0755 $DATADIR/$INITIN $WDIR/init
  
  if [  -n "$KERNEL_VERSION" ] ; then
@@ -156,7 +166,7 @@
    else
      binfiles="$binfiles lsmod"
      sbinfiles="$sbinfiles insmod"
-@@ -105,49 +145,48 @@
+@@ -105,49 +155,48 @@
  
  # Install basic binaries
  for f in $binfiles ; do
@@ -234,7 +244,7 @@
    # Conf file(s)
    cp -a /etc/lvm $WDIR/etc
  fi
-@@ -166,36 +205,57 @@
+@@ -166,36 +215,58 @@
    copy $library lib
  done
  
@@ -308,11 +318,12 @@
 -if ls /usr/lib/firmware/intel-ucode/* >/dev/null 2>&1 ||
 -   ls /usr/lib/firmware/amd-ucode/*   >/dev/null 2>&1; then
 +if ls /lib/firmware/intel-ucode/* >/dev/null 2>&1 ||
-+   ls /lib/firmware/amd-ucode/*   >/dev/null 2>&1; then
++   ls /lib/firmware/amd-ucode/*   >/dev/null 2>&1 &&
++   [[ $ARCH == *86* ]]; then
  
  # first empty WDIR to reuse it
    rm -r $WDIR/*
-@@ -203,12 +263,12 @@
+@@ -203,12 +274,12 @@
    DSTDIR=$WDIR/kernel/x86/microcode
    mkdir -p $DSTDIR
  
