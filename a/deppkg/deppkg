@@ -9,7 +9,7 @@ export LANG=C
 
 usage() {
     echo
-    echo "usage: $(basename $0) [-p /bin/sh] [-l xfs:ext4:tun]"
+    echo "usage: $(basename $0) [-p /bin/sh] [-a]"
     echo "       -p      search for missing packages for the program (default)"
     echo "       -a      search for all packages for a program"
     echo "       -h      displays this message "
