@@ -1,5 +1,5 @@
 --- a/init.in	2021-06-10 22:18:00.718370221 +0300
-+++ b/init.in	2021-06-10 22:38:03.364920033 +0300
++++ b/init.in	2021-06-26 20:52:10.175242696 +0300
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
@@ -8,3 +8,25 @@
  export PATH
  
  problem()
+@@ -121,6 +121,21 @@
+ do_try_resume # This function will not return if resuming from disk
+ do_mount_root
+ 
++# Load kernel modules
++if [ ! -d /lib/modules/$(uname -r) ]; then
++    echo "No kernel modules for Linux $(uname -r)"
++else
++    if [ -e /modules ]; then
++        echo "Loading kernel modules from initramfs image:"
++        while read -r module; do
++            modprobe -v $module;
++        done < /modules
++    fi
++fi
++
++# Some devices need extra time to initialize
++sleep 2
++
+ killall -w ${UDEVD##*/}
+ 
+ exec switch_root /.root "$init" "$@"

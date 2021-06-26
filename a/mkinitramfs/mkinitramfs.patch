@@ -1,5 +1,5 @@
 --- a/mkinitramfs	2021-06-10 22:17:56.734306317 +0300
-+++ b/mkinitramfs	2021-06-14 20:43:27.361087580 +0300
++++ b/mkinitramfs	2021-06-26 20:48:41.763991415 +0300
 @@ -1,19 +1,73 @@
  #!/bin/bash
  # This file based in part on the mkinitramfs script for the LFS LiveCD
@@ -244,7 +244,7 @@
    # Conf file(s)
    cp -a /etc/lvm $WDIR/etc
  fi
-@@ -166,36 +215,58 @@
+@@ -166,36 +215,59 @@
    copy $library lib
  done
  
@@ -286,6 +286,7 @@
 +    do
 +        if $(cp -a --parents "${file}" $WDIR 2>/dev/null) ; then
 +            echo "OK: added module $file"
++            echo $file >> $WDIR/modules
 +        else
 +            echo "WARNING: missing module $file"
 +        fi
@@ -323,7 +324,7 @@
  
  # first empty WDIR to reuse it
    rm -r $WDIR/*
-@@ -203,12 +274,12 @@
+@@ -203,12 +275,12 @@
    DSTDIR=$WDIR/kernel/x86/microcode
    mkdir -p $DSTDIR
  
