@@ -4,7 +4,7 @@ CWD=$(pwd)
 
 NAME="mkinitramfs"
 VERSION="r10.1_560"
-BUILD=${BUILD:-6}
+BUILD=${BUILD:-7}
 PACKAGER=${PACKAGER:-mara}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}

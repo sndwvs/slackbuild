@@ -304,7 +304,7 @@
 +        else
 +            echo "WARNING: missing firmware $file"
 +        fi
-+    done <<< $(modinfo -k $KERNEL_VERSION -F firmware $MODULE | sed 's:^\(.*\):\/lib\/firmware\/\1 :g')
++    done <<< $(modinfo -k $KERNEL_VERSION -F firmware $MODULE | grep -v 'name:' | sed 's:^\(.*\):\/lib\/firmware\/\1 :g')
 +done <<< $(tr ':' '\n' <<< ${MODULES})
 +
 +if [ ! -z ${MODULES} ] ; then
