@@ -35,7 +35,10 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O3 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "riscv64" ]; then
+  SLKCFLAGS="-O3 -fPIC"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
@@ -64,10 +67,6 @@ find . \
  -exec chmod 755 {} \; -o \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
-
-# C++ ABI check is too strict and breaks with GCC 5.1
-# https://bugzilla.redhat.com/show_bug.cgi?id=1200611
-patch -Np1 -i $CWD/make-abicheck-non-fatal.patch || exit 1
 
 [[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
 

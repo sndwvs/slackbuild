@@ -80,7 +80,6 @@ find . \
   --enable-cdda \
   --enable-dvb \
   --enable-dvdnav \
-  --enable-libsmbclient \
   --enable-libarchive \
   --enable-libmpv-shared \
   --enable-egl-drm

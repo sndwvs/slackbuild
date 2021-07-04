@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="Audacity"
+NAME="audacity"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -49,15 +49,15 @@ esac
 
 # Establishment tmp directory for
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-${NAME,,}
+PKG=$TMP/package-$NAME
 rm -rf $PKG
 mkdir -p $PKG
 
 # Delete a directory previous build / create new and change rights
 cd $TMP
-rm -rf ${NAME,,}-${NAME}-$VERSION
+rm -rf $NAME-$VERSION
 tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
-cd ${NAME,,}-${NAME}-$VERSION || exit 1
+cd $NAME-$VERSION || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -65,34 +65,34 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-cat $CWD/system-wx.patch | patch -p0 --verbose || exit 1
-
-export WX_CONFIG=wx-config-gtk3
+#[[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
+#autoreconf -vfi
 
 # Configuration
-mkdir build
-cd build
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-cmake \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX=/usr \
-  -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
-  -DCMAKE_INSTALL_MANDIR=/usr/man \
-  -DCMAKE_INSTALL_DOCDIR=/usr/doc/${NAME,,}-$VERSION \
-  -Daudacity_use_sqlite=local \
-  -Daudacity_use_sndfile=system \
-  -Daudacity_use_soxr=system \
-  -Daudacity_use_lame=system \
-  -Daudacity_use_twolame=off \
-  -Daudacity_use_twolame=system \
-  -Daudacity_use_flac=system \
-  -Daudacity_use_vorbis=system \
-  -Daudacity_use_id3tag=system \
-  -Daudacity_use_expat=system \
-  -Daudacity_use_portaudio=local \
-  -Daudacity_use_lv2=off \
-  ..
+WX_CONFIG=wx-config-gtk3 \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$NAME-$VERSION \
+  --enable-nyquist \
+  --enable-unicode \
+  --with-libsndfile=system \
+  --with-ffmpeg=system \
+  --with-expat=system \
+  --with-lame=system \
+  --with-libflac \
+  --with-libid3tag \
+  --with-libvorbis \
+  --with-portaudio \
+  --with-portmixer \
+  --without-lv2 \
+  --without-libresample \
+  --without-libsamplerate \
+  --disable-sse \
+  --build=$TARGET
 
 # Compilation
 make $NUMJOBS || exit 1
@@ -113,11 +113,10 @@ for i in $( find $PKG/usr/man -type l ) ; do
 done
 
 # Copy docs
-mkdir -vpm755 $PKG/usr/doc/${NAME,,}-$VERSION
+mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
 cp -fav \
   LICENSE README \
-  $PKG/usr/doc/${NAME,,}-$VERSION/
-cat $CWD/${NAME,,}.SlackBuild > $PKG/usr/doc/${NAME,,}-$VERSION/${NAME,,}.SlackBuild
+  $PKG/usr/doc/$NAME-$VERSION/
 
 # Description and installation script
 mkdir -p $PKG/install
@@ -126,4 +125,4 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/${NAME,,}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
