@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="libreoffice"
-VERSION=7.1.2.2
+VERSION=7.1.5.1
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
