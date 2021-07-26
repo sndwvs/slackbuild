@@ -1,0 +1,664 @@
+slackpkg+ plugin for third-party repositories
+
+Slackpkg is a package manager for Slackware.
+
+Slackpkg+ is a plugin for slackpkg.
+   It adds support for third-party repositories.
+   You can install, upgrade and search from multiple repositories.
+
+Thanks to alienbob and phenixia2003 for contributing and all other submitted
+suggestions and/or patches.
+
+********************* DISCLAIMER **********************
+This is NOT an official tool. Use it at your own risk.
+The third party repositories are NOT official.
+The authors of those repositories are not responsible
+for any damage that may be caused to your computer.
+*******************************************************
+
+-----
+
+
+CONFIGURATION
+
+see man slackpkgplus.conf. If you are italian export LANG=it_IT.UTF8 to see
+the italian manpage.
+
+For the basic configuration:
+
+* Edit /etc/slackpkg/slackpkgplus.conf
+* Uncomment one or more mirrors and add them to the REPOPLUS list
+
+Note that packages in these repository will not listed if they are present in
+the official repositories (see below).
+
+* Optionally, set PKGS_PRIORITY to give priority order for single packages 
+  present in multiple repositories or to allow repositories to override
+  official slackware packages
+
+For a list of known repositories see repositories.lst, but you can also
+add others yourself.
+
+If you configure repositories that do not support gpg, you may need to set
+"CHECKGPG=off" in /etc/slackpkg/slackpkg.conf
+
+Then launch
+# slackpkg update gpg
+# slackpkg update
+
+To keep slackpkg+ updated, uncomment the 'slackpkgplus' repository, and then
+# slackpkg upgrade-all
+will upgrade slackpkg+ whenever a new version is released.
+
+-----
+
+
+MIRRORPLUS
+
+The MIRRORPLUS array defines all mirrors. It accepts these protocols:
+
+1) http/ftp/https: for example,
+
+     MIRRORPLUS['slacky']=http://repository.slacky.eu/slackware64-14.2/
+
+   The mirror must contains all metadata files (CHECKSUMS.md5 ...)
+   You must run 'slackpkg update' after adding/removing a repository.
+   You may also need 'slackpkg update gpg'
+
+2) Local mirror: for example,
+
+     MIRRORPLUS['alienlocal']=file://mirrors/alienbob/x86/14.0/
+
+   The directory must contains all metadata files (CHECKSUMS.md5 ...)
+   You must run 'slackpkg update' after adding/removing a repository.
+
+3) Local packages directory: for example,
+
+     MIRRORPLUS['mypackages']=dir://mypackages/
+
+   All packages must be in a single directory (subdirectory not allowed).
+   Note that 'slackpkg update' ignores these repositories. Every time you run
+   slackpkg, it reads the directory contents.
+
+4) Remote packages directory httpdir/httpsdir/ftpdir not containing metadata:
+
+    MIRRORPLUS['slackpkgbeta']=httpsdir://slackpkg.org/beta/
+
+   All packages must be in a single directory (subdirectory not allowed).
+   'slackpkg update' get the directory index and put it in slackpkg database.
+
+As mirror name, slackpkg+ accepts numbers, letters, minus and underscore, but
+you are encouraged to not use the minus character.
+
+-----
+
+
+USAGE
+
+See 'man slackpkg' :D
+
+Use the command
+# slackpkg upgrade-all
+to keep your system up-to-date. This command searches for upgraded packages
+spanning all configured repositories.
+
+Use the command
+# slackpkg install-new
+(if you use Slackware -current) to check for new packages. This command
+searches for new packages ONLY in the official Slackware repository.
+
+The command
+# slackpkg {install,upgrade,remove,reinstall}
+accepts the following kinds of argument:
+
+1) package-name (spanning all repositories), for example
+   # slackpkg install bsd-games
+
+2) part of package-name (spanning all repositories), for example
+   # slackpkg install alsa
+
+3) path of packages in repository (spanning all repositories), for example
+   # slackpkg install xap
+
+4) repository-name, for example
+   # slackpkg upgrade alienbob
+   upgrades all packages in the alienbob repository, and
+   # slackpkg install multilib
+   installs all packages in the multilib repository
+
+5) repository-name:package-name, for example
+   # slackpkg install slacky:openjdk
+   installs openjdk from slacky even if there is another openjdk in another
+   repository
+
+6) file:local-file-name (txz/tgz), for example
+   # slackpkg install file:mypackage-1.0-noarch-1my.txz
+   installs mypackage even though not defined in slackpkgplus.conf
+   (you can specify either a relative or an absolute path)
+
+7) dir:directory, for example
+   # slackpkg {install|upgrade} dir:/root/myrepo
+   installs or upgrades all packages in /root/myrepo/
+   (The final '/' is not strictly required.)
+   Note: 'slackpkg install .' is an alias of 'slackpkg install dir:./', but
+   'slackpkg install ./' is NOT the same alias; see FILE in man slackpkg
+
+-----
+
+
+PRIORITY CONFIGURATION
+
+When a package is present in more than one repository, the package will be
+searched for in the following order:
+
+1) as listed in PKGS_PRIORITY (allow to override official packages)
+2) as listed in an official Slackware repository
+   (configured in /etc/slackpkg/mirrors)
+3) as listed in REPOPLUS (deny to override official packages)
+4) all others defined in MIRRORPLUS
+
+PKGS_PRIORITY syntax:
+  PKGS_PRIORITY=( <repository name>:<package name> ... )
+
+for example:
+  PKGS_PRIORITY=( alienbob:openjdk )
+
+<package name> accepts a regular expression, so for example
+  PKGS_PRIORITY=( restricted:.* vlc.* )
+means 'all packages containing the "vlc" string'
+  PKGS_PRIORITY=( alienbob:.* )
+means 'all packages in repository alienbob'
+
+latest item maybe replaced simply with
+  PKGS_PRIORITY=( alienbob )
+
+all packages matched from alienbob ovverride all related slackware packages, unless
+you do not explicitly exclude it:
+  PKGS_PRIORITY=( patches:harfbuzz slackware64:harfbuzz alienbob )
+that means 'all alienbob packages except harfbuzz'
+
+
+Also you can set TAG_PRIORITY=on to allow slackpkg+ to try select repository
+from where the package was previously installed.
+This method is based from tag of the installed package.
+slackpkg+ search a package with the same tag in all repositories and use it.
+If two repositories contains the same tag, it will honour REPOPLUS.
+ 
+
+-----
+
+
+MULTILIB
+
+If you want to use a multilib system, you can automatically configure the
+multilib repository in slackpkgplus.conf and install multilib simply by running:
+# /usr/doc/slackpkg+-*/setupmultilib.sh
+
+To configure multilib manually (e.g. if you have installed multilib already),
+uncomment the correct "MIRRORPLUS['multilib']=...",
+and uncomment "PKGS_PRIORITY=( multilib )".
+If you do not plan to build yourself 32bit packages on your 64bit machine, you may
+avoid to install gcc:
+
+   PKGS_PRIORITY=( patches:gcc slackware64:gcc multilib )
+
+
+To install multilib manually, launch:
+# slackpkg update gpg
+# slackpkg update
+# slackpkg upgrade-all
+# slackpkg install multilib
+
+After that, you can keep multilib up-to-date by launching:
+# slackpkg update
+# slackpkg upgrade-all
+periodically launch:
+# slackpkg install multilib
+to check for new multilib packages availability
+
+To uninstall multilib, you must remove 'multilib' from PKGS_PRIORITY and from
+REPOPLUS, but do NOT delete the related MIRRORPLUS line, then launch:
+# slackpkg update
+# slackpkg remove multilib
+Note: this does NOT remove the core multilib packages, because they affect the
+64bit system. You must remove these by launching:
+# slackpkg upgrade-all
+then delete or comment the related MIRRORPLUS line, and finally launch
+# slackpkg update
+
+or just re-run
+# /usr/doc/slackpkg+-*/setupmultilib.sh
+
+
+-----
+
+
+KTOWN (LATEST KDE)
+
+KDE 5 is now included in slackware current, so you no longer need it
+
+-----
+
+
+PERSONAL PACKAGES
+
+If you build some packages yourself, you can install these without
+installpkg, by using slackpkg+. This helps you to track the install/upgrade,
+and reduces the possibility of errors. You do NOT need to create a personal
+repository with a gpg-key and metadata every time you build a package; also
+you do NOT need to modify your slackpkgplus.conf file or launch 'slackpkg
+update'.
+
+You can:
+
+1) install/upgrade/reinstall a single package by passing the full file name
+   (optionally with absolute or relative path), for example
+   # slackpkg install file:package-1.0-noarch-1my.txz
+   or
+   # slackpkg upgrade file:../repo/package-2.0-noarch-1my.txz
+
+2) install/upgrade/reinstall all packages in a directory and subdirectory
+   by passing a directory name (optionally with absolute or relative
+   path), for example
+   # slackpkg install dir:/myrep
+   or
+   # slackpkg upgrade dir:./test/package/
+   or
+   # slackpkg reinstall .
+
+   Note: '.' is an alias of 'dir:./', but only that alias exists.
+   'slackpkg install ./' (or /myrepo/ or ./package.txz) generates an error,
+   because in standard slackpkg you can specify a FILE as input, so in
+   'slackpkg install ./list.txt' list.txt must be a plain file containing a list
+   of packages to install (see man slackpkg)
+
+   If a directory contains the same package with two different versions,
+   slackpkg+ try to get the higher version, but it can fail and list one in an
+   unpredictable order
+
+   Tip: if you want to use dir:/myrepo to track your installations and you have
+   lost the original txz/tgz file, you can simply create an empty file; this
+   fools slackpkg+, which only searches for file name and not for contents
+   (unless you run slackpkg reinstall on these packages ;))  So, by doing
+   # touch mypkg1-1.0-noarch-1my.tgz
+   # touch mysecondpkg-1.1-noarch-2my.txz
+   (where mypkg1 and mysecondpkg are already installed packages),
+   'slackpkg install .' (or upgrade) does not show you those packages, but
+   'slackpkg reinstall .' DOES show them (so do not continue the installation)
+
+NOTE: slackpkg+ honour gpg check if a .asc file exists but you must manually
+import the gpg key. If you don't want that, run with -checkgpg=off. The Strict
+GPG Check is disabled. If a .asc file does noti exists, the gpg check is disabled.
+
+-----
+
+
+REMOTE PACKAGES WITHOUT METADATA
+
+Some users share packages on their personal sites, but do not create metadata
+files (particularly if they share only a few packages). To install one of these
+packages, you could download it and install it manually. But now with slackpkg+
+you can specify a direct URL for the package that will automatically download
+and install/upgrade the package.
+
+You can:
+
+1) install/upgrade/reinstall a single package by specifying the complete url:
+   # slackpkg install http://site/path/package-1.0-noarch-1my.txz
+   For example, you may use this function to install a snapshot of slackpkg+
+   (that is not available with 'slackpkg upgrade slackpkg+' because it is a beta
+   version):
+   # slackpkg upgrade https://slakfinder.org/slackpkg+/pkg/slackpkg+-1.7.0-noarch-1mt.txz
+
+2) install/upgrade/reinstall all packages in a single remote directory (but not
+   in a subtree) even if the site owner does not create metadata:
+   # slackpkg install https://slakfinder.org/slackpkg+/pkg/
+
+   Note: this function requires lftp and may fail if the server does not support
+   Directory Listing or if there is a index.html in the path.
+
+3) configure an httpdir MIRRORPLUS
+   MIRRORPLUS['slackpkgbeta']=httpsdir://slackpkg.org/beta/
+
+
+NOTE: slackpkg+ will skip the gpg and md5 check for remote packages without
+metadata!!
+
+------
+
+
+NOTIFICATIONS
+
+Some package require special post-installation activity as upgrading a related
+package or rebuilt kernel modules or change a custom configuration. A user may
+forgot to do this, especially in large updates. The notification functionality
+help the user to remember it. In /etc/slackpkg/notifymsg.conf you can define
+some custom event. See documentation in that file. Events may be VERY custom
+(on kde upgrde remember me to call my friends ;), or the more useful 
+"on kernel upgrade remember to recompile all driver modules"
+
+You may enable this function by setting "ENABLENOTIFY=on" in slackpkgplus.conf
+
+
+-----
+
+WGET Options
+
+slackpkg+ uses wget to download packages and metadata.
+
+You can use the WGETOPTS setting to pass options to wget.
+
+By default when an url is unreachable wget - after a long timeout - retry to
+download so if a repository is unreacheble you should remove it from your
+configuration file.
+As workaround you can add the options WGETOPTS="--timeout=5 --tries=1"
+in slackpkgplus.conf
+
+-----
+
+DOWNLOADCMD Option
+
+You can choose to use an alternative to wget.
+
+Note that downloader will be called as
+$DOWNLOADCMD destinationfile url
+
+The base is
+DOWNLOADCMD="wget -O"
+by default slackpkgplus adds other useful options:
+DOWNLOADCMD="wget $WGETOPTS -nv --no-check-certificate --passive-ftp -O"
+
+If you like curl:
+DOWNLOADCMD="curl -o"
+you can add other options BEFORE the last '-o' switch:
+DOWNLOADCMD="curl -v -o"
+
+If you want use a multi-connection (parallel) download, you can install aria2
+(http://aria2.sourceforge.net/) and set
+DOWNLOADCMD="aria2c -x 16 -s 16 --auto-file-renaming=false --allow-overwrite=true -d / -o"
+if you have proxy add
+DOWNLOADCMD="aria2c --all-proxy=someproxy:8080 -x 16 -s 16 --auto-file-renaming=false --allow-overwrite=true -d / -o"
+
+-----
+
+CACHEUPDATE Option
+
+By default 'slackpkg update' download all metadata files (CHECKSUMS.md5, PACKAGES.TXT,
+MANIFEST.bz2). When you use many and or large repositories, this may take a lot of
+time and in most cases there are no news or news just in only one repository.
+
+Enabling CACHEUPDATE slackpkg+ put a cache of metadatas in /var/lib/slackpkg/cache,
+so everytime it just must to verify if there is a new version, otherwise it can use
+the cached file.
+
+Note that it works only with http repositories and does not work with proxies.
+It uses 'curl' to download file headers to check if there is a new version of
+the file.
+
+Set CACHEUPDATE=on to enable it. Default is 'off'
+
+-----
+
+SEARCH_CLOG_INPARENT Option
+
+Starting from 1.7.0, slackpkg+ allow you to see the ChangeLog in dialog box.
+When you run 'slackpkg update' it download all ChangeLog.txt from all
+repositories (if available).
+Then when you go to in install/upgrade a package, you have a chance to
+read it before install the package.
+Note that the ChangeLog must be in the same Slackware changelog format.
+
+Some repository does not have the ChangeLog.txt in the main url but has it
+in a parent url.
+
+For example the alienbob multilib repository:
+  https://slackware.nl/people/alien/multilib/current/
+has not the ChangeLog.txt in tree, but it is placed in parent directory:
+  https://slackware.nl/people/alien/multilib/current/ChangeLog.txt
+
+Be sure to set SEARCH_CLOG_INPARENT to 'on' to search it in parent.
+Note that ascend out of main url sometime may be unsafe; so if it does not
+work reset it to 'off'.
+Also note that slackpkg+ use wget as default downloader and when the
+ChangeLog.txt is not found it return "ERROR 404: Not Found" before try
+again in the parent url.
+You may avoid it by use the Cached Updates downloader that trap it for a
+quick output. So you are encouraged to set CACHEUPDATE=on
+
+-----
+
+DOWNLOADONLY Option
+
+Sometimes may be useful to just download only the packages, and in a second moment 
+install it. For example for large upgrades I can download all in the night while 
+I sleep and then install all in the morning.
+
+Also it is good when the 'install-new' give you a large list of packages to install.
+
+You can set DOWNLOANDONLY=on in slackpkgplus.conf to do that or use it in cmdline.
+
+For example, to upgrading from slackware 14.1 to slackware 14.2:
+# DOWNLOADONLY=on slackpkg install-new
+# DOWNLOADONLY=on slackpkg upgrade-all
+# slackpkg install-new
+# slackpkg upgrade-all
+# slackpkg clean-system
+
+-----
+
+ALLOW32BIT
+
+By default slackpkg+ deny to install 32bit packages on a 64bit system.
+
+Set ALLOW32BIT=on to allow slackpkg+ to install 32bit packages on a 64bit slackware 
+installation (possibly unsafe). Please, do not install both 32 and 64bit of the same 
+package to avoid problems, and NEVER upgrade existant 64bit packages with relative 32bit
+package.
+
+Do not forget to install the multilibs.
+
+
+-----
+
+BLACKLIST
+
+Slackpkg+ uses the same slackpkg system. See /etc/slackpkg/blacklist for details.
+Starting from slackpkg 15, the new system was improved. To blacklist a package
+you have to put its entire name, so 'kernel' does not blacklist 'kernel-modules',
+or a regular expression to match it, as 'kernel-.*'. Also you can blacklist an
+entire package series specifing  the entire name followed by /, as 'kde/'.
+In this way you are more sure to exclude exactly the packages you want.
+
+However this may be inefficient with third party repository.
+You can set LEGACYBL=on to allow slackpkg+ to use the previous (14.2) blacklist system.
+It apply a regex to the entire pkglist row with 'grep -wE'. A row is similar to
+
+SLACKPKGPLUS_slackpkgplus slackpkg+ 1.7.5 noarch 2mt slackpkg+-1.7.5-noarch-2mt ./SLACKPKGPLUS_slackpkgplus/pkg txz
+
+consider that to avoid false positive.
+Test your blacklist file with the command:
+$ grep -wE -f <(grep -v ^$ /etc/slackpkg/blacklist) /var/lib/slackpkg/pkglist
+
+You can use USEBL=off to totally disable blacklist.
+
+Also you can use both settings as temporary from cmdlisne
+
+USEBL=off slackpkg search kernel
+LEGACYBL=on slackpkg search kernel
+
+-----
+
+GREYLIST
+
+Sometime you may want that slackpkg+ does not install some package in the upgrade-all
+process. To do that you must uncheck the package everytime or add it in the
+'blacklist' file. The first method may be onerous when you use upgrade-all frequently.
+The second method does not allow you to know which package version is available.
+A thirdy method is to put it in the 'greylist' file.
+All packages listed in greylist will be available to install and listed in slackpkg
+dialog, but they will be unchecked by default so you are sure to not install it
+wrongly.
+You may decide also to greylist one entire repository. A good idea is to greylist
+all thirdy party repository so an upgrade-all automatically upgrade official
+slackware packages but force you to review all other packages so to be sure on what
+you install.
+
+-----
+
+SENSITIVE_SEARCH
+
+By default the 'slackpkg search' and 'slackpkg file-search' do case sensitive
+searches, so 'slackpkg search mplayer' does NOT find the slackware package 
+MPlayer-1.1_20130819-x86_64-2
+
+You can search case-insensitive by setting SENSITIVE_SEARCH to off in config file.
+You can also do temporary case-insensitive searches overriding that setting in cmdline
+
+SENSITIVE_SEARCH=off slackpkg search mplayer
+
+
+Note that 'slackpkg install' still remains case sensitive, so you must use
+slackpkg install MPlayer
+
+-----
+
+WW_FILE_SEARCH
+
+By default 'slackpkg file-search' search whole words, so 
+# slackpkg file-search slackpkgpl
+returns nothing.
+
+By setting WW_FILE_SEARCH to on, the same command should find slackpkg+
+becouse match slackpkgplus.conf and other.
+
+Note that a short pattern may match many many packages.
+
+-----
+
+SBO
+
+'slackpkg search' allow you to search packages in SlackBuilds.org 14.2 and
+current.
+Note that slackpkg+ does not replace sbopkg or other similar tools.
+slackpkg+ show you the url of the SlackBuild, then you have to manually
+download, build and install it, or use sbopkg to do that.
+Note that slackpkg+ does not replace sbopkg o similar tools, but is only
+useful to know if a package is present on SBo.
+The user can download it via 'slackpkg download <package>', then build it,
+or he can use sbopkg instead.
+
+
+-----
+
+SHOWORDER
+
+By default slackpkg in dialogbox sort packages by name.
+For large upgrades from many reporitories, may be useful sorting by repository name.
+With this option you can sort packages by package name, repository, tag, path
+(in the repository), architecture:
+
+# Select the show order in dialogbox. Available "package" "repository" "tag" "path" "arch"
+SHOWORDER=repository
+
+Default is "package"
+
+-----
+
+DETAILED_INFO
+
+By default, "slackpkg info <package>" show the metadata and the package
+description.
+This is the same if you select DETAILED_INFO=none
+
+DETAILED_INFO=basic show the repository on the repository, and the url to 
+download it.
+
+DETAILED_INFO=filelist also show the full file list of the package.
+
+-----
+
+STRICTGPG
+
+slackpkg was born to install slackware packages from official mirrors; they
+are signed with the official slackware GPG-KEY, so no other packages may be
+added (unless you disable GPG check).
+slackpkg+ introduces the ability to download keys from many repositories; as
+implication, slackpkg+ allow also to copy packages from other repositories and
+the original signature; in this way a repository can contain a mix of packages
+that may confuse the user.
+
+Strict GPG check disallow users to do that. This improve the security.
+
+However some user may want to do a custom repository with any type of
+packages.
+To use a similar repository you may set STRICTGPG=off
+Note that sometime you may need to import manually the GPG-KEY with the command
+# gpg --import GPG-KEY
+
+Note: after upgrading from slackpkg+ < 1.7, you must run slackpkg update gpg.
+Also you need it everytime you add or _rename_ a reporitory in
+slackpkgplus.conf.
+
+-----
+
+INSTALL LOG
+
+Slackpkg+ logs all install/remove/upgrade/reinstall actions in /var/lib/slackpkg/install.log
+This help you to track your slackware installation.
+
+-----
+
+CHECK-UPDATE IMPROVEMENT
+
+the command "slackpkg check-updates" reports the repositories which have been changed since
+the last update. For more details and some suggests how to use it in crontab see:
+http://www.linuxquestions.org/questions/showthread.php?p=5146591
+
+-----
+
+SEARCH FUNCTION IMPROVEMENT
+
+The command "slackpkg search ..." when finds two packages with the same name
+but with different versions, it will show all so you know all repositories
+that contains that package, not just the first in priority list.
+It will mark all versions not in priority (i.e. that install/upgrade will not
+show) as 'masked'. To install that packages you must explicitly specify the
+repository name with "slackpkg install/upgrade repository:package".
+
+-----
+
+PLUGINS
+
+In the slackpkg+ packages there are some optional plugin. Some of that may be
+sperimental, so it is not included by default in slackpkg+ core. You may
+enable it by setting the PLUGIN_* variable to 'enabled'. Open the plugin file
+for further defail about the plugin.
+
+ - /usr/libexec/slackpkg/functions.d/zlookkernel.sh
+     to allow slackpkg to rebuild your initrd and install lilo or elilo.
+     enable it with PLUGIN_ZLOOKKERNEL=enable
+     set PLUGIN_ZLOOKKERNEL_PROMPT=off to avoid confirmation at every step
+     set PLUGIN_ZLOOKKERNEL_IMAGE=/boot/vmlinuz-generic to monitor it instead
+     standard vmlinuz image
+     You can also run the plugin directly from cmdline to force rebuild
+     bootloader
+
+- /usr/libexec/slackpkg/functions.d/zchangelog.sh
+     to allow slackpkg to create a global changelog in
+     /var/lib/slackpkg/RepoChangeLog.txt
+     enable it with PLUGIN_ZCHANGELOG=disable
+     set PLUGIN_ZCHANGELOG_SHOW=on to view it in standard output too
+
+-----
+
+FURTHER INFORMATION
+
+The AlienBOB article about slackpkg+:
+  http://alien.slackbook.org/blog/introducing-slackpkg-an-extension-to-slackpkg-for-3rd-party-repositories/
+
+For questions, suggestions or contributions, you can email me at
+zerouno@slacky.it or use the linuxquestions forum:
+  http://www.linuxquestions.org/questions/showthread.php?p=4940074
+
+You can find slackpkg+ on sourceforge:
+  https://sourceforge.net/projects/slackpkgplus
