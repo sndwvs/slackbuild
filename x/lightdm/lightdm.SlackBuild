@@ -4,7 +4,7 @@ CWD=$(pwd)
 
 NAME="lightdm"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-6}
 PACKAGER=${PACKAGER:-mara}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
@@ -69,6 +69,9 @@ find . \
 
 # Then change the Linux-PAM configuration files so that elogind is used: 
 sed -i s/systemd/elogind/ data/pam/*
+
+# if there is no password, request 
+sed -i 's:\(^auth.*unix.*\)$:\1 nullok:g' data/pam/*
 
 # Configuration
 CFLAGS="$SLKCFLAGS" \
