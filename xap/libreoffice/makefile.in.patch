@@ -1,5 +1,5 @@
---- Makefile.in.orig	2020-12-17 21:59:38.000000000 +0000
-+++ Makefile.in	2021-01-01 01:21:42.505805208 +0000
+--- Makefile.in.orig	2021-08-16 19:56:28.000000000 +0000
++++ Makefile.in	2021-08-23 09:01:18.037360547 +0000
 @@ -9,7 +9,7 @@
  
  gb_Top_MODULE_CHECK_TARGETS := slowcheck unitcheck subsequentcheck perfcheck uicheck screenshot
@@ -9,22 +9,25 @@
  
  MAKECMDGOALS?=build
  build_goal:=$(if $(filter build build-nocheck uicheck,$(MAKECMDGOALS)),build)\
-@@ -58,14 +58,6 @@
+@@ -58,17 +58,6 @@
  
  .DEFAULT_GOAL := build
  
 -check-if-root:
--	@if test ! `uname` = 'Haiku' -a `id -u` = 0 && test -z $$container && ! grep -q 'lxc\|docker' /proc/self/cgroup && ! grep -q 'libpod_parent' /proc/self/cgroup; then \
--		echo; \
--		echo 'Building LibreOffice as root is a very bad idea, use a regular user.'; \
--		echo; \
--		exit 1; \
+-	@if test ! `uname` = 'Haiku' -a `id -u` = 0; then \
+-		# if the systemd-detect-virt command doesn't exist or it reports we're not in a container \
+-		if test ! -x "$$(command -v systemd-detect-virt)" || ! systemd-detect-virt -c -q; then \
+-			echo; \
+-			echo 'Building LibreOffice as root is a very bad idea, use a regular user.'; \
+-			echo; \
+-			exit 1; \
+-		fi \
 -	fi
 -
  gb_Side ?= host
  
  include $(BUILDDIR)/config_$(gb_Side).mk
-@@ -268,7 +260,7 @@
+@@ -274,7 +263,7 @@
  #
  # Bootstrap
  #
