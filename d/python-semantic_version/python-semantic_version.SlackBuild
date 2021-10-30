@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="cryptography"
+NAME="semantic_version"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}

@@ -70,9 +70,6 @@ find . \
 # Compilation
 python3 setup.py install --root=$PKG || exit 1
 
-python setup.py install --root=$PKG || exit 1
-
-
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 
