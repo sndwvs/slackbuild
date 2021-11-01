@@ -89,26 +89,8 @@ fi
 
 wayland="--disable-wayland" ; [ "${WAYLAND:-no}" != "no" ] && wayland="--enable-wayland"
 
-opencv=""
-if [ "${OPENCV:-yes}" != "yes" ]; then
-  opencv="--disable-opencv" ;
-else
-  if pkg-config --exists opencv4 ; then
-    opencv="--enable-opencv"
-    patch -p0 < $CWD/patch-opencv4.diff || exit 1
-    mv modules/video_filter/opencv_wrapper.c modules/video_filter/opencv_wrapper.cpp
-  elif pkg-config --exists opencv ; then
-    # opencv-legacy
-    opencv="--enable-opencv"
-  else
-    opencv="--disable-opencv"
-  fi
-fi
-
-patch -p0 < $CWD/patch-dvdread-503.diff || exit 1
-patch -p0 < $CWD/patch-dvdnav-503.diff || exit 1
-patch -p0 < $CWD/patch-projectM-fontpath.diff || exit 1
-patch -p0 < $CWD/patch_vlc_cache_gen.diff || exit 1
+sed -e 's:truetype/ttf-dejavu:TTF:g' -i modules/visualization/projectm.cpp
+sed -e 's|-Werror-implicit-function-declaration||g' -i configure
 
 autoreconf -fiv
 
@@ -117,7 +99,7 @@ CC="clang" \
 CXX="clang++" \
 LDFLAGS=$SLKLDFLAGS \
 CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS -std=c++11" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
@@ -125,9 +107,9 @@ CXXFLAGS="$SLKCFLAGS" \
   --mandir=/usr/man \
   --localstatedir=/var \
   --docdir=/usr/doc/$NAME-$VERSION \
-  --enable-qt=5 \
+  --enable-qt \
   $wayland \
-  $opencv \
+  --disable-opencv \
   --enable-run-as-root \
   --enable-merge-ffmpeg \
   --enable-libva=yes \
