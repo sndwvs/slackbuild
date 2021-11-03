@@ -35,7 +35,7 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O2 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O2"
+  SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
@@ -69,8 +69,6 @@ find . \
  -exec chmod 644 {} \;
 
 # Configuration
-CRFLAGS="CHROMIUM_FLAGS"
-CRUSERFLAGS="CHROMIUM_USER_FLAGS"
 
 # Possible replacements are listed in build/linux/unbundle/replace_gn_files.py
 # Keys are the names in the above script; values are the dependencies in Arch
@@ -84,7 +82,7 @@ declare -gA _system_libs=(
   [libdrm]=
   [libjpeg]=libjpeg
   #[libpng]=libpng    # https://crbug.com/752403#c10
-  [libvpx]=libvpx
+  #[libvpx]=libvpx
   [libwebp]=libwebp
   [libxml]=libxml2
   [libxslt]=libxslt
@@ -101,81 +99,99 @@ depends+=(${_system_libs[@]})
 
 # Google API keys (see https://www.chromium.org/developers/how-tos/api-keys)
 _google_api_key=" "
-_google_default_client_id=" "
-_google_default_client_secret=" "
 
 # Allow building against system libraries in official builds
 sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
   tools/generate_shim_headers/generate_shim_headers.py
 
 # Arch Linux ARM fixes
-patch -p1 -i $CWD/0001-crashpad-include-limits.patch || exit 1
-patch -p1 -i $CWD/chromium-81.0.4044.122-Fix-sandbox-Aw-snap-for-syscalls-403-and-407.patch ||exit 1
+patch -Np1 -i $CWD/patches/0001-widevine-support-for-arm.patch || exit 1
+patch -Np1 -i $CWD/patches/0002-Run-blink-bindings-generation-single-threaded.patch || exit 1
+patch -Np1 -i $CWD/patches/0003-Fix-eu-strip-build-for-newer-GCC.patch || exit 1
 
 # Build ARMv7 with NEON
-[[ $ARCH == "armv7h" ]] && NUMJOBS="-j4" && SLKCFLAGS=$(echo $SLKCFLAGS | sed -e 's/vfpv3-d16/neon/') && CXXFLAGS="$SLKCFLAGS"
+if [[ $CARCH == "armv7h" ]]; then
+    export ALARM_NINJA_JOBS="4"
+    export MAKEFLAGS="-j4"
+    CFLAGS=`echo $SLKCFLAGS | sed -e 's/vfpv3-d16/neon/'`
+    CXXFLAGS="$SLKCFLAGS"
+fi
 
 # Allow build to set march and options on AArch64 (crc, crypto)
 [[ $ARCH == "aarch64" ]] && SLKCFLAGS=$(echo $SLKCFLAGS | sed -e 's/-march=armv8-a//') && CXXFLAGS="$SLKCFLAGS"
 
 # https://crbug.com/893950
-sed -i -e 's/\/malloc/' -e 's/\/free/' \
+sed -i -e 's/\<xmlMalloc\>/malloc/' -e 's/\<xmlFree\>/free/' \
   third_party/blink/renderer/core/xml/*.cc \
   third_party/blink/renderer/core/xml/parser/xml_document_parser.cc \
   third_party/libxml/chromium/*.cc
 
-# https://chromium-review.googlesource.com/c/chromium/src/+/2145261
-patch -Np1 -i $CWD/clean-up-a-call-to-set_utf8.patch || exit 1
+# Use the --oauth2-client-id= and --oauth2-client-secret= switches for
+# setting GOOGLE_DEFAULT_CLIENT_ID and GOOGLE_DEFAULT_CLIENT_SECRET at
+# runtime -- this allows signing into Chromium without baked-in values
+patch -Np1 -i $CWD/patches/use-oauth2-client-switches-as-default.patch || exit 1
 
-# https://chromium-review.googlesource.com/c/chromium/src/+/2153111
-patch -Np1 -F3 -i $CWD/iwyu-std-numeric_limits-is-defined-in-limits.patch || exit 1
+# Fix build with older ffmpeg
+patch -Np1 -i $CWD/patches/chromium-93-ffmpeg-4.4.patch || exit 1
 
-# https://chromium-review.googlesource.com/c/chromium/src/+/2152333
-patch -Np1 -i $CWD/add-missing-algorithm-header-in-crx_install_error.cc.patch || exit 1
+# Revert change to custom function av_stream_get_first_dts; will need to
+# switch to bundled ffmpeg when we're no longer using ffmpeg 4.4 in Arch
+# Upstream commit that made first_dts internal causing Chromium to add a
+# custom function: https://github.com/FFmpeg/FFmpeg/commit/591b88e6787c4
+# https://crbug.com/1251779
+patch -Rp1 -i $CWD/patches/chromium-94-ffmpeg-roll.patch || exit 1
 
-# https://chromium-review.googlesource.com/c/chromium/src/+/2132403
-patch -Np1 -i $CWD/libstdc-fix-incomplete-type-in-AXTree-for-NodeSetSiz.patch || exit 1
+# https://crbug.com/1207478
+patch -Np0 -i $CWD/patches/unexpire-accelerated-video-decode-flag.patch || exit 1
 
-# https://chromium-review.googlesource.com/c/chromium/src/+/2164645
-patch -Np1 -i $CWD/include-memory-header-to-get-the-definition-of-std-u.patch || exit 1
+# Upstream fixes
+patch -Np1 -i $CWD/patches/maldoca-depend-on-zlib-instead-of-headers-only.patch || exit 1
+patch -Np1 -i $CWD/patches/ozone-x11-fix-VA-API.patch || exit 1
+patch -Np1 -i $CWD/patches/chromium-95-harfbuzz-3.patch || exit 1
+patch -Np1 -i $CWD/patches/xfce-set-zero-insets-on-maximising-the-window.patch || exit 1
 
-# https://chromium-review.googlesource.com/c/chromium/src/+/2174199
-patch -Np1 -i $CWD/make-some-of-blink-custom-iterators-STL-compatible.patch || exit 1
+# Revert transition to -fsanitize-ignorelist (needs newer clang)
+patch -Rp1 -i $CWD/patches/replace-blacklist-with-ignorelist.patch || exit 1
 
-# https://chromium-review.googlesource.com/c/chromium/src/+/2094496
-patch -Np1 -i $CWD/avoid-double-destruction-of-ServiceWorkerObjectHost.patch || exit 1
+# Revert addition of -ffile-compilation-dir= (needs newer clang)
+patch -Rp1 -i $CWD/patches/add-a-TODO-about-a-missing-pnacl-flag.patch || exit 1
+patch -Rp1 -i $CWD/patches/use-ffile-compilation-dir.patch || exit 1
 
-# https://crbug.com/v8/10393
-patch -Np1 -d v8 < $CWD/v8-remove-soon-to-be-removed-getAllFieldPositions.patch || exit 1
+# Fix desktop sharing via Pipewire with xdg-desktop-portal 1.10
+patch -Np1 -d third_party/webrtc < $CWD/patches/pipewire-do-not-typecheck-the-portal-session_handle.patch || exit 1
 
-# Fixes from Gentoo
-patch -Np1 -i $CWD/chromium-83-gcc-10.patch || exit 1
+# https://chromium-review.googlesource.com/c/chromium/src/+/2862724
+patch -Np1 -i $CWD/patches/sql-make-VirtualCursor-standard-layout-type.patch || exit 1
 
-# https://crbug.com/skia/6663#c10
-patch -Np0 -i $CWD/chromium-skia-harmony.patch || exit 1
+# Fixes for building with libstdc++ instead of libc++
+patch -Np1 -i ../patches/chromium-95-quiche-include.patch || exit 1
 
-# Force script incompatible with Python 3 to use /usr/bin/python2
-sed -i '1s|python$|&2|' third_party/dom_distiller_js/protoc_plugins/*.py
-
+# Link to system tools required by the build
 mkdir -p third_party/node/linux/node-linux-x64/bin
 #ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
 ln -s $TMP/chromium-build-deps/usr/bin/node third_party/node/linux/node-linux-x64/bin/
+#ln -s /usr/bin/java third_party/jdk/current/bin/
+ln -s $(whereis java | sed 's:\s:\n:g' | grep bin) third_party/jdk/current/bin/
 
 # Remove bundled libraries for which we will use the system copies; this
 # *should* do what the remove_bundled_libraries.py script does, with the
 # added benefit of not having to list all the remaining libraries
 for _lib in ${_unwanted_bundled_libs[@]}; do
-  find "third_party/$_lib" -type f \
-    \! -path "third_party/$_lib/chromium/*" \
-    \! -path "third_party/$_lib/google/*" \
-    \! -path "third_party/harfbuzz-ng/utils/hb_scoped.h" \
-    \! -path 'third_party/yasm/run_yasm.py' \
-    \! -regex '.*\.\(gn\|gni\|isolate\)' \
-    -delete
+    find "third_party/$_lib" -type f \
+      \! -path "third_party/$_lib/chromium/*" \
+      \! -path "third_party/$_lib/google/*" \
+      \! -path "third_party/harfbuzz-ng/utils/hb_scoped.h" \
+      \! -regex '.*\.\(gn\|gni\|isolate\)' \
+      -delete
 done
 
-python2 build/linux/unbundle/replace_gn_files.py \
+./build/linux/unbundle/replace_gn_files.py \
   --system-libraries "${!_system_libs[@]}"
+
+# Rebuild eu-strip
+pushd buildtools/third_party/eu-strip
+./build.sh || exit 1
+popd
 
 # Compilation
 export CC=clang
@@ -191,36 +207,34 @@ _flags=(
   'use_allocator="none"'
   'is_official_build=true' # implies is_cfi=true on x86_64
   'is_cfi=false'
+  'chrome_pgo_phase=0'
   'treat_warnings_as_errors=false'
-  'fieldtrial_testing_like_official_build=true'
+  'disable_fieldtrial_testing_config=true'
+  'blink_enable_generated_code_formatting=false'
   'ffmpeg_branding="Chrome"'
   'proprietary_codecs=true'
   #'rtc_use_pipewire=true'
-  'enable_webrtc=true'
   'link_pulseaudio=true'
   'use_gnome_keyring=false'
   'use_gold=false'
   'use_sysroot=false'
-  'linux_use_bundled_binutils=false'
   'use_custom_libcxx=false'
   'enable_hangout_services_extension=true'
-  'enable_widevine=false'
+  'enable_widevine=true'
   'enable_nacl=false'
-  'enable_swiftshader=false'
-  'symbol_level=0'
-  'use_bundled_fontconfig=false'
-  'use_cfi_icall=false' # https://crbug.com/866290
-  'use_cups=true'
-  'use_custom_libcxx=true'
-  'use_kerberos=false'
-  'use_lld=true'
-  "google_api_key=\"${_google_api_key}\""
-  "google_default_client_id=\"${_google_default_client_id}\""
-  "google_default_client_secret=\"${_google_default_client_secret}\""
+  "google_api_key=\"$_google_api_key\""
 )
 
 if [[ -n ${_system_libs[icu]+set} ]]; then
   _flags+=('icu_use_data_file=false')
+fi
+
+if check_option strip y; then
+  _flags+=('symbol_level=0')
+fi
+
+if [[ $CARCH == "armv7h" ]]; then
+  _flags+=('use_thin_lto=false')
 fi
 
 CFLAGS+="$SLKCFLAGS"
@@ -235,7 +249,7 @@ CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__='
 CFLAGS+='   -Wno-unknown-warning-option'
 CXXFLAGS+=' -Wno-unknown-warning-option'
 
-gn gen out/Release --args="${_flags[*]}" --script-executable=/usr/bin/python2
+gn gen out/Release --args="${_flags[*]}"
 ninja -C out/Release chrome chrome_sandbox chromedriver
 
 install -D out/Release/chrome "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/chromium"
@@ -253,15 +267,36 @@ sed -i \
   "$PKG/usr/share/applications/chromium.desktop" \
   "$PKG/usr/man/man1/chromium.1"
 
-cp \
-  out/Release/{chrome_{100,200}_percent,resources}.pak \
-  out/Release/{*.bin,chromedriver} \
-  "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/"
-install -Dm644 -t "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/locales" out/Release/locales/*.pak
+install -Dm644 chrome/installer/linux/common/chromium-browser/chromium-browser.appdata.xml \
+  "$PKG/usr/share/metainfo/chromium.appdata.xml"
+sed -ni \
+  -e 's/chromium-browser\.desktop/chromium.desktop/' \
+  -e '/<update_contact>/d' \
+  -e '/<p>/N;/<p>\n.*\(We invite\|Chromium supports Vorbis\)/,/<\/p>/d' \
+  -e '/^<?xml/,$p' \
+  "$PKG/usr/share/metainfo/chromium.appdata.xml"
+
+local toplevel_files=(
+  chrome_100_percent.pak
+  chrome_200_percent.pak
+  resources.pak
+  v8_context_snapshot.bin
+
+  # ANGLE
+  libEGL.so
+  libGLESv2.so
+
+  chromedriver
+  chrome_crashpad_handler
+)
 
 if [[ -z ${_system_libs[icu]+set} ]]; then
-  cp out/Release/icudtl.dat "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/"
+  toplevel_files+=(icudtl.dat)
 fi
+
+cp "${toplevel_files[@]/#/out/Release/}" "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/"
+install -Dm644 -t "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/locales" out/Release/locales/*.pak
+install -Dm755 -t "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/swiftshader" out/Release/swiftshader/*.so
 
 for size in 24 48 64 128 256; do
   install -Dm644 "chrome/app/theme/chromium/product_logo_$size.png" \

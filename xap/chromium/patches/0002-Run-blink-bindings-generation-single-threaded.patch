@@ -1,0 +1,24 @@
+From 4165b45646bca0977b80e0aa7b7645fbb70e654f Mon Sep 17 00:00:00 2001
+From: Kevin Mihelich <kevin@archlinuxarm.org>
+Date: Tue, 2 Feb 2021 13:58:59 -0700
+Subject: [PATCH 2/3] Run blink bindings generation single threaded
+
+When not single threaded this process will eat all the RAM.
+---
+ third_party/blink/renderer/bindings/BUILD.gn | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/third_party/blink/renderer/bindings/BUILD.gn b/third_party/blink/renderer/bindings/BUILD.gn
+index 30017570a1391..f88e5906f23f4 100644
+--- a/third_party/blink/renderer/bindings/BUILD.gn
++++ b/third_party/blink/renderer/bindings/BUILD.gn
+@@ -148,6 +148,7 @@ template("generate_bindings") {
+     outputs = invoker.outputs
+ 
+     args = [
++      "--single_process",
+       "--web_idl_database",
+       rebase_path(web_idl_database, root_build_dir),
+       "--root_src_dir",
+-- 
+2.32.0
