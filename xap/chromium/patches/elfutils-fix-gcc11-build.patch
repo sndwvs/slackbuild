@@ -1,0 +1,39 @@
+--- a/buildtools/third_party/eu-strip/build.sh	2021-11-04 22:32:13.897756886 +0200
++++ b/buildtools/third_party/eu-strip/build.sh	2021-11-04 23:52:16.589236858 +0200
+@@ -9,9 +9,10 @@
+ autoconf
+ automake --add-missing
+ patch -p1 < ../fix-elf-size.patch
++patch -p1 < ../fix-gcc11-build.patch
+ mkdir build
+ cd build
+-../configure --enable-maintainer-mode
++CFLAGS="-Wno-error" ../configure --enable-maintainer-mode
+ make -j40
+ gcc -std=gnu99 -Wall -Wshadow -Wunused -Wextra -fgnu89-inline \
+   -Wformat=2 -Werror -g -O2 -Wl,-rpath-link,libelf:libdw -Wl,--build-id=none -o eu-strip \
+--- /dev/null	2021-10-28 21:45:52.500000014 +0300
++++ b/buildtools/third_party/eu-strip/fix-gcc11-build.patch	2021-11-04 23:50:50.761308491 +0200
+@@ -0,0 +1,22 @@
++--- a/libebl/libebl.h
+++++ b/libebl/libebl.h
++@@ -245,7 +245,7 @@ extern ssize_t ebl_register_info (Ebl *e
++    Each of these is filled with the DWARF register number corresponding,
++    or -1 if there is none.  Returns zero when the information is available.  */
++ extern int ebl_syscall_abi (Ebl *ebl, int *sp, int *pc,
++-			    int *callno, int args[6]);
+++			    int *callno, int args[]);
++ 
++ /* Supply the ABI-specified state of DWARF CFI before CIE initial programs.
++ 
++--- a/libdw/libdw.h
+++++ b/libdw/libdw.h
++@@ -1065,7 +1065,7 @@ extern int dwarf_frame_cfa (Dwarf_Frame
++    expressions in the CFI, *OPS is an internal pointer that can be used as
++    long as the Dwarf_CFI used to create FRAME remains alive.  */
++ extern int dwarf_frame_register (Dwarf_Frame *frame, int regno,
++-				 Dwarf_Op ops_mem[3],
+++				 Dwarf_Op ops_mem[],
++ 				 Dwarf_Op **ops, size_t *nops)
++   __nonnull_attribute__ (3, 4, 5);
++ 
