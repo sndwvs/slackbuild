@@ -1,5 +1,5 @@
---- a/slackpkgplus.sh	2021-07-15 20:46:19.000000000 +0300
-+++ b/slackpkgplus.sh	2021-07-26 21:03:30.809181595 +0300
+--- a/slackpkgplus.sh	2021-11-04 20:23:48.393662169 +0200
++++ b/slackpkgplus.sh	2021-11-04 20:28:54.704736977 +0200
 @@ -9,7 +9,7 @@
  
    # regular expression used to distinguish the 3rd party repositories from the standard slackware directories.
@@ -9,16 +9,20 @@
  
    # CLOG_PKGREGEX : regular expression used to find package entry in ChangeLog files
    # CLOG_SEPREGEX : regular expression that match the "standard" entry separator in a ChangeLog file
-@@ -868,7 +868,7 @@
-       X86_64=$(ls $ROOT/var/log/packages/aaa_base*x86_64* 2>/dev/null|head -1)
+@@ -874,10 +874,10 @@
+       else
+         cp ${TMPDIR}/CHECKSUMS.md5 ${TMPDIR}/CHECKSUMS.md5-merged
+       fi
+-      X86_64=$(ls $ROOT/var/log/packages/aaa_base*x86_64* 2>/dev/null|head -1)
++      X86_64=$(ls $ROOT/var/log/packages/aaa_base*{x86_,aarch,riscv}64* 2>/dev/null|head -1)
        for PREPO in ${REPOPLUS[*]};do
          if [ -z "$X86_64" ];then
 -          FILTEREXCLUDE="-(x86_64|arm)-"
-+          FILTEREXCLUDE="-(x86_64|arm|aarch64)-"
++          FILTEREXCLUDE="-(x86_64|arm|aarch64|riscv64)-"
          elif [ "$ALLOW32BIT" == "on" ];then
            FILTEREXCLUDE="-(arm)-"
          else
-@@ -993,6 +993,7 @@
+@@ -1002,6 +1002,7 @@
        if [ "$FILENAME" == "CHECKSUMS.md5" ];then
          REPO=slackware
          [ -e "${WORKDIR}/gpg/GPG-KEY-slackware64.gpg" ]&&REPO=slackware64
@@ -26,7 +30,7 @@
        elif [ ${FILENAME:0:13} == "CHECKSUMS.md5" ];then
          REPO=$(echo $FILENAME|cut -f2- -d-|sed 's/\.gz$//')
        else
-@@ -1927,7 +1928,7 @@
+@@ -1972,7 +1973,7 @@
      find $TEMP ! -type d|sort|tac|awk '{if($1~/\.asc$/)f[$1]++;if($1~/\.t.z$/ && !f[$1".asc"])print $1}' |xargs -r rm -f
    fi
  

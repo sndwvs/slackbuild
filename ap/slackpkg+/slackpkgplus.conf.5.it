@@ -52,16 +52,19 @@ Seguono le differenti impostazioni disponibili:
 
 
 \fBImpostazioni di download\fP
-.ds 1 VERBOSE\t\t\t\t0,1,2,3\t\t1\t\tsi
-.ds 2 USETERSE\t\t\t\ton/off\t\toff\t\tsi
-.ds 3 PROXY\t\t\t\tstringa\t\t-\t\tsi
-.ds 4 WGETOPTS\t\t\t\tstringa\t\t-\t\tsi
-.ds 5 DOWNLOADCMD\t\t\tstringa\t\twget\t\tsi
+.ds 0 VERBOSE\t\t\t\t0,1,2,3\t\t1\t\tsi
+.ds 1 USETERSE\t\t\t\ton/off\t\toff\t\tsi
+.ds 2 PROXY\t\t\t\tstringa\t\t-\t\tsi
+.ds 3 WGETOPTS\t\t\t\tstringa\t\t-\t\tsi
+.ds 4 DOWNLOADCMD\t\t\tstringa\t\twget\t\tsi
+.ds 5 CHECKDISKSPACE\t\t\ton/off\t\toff\t\tno
 .ds 6 DOWNLOADONLY\t\t\ton/off\t\toff\t\tsi
 .ds 7 CACHEUPDATE\t\t\ton/off\t\toff\t\tsi
 .ds 8 SEARCH_CLOG_INPARENT\ton/off\t\toff\t\tno
 .ds 9 STRICTGPG\t\t\t\ton/off\t\ton\t\tsi
 .in +2
+\*0
+.br
 \*1
 .br
 \*2
@@ -277,6 +280,11 @@ DOWNLOADCMD="curl -v -o"
 Per i dettagli vedere la documentazione.
 
 .TP  5
+\fBCHECKDISKSPACE\fP
+.br
+Permette a \%slackpkg+  di controllare lo spazio libero su disco per scaricare i pacchetti. Inoltre controlla se c'è spazio sufficiente anche per l'installazione, esclusivamente per i comandi install/install\-new.
+
+.TP  5
 \fBDOWNLOADONLY\fP
 .br
 Nel download dei pacchetti, con questa variabile è possibile specificare di non installarli ma solo di scaricarli. Verranno lasciati nella cache dei pacchetti.
@@ -486,6 +494,21 @@ Mette nella prima colonna sigle più corte e colorate. I valori possibili sono:
 .br
 \fItiny\fP)\ [-] uninstalled, [I] installed, [U] upgrade, [M] uninstalled/masked
 .br
+
+.SH EXIT STATUS
+.P
+.IP "\fB0\fP" 5
+Slackpkg eseguito con successo.
+.IP "\fB1\fP" 5
+Si è verificato un errore (warning).
+.IP "\fB2\fP" 5
+Si è verificato un errore importante (fatal). Assicurati di gestirlo e non ignorarlo.
+.IP "\fB20\fP" 5
+Nessun pacchetto disponibile al download, install, reinstall, upgrad, or remove.
+.IP "\fB50\fP" 5
+Slackpkg è stato aggiornato ed è necessario riavviarlo.
+.IP "\fB100\fP" 5
+Ci sono aggiornamenti disponibili.
 
 .SH FILES
 

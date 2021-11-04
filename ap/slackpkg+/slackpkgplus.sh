@@ -171,7 +171,8 @@ if [ "$SLACKPKGPLUS" = "on" ];then
     # Get the current exit-code so that we can check if cleanup is
     # called in response of a CTRL+C (ie. $?=130) or not.
     local lEcode=$?
-    local retval=${PENDING_UPDATES:-0}
+    local retval=${EXIT_CODE:-0}
+    [ ! -z "$PENDING_UPDATES" ]&&retval=$PENDING_UPDATES
 
     if [ "$CMD" == "info" ];then
       DETAILED_INFO=${DETAILED_INFO:-none}
@@ -537,6 +538,10 @@ if [ "$SLACKPKGPLUS" = "on" ];then
   function getfile(){
     local URLFILE
     URLFILE=$1
+    PREPO=slackware
+    if [ $(basename $1) = "PACKAGES.TXT" ];then
+      PREPO=$(echo $1|awk -F/ '{print $(NF-1)}')
+    fi
 
     if echo $URLFILE|grep -q /SBO_;then
       local PRGNAM
@@ -687,6 +692,10 @@ if [ "$SLACKPKGPLUS" = "on" ];then
       if [ ! -s $2 ];then
         echo -n|bzip2 -c >$2
       fi
+    fi
+
+    if [ $(basename $1) = "PACKAGES.TXT" ];then
+      sed -i -e "1i===== START REPO: $PREPO : URL:$1  =====" -e "\$a===== END REPO: $PREPO =====" $2
     fi
 
     if [ $(basename $1) = "CHECKSUMS.md5.asc" -a ! -e $TMPDIR/signaturedownloaded ];then
@@ -1788,6 +1797,42 @@ if [ "$SLACKPKGPLUS" = "on" ];then
         echo "No packages selected for $2, exiting."
         cleanup
       fi
+      if [ "$2" != "remove" -a "$CHECKDISKSPACE" == "on" ];then
+        COUNTLIST=$(echo $SHOWLIST|wc -w)
+        compressed=0
+        uncompressed=0
+        n=0
+        for i in $SHOWLIST;do
+          let n++
+          r=$(cat $TMPDIR/dialog.tmp|grep ^$i|cut -f2 -d'"')
+          read c u <<<$(echo $(sed -e "1,/START REPO: $r :/d" -e "1,/ $i$/d" -e '/^$/Q' -e '/[^0-9][^ ][^K]$/d' -e 's/ K$//' $WORKDIR/PACKAGES.TXT|grep compressed|sort|awk '{print $NF}'))
+          [ "$c" ]&&let compressed+=$c
+          [ "$u" ]&&let uncompressed+=$u
+          echo -en "Total space required to download $n/$COUNTLIST packages: $[$compressed/1024] MB \r"
+        done
+        available=$(df $TEMP|grep -v ^Filesystem|tail -1|awk '{print $4}')
+        [ $compressed -lt 1024 ]&&toprint="$compressed KB"||toprint="$[$compressed/1024] MB"
+        echo "Total space required to download: $toprint; Available: $[$available/1024] MB"
+        if [ $available -lt $compressed ];then
+          echo "No sufficient space to download packages. Do you want to continue anyway? (y/N)"
+          answer
+          if [ "$ANSWER" != "Y" ] && [ "$ANSWER" != "y" ]; then
+            cleanup
+          fi
+        fi
+        if [ "$2" == "install" ];then
+          available=$(df $ROOT/usr|grep -v ^Filesystem|tail -1|awk '{print $4}')
+          [ $uncompressed -lt 1024 ]&&toprint="$uncompressed KB"||toprint="$[$uncompressed/1024] MB"
+          echo "Total space required to install: $toprint; Available: $[$available/1024] MB"
+          if [ $available -lt $compressed ];then
+            echo "No sufficient space to install packages. Do you want to continue anyway? (y/N)"
+            answer
+            if [ "$ANSWER" != "Y" ] && [ "$ANSWER" != "y" ]; then
+              cleanup
+            fi
+          fi
+        fi
+      fi
     } # END function showlist()
 
   else # (DIALOG=off)
@@ -1880,7 +1925,7 @@ if [ "$SLACKPKGPLUS" = "on" ];then
     cleanup
   fi
 
-  SPKGPLUS_VERSION="1.7.7"
+  SPKGPLUS_VERSION="1.7.9"
   VERSION="$VERSION / slackpkg+ $SPKGPLUS_VERSION"
   
   if [ ${VERSION:0:4} == "2.82" ];then
@@ -2417,7 +2462,7 @@ if [ "$SLACKPKGPLUS" = "on" ];then
     
     if $UPDATES ; then
       echo "Slackpkg: Updated packages are available since last check." >&2
-      PENDING_UPDATES=1
+      EXIT_CODE=100
       
       printf "\n  [ %-24s ] [ %-20s ]\n" "Repository" "Status"
       
