@@ -145,26 +145,26 @@ patch -Rp1 -i $CWD/patches/chromium-94-ffmpeg-roll.patch || exit 1
 patch -Np0 -i $CWD/patches/unexpire-accelerated-video-decode-flag.patch || exit 1
 
 # Upstream fixes
-patch -Np1 -i $CWD/patches/maldoca-depend-on-zlib-instead-of-headers-only.patch || exit 1
-patch -Np1 -i $CWD/patches/ozone-x11-fix-VA-API.patch || exit 1
-patch -Np1 -i $CWD/patches/chromium-95-harfbuzz-3.patch || exit 1
-patch -Np1 -i $CWD/patches/xfce-set-zero-insets-on-maximising-the-window.patch || exit 1
+#patch -Np1 -i $CWD/patches/maldoca-depend-on-zlib-instead-of-headers-only.patch || exit 1
+#patch -Np1 -i $CWD/patches/ozone-x11-fix-VA-API.patch || exit 1
+#patch -Np1 -i $CWD/patches/chromium-95-harfbuzz-3.patch || exit 1
+#patch -Np1 -i $CWD/patches/xfce-set-zero-insets-on-maximising-the-window.patch || exit 1
 
 # Revert transition to -fsanitize-ignorelist (needs newer clang)
-patch -Rp1 -i $CWD/patches/replace-blacklist-with-ignorelist.patch || exit 1
+#patch -Rp1 -i $CWD/patches/replace-blacklist-with-ignorelist.patch || exit 1
 
 # Revert addition of -ffile-compilation-dir= (needs newer clang)
-patch -Rp1 -i $CWD/patches/add-a-TODO-about-a-missing-pnacl-flag.patch || exit 1
-patch -Rp1 -i $CWD/patches/use-ffile-compilation-dir.patch || exit 1
+#patch -Rp1 -i $CWD/patches/add-a-TODO-about-a-missing-pnacl-flag.patch || exit 1
+#patch -Rp1 -i $CWD/patches/use-ffile-compilation-dir.patch || exit 1
 
 # Fix desktop sharing via Pipewire with xdg-desktop-portal 1.10
-patch -Np1 -d third_party/webrtc < $CWD/patches/pipewire-do-not-typecheck-the-portal-session_handle.patch || exit 1
+#patch -Np1 -d third_party/webrtc < $CWD/patches/pipewire-do-not-typecheck-the-portal-session_handle.patch || exit 1
 
 # https://chromium-review.googlesource.com/c/chromium/src/+/2862724
 patch -Np1 -i $CWD/patches/sql-make-VirtualCursor-standard-layout-type.patch || exit 1
 
 # Fixes for building with libstdc++ instead of libc++
-patch -Np1 -i $CWD/patches/chromium-95-quiche-include.patch || exit 1
+#patch -Np1 -i $CWD/patches/chromium-95-quiche-include.patch || exit 1
 
 # Fixes for building elfutils with gcc11
 patch -Np1 -i $CWD/patches/elfutils-fix-gcc11-build.patch || exit 1
@@ -199,8 +199,8 @@ popd
 # Compilation
 export CC=clang
 export CXX=clang++
-export AR=ar
-export NM=nm
+export AR=llvm-ar
+export NM=llvm-nm
 
 _flags=(
   'custom_toolchain="//build/toolchain/linux/unbundle:default"'
