@@ -141,6 +141,9 @@ patch -Np1 -i $CWD/patches/chromium-93-ffmpeg-4.4.patch || exit 1
 # https://crbug.com/1251779
 #patch -Rp1 -i $CWD/patches/chromium-94-ffmpeg-roll.patch || exit 1
 
+# Fix build with function av_stream_get_first_dts
+patch -Np1 -i $CWD/patches/chromium-98-ffmpeg-fix.patch || exit 1
+
 # https://crbug.com/1207478
 patch -Np0 -i $CWD/patches/unexpire-accelerated-video-decode-flag.patch || exit 1
 
