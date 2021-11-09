@@ -139,7 +139,7 @@ patch -Np1 -i $CWD/patches/chromium-93-ffmpeg-4.4.patch || exit 1
 # Upstream commit that made first_dts internal causing Chromium to add a
 # custom function: https://github.com/FFmpeg/FFmpeg/commit/591b88e6787c4
 # https://crbug.com/1251779
-patch -Rp1 -i $CWD/patches/chromium-94-ffmpeg-roll.patch || exit 1
+#patch -Rp1 -i $CWD/patches/chromium-94-ffmpeg-roll.patch || exit 1
 
 # https://crbug.com/1207478
 patch -Np0 -i $CWD/patches/unexpire-accelerated-video-decode-flag.patch || exit 1
