@@ -172,6 +172,10 @@ patch -Np1 -i $CWD/patches/sql-make-VirtualCursor-standard-layout-type.patch || 
 # Fixes for building elfutils with gcc11
 patch -Np1 -i $CWD/patches/elfutils-fix-gcc11-build.patch || exit 1
 
+# ../../ui/ozone/platform/wayland/gpu/wayland_gl_egl_utility.cc:32:12: error: no member named 'find' in namespace 'std'
+# if (std::find(display_attributes->begin(), display_attributes->end(),
+patch -Np1 -i $CWD/patches/chromium-98-platform_gl_egl_utility-fix.patch || exit 1
+
 # Link to system tools required by the build
 mkdir -p third_party/node/linux/node-linux-x64/bin
 #ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
