@@ -69,6 +69,8 @@ find . \
  -exec chmod 644 {} \;
 
 # Configuration
+CRFLAGS="CHROMIUM_FLAGS"
+CRUSERFLAGS="CHROMIUM_USER_FLAGS"
 
 # Possible replacements are listed in build/linux/unbundle/replace_gn_files.py
 # Keys are the names in the above script; values are the dependencies in Arch
@@ -286,7 +288,7 @@ sed -ni \
   -e '/^<?xml/,$p' \
   "$PKG/usr/share/metainfo/chromium.appdata.xml"
 
-local toplevel_files=(
+toplevel_files=(
   chrome_100_percent.pak
   chrome_200_percent.pak
   resources.pak
