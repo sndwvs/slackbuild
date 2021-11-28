@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="libreoffice"
-VERSION=7.2.0.4
+VERSION=7.2.3.2
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -31,7 +31,7 @@ DOWNLOADS+=( ${SOURCE_URL2}/libfreehand-0.1.2.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/bae83fa5dc7f081768daace6e199adc3-glm-0.9.4.6-libreoffice.zip )
 DOWNLOADS+=( ${SOURCE_URL2}/5ade6ae2a99bc1e9e57031ca88d36dad-hyphen-2.8.8.tar.gz )
 DOWNLOADS+=( ${SOURCE_URL2}/libexttextcat-3.4.5.tar.xz )
-DOWNLOADS+=( ${SOURCE_URL2}/language-subtag-registry-2021-03-05.tar.bz2 )
+DOWNLOADS+=( ${SOURCE_URL2}/language-subtag-registry-2021-08-06.tar.bz2 )
 DOWNLOADS+=( ${SOURCE_URL2}/liblangtag-0.6.2.tar.bz2 )
 DOWNLOADS+=( ${SOURCE_URL2}/libnumbertext-1.0.7.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/xmlsec1-1.2.32.tar.gz )
