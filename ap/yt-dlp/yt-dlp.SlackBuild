@@ -86,6 +86,8 @@ mv "${PKG}/usr/share/man" \
    "${PKG}/usr/"
 rm -rf "${PKG}/usr/share/doc"
 
+ln -s ${PKG}/usr/bin/${NAME} -r ${PKG}/usr/bin/youtube-dl
+
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
   | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
