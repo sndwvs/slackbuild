@@ -71,6 +71,7 @@ find . \
 install -d -m 755 $PKG/usr/bin
 install -D -m 755 firmware/vl805 $PKG/usr/bin/vl805
 install -D -m 755 rpi-eeprom-config $PKG/usr/bin/rpi-eeprom-config
+install -D -m 755 rpi-eeprom-digest $PKG/usr/bin/rpi-eeprom-digest
 
 # Patch /opt/vc/bin into PATH in script due to weird install location of raspberrypi-firmware
 install -D -m 755 rpi-eeprom-update $PKG/usr/bin/rpi-eeprom-update
