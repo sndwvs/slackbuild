@@ -71,7 +71,7 @@ elif [ "$ARCH" = "arm" ]; then
   LIBDIRSUFFIX=""
   OPTIMIZE=${OPTIMIZE:-"-O2"}
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O2"
+  SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX="64"
   OPTIMIZE=${OPTIMIZE:-"-O2"}
 else
@@ -142,12 +142,11 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-# Selectively APPLY patch for glibc 2.30+
-cat $CWD/glibc-2.30+.patch || patch -p0 || exit 1
-
 # Without LANG=C, building the Python environment may fail with:
 # "UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 36: ordinal not in range(128)"
 export LANG=C
+
+patch -p1 --verbose -i $CWD/fix-build-with-gcc11.patch || exit 1
 
 # Keep memory usage as low as possible when linking:
 SLKLDFLAGS=" -Wl,--as-needed -Wl,--reduce-memory-overheads -Wl,--no-keep-memory -Wl,--stats"

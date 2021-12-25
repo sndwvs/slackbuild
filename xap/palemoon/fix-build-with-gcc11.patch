@@ -1,0 +1,1042 @@
+--- a/platform/accessible/generic/HyperTextAccessible.cpp
++++ b/platform/accessible/generic/HyperTextAccessible.cpp
+@@ -38,6 +38,8 @@
+ #include "mozilla/dom/Selection.h"
+ #include "mozilla/MathAlgorithms.h"
+ #include "gfxSkipChars.h"
++
++#include <limits>
+ #include <algorithm>
+ 
+ using namespace mozilla;
+
+--- a/platform/dom/crypto/WebCryptoTask.cpp
++++ b/platform/dom/crypto/WebCryptoTask.cpp
+@@ -3,6 +3,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
++
+ #include "pk11pub.h"
+ #include "cryptohi.h"
+ #include "secerr.h"
+
+--- a/platform/dom/media/gtest/TestIntervalSet.cpp
++++ b/platform/dom/media/gtest/TestIntervalSet.cpp
+@@ -7,6 +7,8 @@
+ #include "mozilla/dom/TimeRanges.h"
+ #include "TimeUnits.h"
+ #include "Intervals.h"
++
++#include <limits>
+ #include <algorithm>
+ #include <vector>
+ 
+--- a/platform/dom/media/webaudio/BiquadFilterNode.cpp
++++ b/platform/dom/media/webaudio/BiquadFilterNode.cpp
+@@ -4,6 +4,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
++
+ #include "BiquadFilterNode.h"
+ #include "AlignmentUtils.h"
+ #include "AudioNodeEngine.h"
+
+--- a/platform/dom/media/webaudio/DelayBuffer.h
++++ b/platform/dom/media/webaudio/DelayBuffer.h
+@@ -7,6 +7,8 @@
+ #ifndef DelayBuffer_h_
+ #define DelayBuffer_h_
+ 
++#include <limits>
++
+ #include "nsTArray.h"
+ #include "AudioBlock.h"
+ #include "AudioSegment.h"
+
+--- a/platform/dom/media/webaudio/IIRFilterNode.cpp
++++ b/platform/dom/media/webaudio/IIRFilterNode.cpp
+@@ -4,6 +4,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
++
+ #include "IIRFilterNode.h"
+ #include "AlignmentUtils.h"
+ #include "AudioBlock.h"
+
+--- a/platform/dom/media/webm/WebMDemuxer.cpp
++++ b/platform/dom/media/webm/WebMDemuxer.cpp
+@@ -27,6 +27,7 @@
+ #include "prprf.h"           // leaving it for PR_vsnprintf()
+ #include "mozilla/Sprintf.h"
+ 
++#include <limits>
+ #include <algorithm>
+ #include <numeric>
+ #include <stdint.h>
+
+--- a/platform/dom/svg/SVGContentUtils.cpp
++++ b/platform/dom/svg/SVGContentUtils.cpp
+@@ -31,6 +31,8 @@
+ #include "SVGPathData.h"
+ #include "SVGPathElement.h"
+ 
++#include <limits>
++
+ using namespace mozilla;
+ using namespace mozilla::dom;
+ using namespace mozilla::gfx;
+
+--- a/platform/gfx/2d/BaseRect.h
++++ b/platform/gfx/2d/BaseRect.h
+@@ -9,6 +9,7 @@
+ #include <algorithm>
+ #include <cmath>
+ #include <ostream>
++#include <limits>
+ 
+ #include "mozilla/Assertions.h"
+ #include "mozilla/FloatingPoint.h"
+
+--- a/platform/gfx/2d/Matrix.h
++++ b/platform/gfx/2d/Matrix.h
+@@ -13,6 +13,7 @@
+ #include "Quaternion.h"
+ #include <iosfwd>
+ #include <math.h>
++#include <limits>
+ #include "mozilla/Attributes.h"
+ #include "mozilla/DebugOnly.h"
+ #include "mozilla/FloatingPoint.h"
+
+--- a/platform/gfx/2d/image_operations.h
++++ b/platform/gfx/2d/image_operations.h
+@@ -29,6 +29,8 @@
+ #ifndef SKIA_EXT_IMAGE_OPERATIONS_H_
+ #define SKIA_EXT_IMAGE_OPERATIONS_H_
+ 
++#include <limits>
++
+ #include "skia/include/core/SkTypes.h"
+ #include "Types.h"
+ #include "convolver.h"
+
+--- a/platform/gfx/angle/src/common/BitSetIterator.h
++++ b/platform/gfx/angle/src/common/BitSetIterator.h
+@@ -10,8 +10,8 @@
+ #ifndef COMMON_BITSETITERATOR_H_
+ #define COMMON_BITSETITERATOR_H_
+ 
++#include <limits>
+ #include <stdint.h>
+-
+ #include <bitset>
+ 
+ #include "common/angleutils.h"
+
+--- a/platform/gfx/angle/src/common/mathutil_unittest.cpp
++++ b/platform/gfx/angle/src/common/mathutil_unittest.cpp
+@@ -9,6 +9,7 @@
+ 
+ #include "mathutil.h"
+ 
++#include <limits>
+ #include <gtest/gtest.h>
+ 
+ using namespace gl;
+
+--- a/platform/gfx/angle/src/common/utilities.cpp
++++ b/platform/gfx/angle/src/common/utilities.cpp
+@@ -10,6 +10,7 @@
+ #include "common/mathutil.h"
+ #include "common/platform.h"
+ 
++#include <limits>
+ #include <set>
+ 
+ #if defined(ANGLE_ENABLE_WINDOWS_STORE)
+
+--- a/platform/gfx/angle/src/compiler/translator/CallDAG.cpp
++++ b/platform/gfx/angle/src/compiler/translator/CallDAG.cpp
+@@ -8,6 +8,8 @@
+ // analyses, allows to efficiently traverse the functions in topological
+ // order.
+ 
++#include <limits>
++
+ #include "compiler/translator/CallDAG.h"
+ #include "compiler/translator/InfoSink.h"
+ 
+--- a/platform/gfx/angle/src/libANGLE/BinaryStream_unittest.cpp
++++ b/platform/gfx/angle/src/libANGLE/BinaryStream_unittest.cpp
+@@ -6,6 +6,7 @@
+ 
+ // BinaryStream_unittest.cpp: Unit tests of the binary stream classes.
+ 
++#include <limits>
+ #include <gtest/gtest.h>
+ 
+ #include "libANGLE/BinaryStream.h"
+
+--- a/platform/gfx/angle/src/libANGLE/HandleAllocator.cpp
++++ b/platform/gfx/angle/src/libANGLE/HandleAllocator.cpp
+@@ -9,6 +9,7 @@
+ 
+ #include "libANGLE/HandleAllocator.h"
+ 
++#include <limits>
+ #include <algorithm>
+ 
+ #include "common/debug.h"
+
+--- a/platform/gfx/angle/src/libANGLE/HandleAllocator_unittest.cpp
++++ b/platform/gfx/angle/src/libANGLE/HandleAllocator_unittest.cpp
+@@ -6,6 +6,8 @@
+ // Unit tests for HandleAllocator.
+ //
+ 
++#include <limits>
++
+ #include "gmock/gmock.h"
+ #include "gtest/gtest.h"
+ 
+--- a/platform/gfx/angle/src/libANGLE/HandleRangeAllocator_unittest.cpp
++++ b/platform/gfx/angle/src/libANGLE/HandleRangeAllocator_unittest.cpp
+@@ -6,9 +6,10 @@
+ // Unit tests for HandleRangeAllocator.
+ //
+ 
++#include <limits>
++
+ #include "gmock/gmock.h"
+ #include "gtest/gtest.h"
+-
+ #include "libANGLE/HandleRangeAllocator.h"
+ 
+ namespace
+
+--- a/platform/gfx/angle/src/libANGLE/Program.cpp
++++ b/platform/gfx/angle/src/libANGLE/Program.cpp
+@@ -9,6 +9,7 @@
+ 
+ #include "libANGLE/Program.h"
+ 
++#include <limits>
+ #include <algorithm>
+ 
+ #include "common/BitSetIterator.h"
+
+--- a/platform/gfx/angle/src/libANGLE/queryconversions.cpp
++++ b/platform/gfx/angle/src/libANGLE/queryconversions.cpp
+@@ -8,6 +8,7 @@
+ 
+ #include "libANGLE/queryconversions.h"
+ 
++#include <limits>
+ #include <vector>
+ 
+ #include "libANGLE/Context.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/BufferD3D.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/BufferD3D.cpp
+@@ -6,6 +6,8 @@
+ 
+ // BufferD3D.cpp Defines common functionality between the Buffer9 and Buffer11 classes.
+ 
++#include <limits>
++
+ #include "libANGLE/renderer/d3d/BufferD3D.h"
+ 
+ #include "common/mathutil.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/IndexDataManager.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/IndexDataManager.cpp
+@@ -7,6 +7,8 @@
+ // IndexDataManager.cpp: Defines the IndexDataManager, a class that
+ // runs the Buffer translation process for index buffers.
+ 
++#include <limits>
++
+ #include "libANGLE/renderer/d3d/IndexDataManager.h"
+ 
+ #include "common/utilities.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/RendererD3D.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/RendererD3D.cpp
+@@ -6,6 +6,8 @@
+ 
+ // RendererD3D.cpp: Implementation of the base D3D Renderer.
+ 
++#include <limits>
++
+ #include "libANGLE/renderer/d3d/RendererD3D.h"
+ 
+ #include "common/debug.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/VertexDataManager.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/VertexDataManager.cpp
+@@ -7,6 +7,8 @@
+ // VertexDataManager.h: Defines the VertexDataManager, a class that
+ // runs the Buffer translation process.
+ 
++#include <limits>
++
+ #include "libANGLE/renderer/d3d/VertexDataManager.h"
+ 
+ #include "common/BitSetIterator.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/Buffer11.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/Buffer11.cpp
+@@ -8,6 +8,7 @@
+ 
+ #include "libANGLE/renderer/d3d/d3d11/Buffer11.h"
+ 
++#include <limits>
+ #include <memory>
+ 
+ #include "common/MemoryBuffer.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/InputLayoutCache.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/InputLayoutCache.cpp
+@@ -7,6 +7,8 @@
+ // InputLayoutCache.cpp: Defines InputLayoutCache, a class that builds and caches
+ // D3D11 input layouts.
+ 
++#include <limits>
++
+ #include "libANGLE/renderer/d3d/d3d11/InputLayoutCache.h"
+ 
+ #include "common/BitSetIterator.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/Query11.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/Query11.cpp
+@@ -8,6 +8,7 @@
+ 
+ #include "libANGLE/renderer/d3d/d3d11/Query11.h"
+ 
++#include <limits>
+ #include <GLES2/gl2ext.h>
+ 
+ #include "common/utilities.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
+@@ -8,6 +8,7 @@
+ 
+ #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
+ 
++#include <limits>
+ #include <EGL/eglext.h>
+ #include <iomanip>
+ #include <sstream>
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/StateManager11.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/StateManager11.cpp
+@@ -6,6 +6,8 @@
+ 
+ // StateManager11.cpp: Defines a class for caching D3D11 state
+ 
++#include <limits>
++
+ #include "libANGLE/renderer/d3d/d3d11/StateManager11.h"
+ 
+ #include "common/BitSetIterator.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/TextureStorage11.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/TextureStorage11.cpp
+@@ -10,6 +10,7 @@
+ 
+ #include "libANGLE/renderer/d3d/d3d11/TextureStorage11.h"
+ 
++#include <limits>
+ #include <tuple>
+ 
+ #include "common/MemoryBuffer.h"
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/copyvertex.inl
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/copyvertex.inl
+@@ -4,6 +4,8 @@
+ // found in the LICENSE file.
+ //
+ 
++#include <limits>
++
+ namespace rx
+ {
+
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d11/renderer11_utils.cpp
+@@ -9,6 +9,7 @@
+ 
+ #include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+ 
++#include <limits>
+ #include <algorithm>
+ 
+ #include "common/debug.h"
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d9/Renderer9.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d9/Renderer9.cpp
+@@ -8,6 +8,7 @@
+ 
+ #include "libANGLE/renderer/d3d/d3d9/Renderer9.h"
+ 
++#include <limits>
+ #include <sstream>
+ #include <EGL/eglext.h>
+ 
+--- a/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d9/renderer9_utils.cpp
++++ b/platform/gfx/angle/src/libANGLE/renderer/d3d/d3d9/renderer9_utils.cpp
+@@ -7,6 +7,8 @@
+ // renderer9_utils.cpp: Conversion functions and other utility routines
+ // specific to the D3D9 renderer.
+ 
++#include <limits>
++
+ #include "libANGLE/renderer/d3d/d3d9/renderer9_utils.h"
+ 
+ #include "common/mathutil.h"
+
+--- a/platform/gfx/angle/src/libANGLE/validationES.cpp
++++ b/platform/gfx/angle/src/libANGLE/validationES.cpp
+@@ -6,8 +6,9 @@
+ 
+ // validationES.h: Validation functions for generic OpenGL ES entry point parameters
+ 
+-#include "libANGLE/validationES.h"
++#include <limits>
+ 
++#include "libANGLE/validationES.h"
+ #include "libANGLE/validationES2.h"
+ #include "libANGLE/validationES3.h"
+ #include "libANGLE/Context.h"
+
+--- a/platform/gfx/angle/src/libANGLE/validationES2.cpp
++++ b/platform/gfx/angle/src/libANGLE/validationES2.cpp
+@@ -8,6 +8,7 @@
+ 
+ #include "libANGLE/validationES2.h"
+ 
++#include <limits>
+ #include <cstdint>
+ 
+ #include "libANGLE/validationES.h"
+
+--- a/platform/gfx/angle/src/libANGLE/validationES3.cpp
++++ b/platform/gfx/angle/src/libANGLE/validationES3.cpp
+@@ -6,8 +6,9 @@
+ 
+ // validationES3.cpp: Validation functions for OpenGL ES 3.0 entry point parameters
+ 
+-#include "libANGLE/validationES3.h"
++#include <limits>
+ 
++#include "libANGLE/validationES3.h"
+ #include "libANGLE/validationES.h"
+ #include "libANGLE/Context.h"
+ #include "libANGLE/Texture.h"
+
+--- a/platform/gfx/angle/src/tests/compiler_tests/ConstantFolding_test.cpp
++++ b/platform/gfx/angle/src/tests/compiler_tests/ConstantFolding_test.cpp
+@@ -7,6 +7,7 @@
+ //   Tests for constant folding
+ //
+ 
++#include <limits>
+ #include <vector>
+ 
+ #include "angle_gl.h"
+
+--- a/platform/gfx/angle/src/tests/gl_tests/BlendMinMaxTest.cpp
++++ b/platform/gfx/angle/src/tests/gl_tests/BlendMinMaxTest.cpp
+@@ -4,6 +4,7 @@
+ // found in the LICENSE file.
+ //
+ 
++#include <limits>
+ #include "test_utils/ANGLETest.h"
+ 
+ using namespace angle;
+
+--- a/platform/gfx/angle/src/tests/gl_tests/BufferDataTest.cpp
++++ b/platform/gfx/angle/src/tests/gl_tests/BufferDataTest.cpp
+@@ -6,6 +6,7 @@
+ 
+ #include "test_utils/ANGLETest.h"
+ 
++#include <limits>
+ #include <stdint.h>
+ 
+ using namespace angle;
+
+--- a/platform/gfx/angle/src/tests/gl_tests/DepthStencilFormatsTest.cpp
++++ b/platform/gfx/angle/src/tests/gl_tests/DepthStencilFormatsTest.cpp
+@@ -4,6 +4,7 @@
+ // found in the LICENSE file.
+ //
+ 
++#include <limits>
+ #include "test_utils/ANGLETest.h"
+ 
+ using namespace angle;
+
+--- a/platform/gfx/angle/src/tests/gl_tests/PathRenderingTest.cpp
++++ b/platform/gfx/angle/src/tests/gl_tests/PathRenderingTest.cpp
+@@ -12,6 +12,7 @@
+ 
+ #include "common/angleutils.h"
+ 
++#include <limits>
+ #include <cmath>
+ #include <cstring>
+ #include <cstddef>
+
+--- a/platform/gfx/angle/src/tests/gl_tests/UniformTest.cpp
++++ b/platform/gfx/angle/src/tests/gl_tests/UniformTest.cpp
+@@ -6,6 +6,7 @@
+ 
+ #include "test_utils/ANGLETest.h"
+ 
++#include <limits>
+ #include <array>
+ #include <cmath>
+ 
+--- a/platform/gfx/angle/src/tests/gl_tests/VertexAttributeTest.cpp
++++ b/platform/gfx/angle/src/tests/gl_tests/VertexAttributeTest.cpp
+@@ -4,6 +4,7 @@
+ // found in the LICENSE file.
+ //
+ 
++#include <limits>
+ #include "test_utils/ANGLETest.h"
+ 
+ using namespace angle;
+
+--- a/platform/gfx/angle/src/tests/perf_tests/BufferSubData.cpp
++++ b/platform/gfx/angle/src/tests/perf_tests/BufferSubData.cpp
+@@ -7,6 +7,7 @@
+ //   Performance test for ANGLE buffer updates.
+ //
+ 
++#include <limits>
+ #include <sstream>
+ 
+ #include "ANGLEPerfTest.h"
+
+--- a/platform/gfx/angle/src/tests/perf_tests/DynamicPromotionPerfTest.cpp
++++ b/platform/gfx/angle/src/tests/perf_tests/DynamicPromotionPerfTest.cpp
+@@ -9,6 +9,8 @@
+ //   dynamic and static buffers quite differently.
+ //
+ 
++#include <limits>
++
+ #include "ANGLEPerfTest.h"
+ #include "random_utils.h"
+ #include "shader_utils.h"
+
+--- a/platform/gfx/angle/src/tests/perf_tests/IndexConversionPerf.cpp
++++ b/platform/gfx/angle/src/tests/perf_tests/IndexConversionPerf.cpp
+@@ -7,6 +7,7 @@
+ //   Performance tests for ANGLE index conversion in D3D11.
+ //
+ 
++#include <limits>
+ #include <sstream>
+ 
+ #include "ANGLEPerfTest.h"
+
+--- a/platform/gfx/layers/client/TiledContentClient.cpp
++++ b/platform/gfx/layers/client/TiledContentClient.cpp
+@@ -3,6 +3,7 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
+ #include "mozilla/layers/TiledContentClient.h"
+ #include <math.h>                       // for ceil, ceilf, floor
+ #include <algorithm>
+
+--- a/platform/gfx/ots/src/hdmx.cc
++++ b/platform/gfx/ots/src/hdmx.cc
+@@ -2,6 +2,8 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
++#include <limits>
++
+ #include "hdmx.h"
+ #include "head.h"
+ #include "maxp.h"
+
+--- a/platform/gfx/ots/src/kern.cc
++++ b/platform/gfx/ots/src/kern.cc
+@@ -2,6 +2,7 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
++#include <limits>
+ #include "kern.h"
+ 
+ // kern - Kerning
+
+--- a/platform/gfx/ots/src/name.cc
++++ b/platform/gfx/ots/src/name.cc
+@@ -4,6 +4,7 @@
+ 
+ #include "name.h"
+ 
++#include <limits>
+ #include <algorithm>
+ #include <cstring>
+ 
+--- a/platform/gfx/skia/skia/include/core/SkPathRef.h
++++ b/platform/gfx/skia/skia/include/core/SkPathRef.h
+@@ -18,6 +18,8 @@
+ #include "SkRefCnt.h"
+ #include "../private/SkTemplates.h"
+ 
++#include <limits>
++
+ class SkRBuffer;
+ class SkWBuffer;
+
+--- a/platform/gfx/skia/skia/include/private/SkTDArray.h
++++ b/platform/gfx/skia/skia/include/private/SkTDArray.h
+@@ -10,6 +10,8 @@
+ #ifndef SkTDArray_DEFINED
+ #define SkTDArray_DEFINED
+ 
++#include <limits>
++
+ #include "SkTypes.h"
+ 
+ template <typename T> class SkTDArray {
+
+--- a/platform/gfx/skia/skia/src/core/SkColorSpace_ICC.cpp
++++ b/platform/gfx/skia/skia/src/core/SkColorSpace_ICC.cpp
+@@ -5,6 +5,8 @@
+  * found in the LICENSE file.
+  */
+ 
++#include <limits>
++
+ #include "SkColorSpace.h"
+ #include "SkColorSpace_Base.h"
+ #include "SkColorSpacePriv.h"
+
+--- a/platform/gfx/skia/skia/src/core/SkEdgeBuilder.cpp
++++ b/platform/gfx/skia/skia/src/core/SkEdgeBuilder.cpp
+@@ -4,6 +4,9 @@
+  * Use of this source code is governed by a BSD-style license that can be
+  * found in the LICENSE file.
+  */
++
++#include <limits>
++
+ #include "SkEdgeBuilder.h"
+ #include "SkPath.h"
+ #include "SkEdge.h"
+
+--- a/platform/gfx/skia/skia/src/core/SkMask.cpp
++++ b/platform/gfx/skia/skia/src/core/SkMask.cpp
+@@ -5,6 +5,7 @@
+  * found in the LICENSE file.
+  */
+ 
++#include <limits>
+ #include "SkMask.h"
+ 
+ //#define TRACK_SKMASK_LIFETIME
+
+--- a/platform/gfx/skia/skia/src/sksl/SkSLUtil.h
++++ b/platform/gfx/skia/skia/src/sksl/SkSLUtil.h
+@@ -8,6 +8,7 @@
+ #ifndef SKSL_UTIL
+ #define SKSL_UTIL
+ 
++#include <limits>
+ #include <iomanip>
+ #include <string>
+ #include <sstream>
+
+--- a/platform/gfx/thebes/gfxUserFontSet.cpp
++++ b/platform/gfx/thebes/gfxUserFontSet.cpp
+@@ -24,6 +24,8 @@
+ #include "opentype-sanitiser.h"
+ #include "ots-memory-stream.h"
+ 
++#include <limits>
++
+ using namespace mozilla;
+ 
+ mozilla::LogModule*
+
+--- a/platform/intl/unicharutil/util/ICUUtils.cpp
++++ b/platform/intl/unicharutil/util/ICUUtils.cpp
+@@ -4,6 +4,8 @@
+ 
+ #ifdef MOZILLA_INTERNAL_API
+ 
++#include <limits>
++
+ #include "ICUUtils.h"
+ #include "mozilla/Preferences.h"
+ #include "nsIContent.h"
+
+--- a/platform/ipc/chromium/src/chrome/common/ipc_channel_win.cc
++++ b/platform/ipc/chromium/src/chrome/common/ipc_channel_win.cc
+@@ -5,6 +5,7 @@
+ 
+ #include "chrome/common/ipc_channel_win.h"
+ 
++#include <limits>
+ #include <windows.h>
+ #include <sstream>
+ 
+--- a/platform/ipc/glue/Faulty.cpp
++++ b/platform/ipc/glue/Faulty.cpp
+@@ -12,6 +12,7 @@
+ #include "prenv.h"
+ #include "mozilla/TypeTraits.h"
+ #include <cmath>
++#include <limits>
+ #include <climits>
+ 
+ namespace mozilla {
+
+--- a/platform/ipc/glue/GeckoChildProcessHost.cpp
++++ b/platform/ipc/glue/GeckoChildProcessHost.cpp
+@@ -43,6 +43,8 @@
+ #include "nsNativeCharsetUtils.h"
+ #include "nscore.h" // for NS_FREE_PERMANENT_DATA
+ 
++#include <limits>
++
+ using mozilla::MonitorAutoLock;
+ using mozilla::ipc::GeckoChildProcessHost;
+ 
+
+--- a/platform/js/src/jit/ExecutableAllocator.cpp
++++ b/platform/js/src/jit/ExecutableAllocator.cpp
+@@ -24,8 +24,9 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+-#include "jit/ExecutableAllocator.h"
++#include <limits>
+ 
++#include "jit/ExecutableAllocator.h"
+ #include "jit/JitCompartment.h"
+ #include "js/MemoryMetrics.h"
+ 
+--- a/platform/js/src/new-regexp/regexp-bytecode-peephole.cc
++++ b/platform/js/src/new-regexp/regexp-bytecode-peephole.cc
+@@ -2,8 +2,9 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+-#include "new-regexp/regexp-bytecode-peephole.h"
++#include <limits>
+ 
++#include "new-regexp/regexp-bytecode-peephole.h"
+ #include "new-regexp/regexp-bytecodes.h"
+ 
+ namespace v8 {
+
+--- a/platform/js/src/new-regexp/util/vector.h
++++ b/platform/js/src/new-regexp/util/vector.h
+@@ -5,6 +5,7 @@
+ #ifndef V8_UTIL_VECTOR_H_
+ #define V8_UTIL_VECTOR_H_
+ 
++#include <limits>
+ #include <algorithm>
+ #include <cstring>
+ #include <iterator>
+
+--- a/platform/js/src/vm/ArrayBufferObject.h
++++ b/platform/js/src/vm/ArrayBufferObject.h
+@@ -6,6 +6,8 @@
+ #ifndef vm_ArrayBufferObject_h
+ #define vm_ArrayBufferObject_h
+ 
++#include <limits>
++
+ #include "mozilla/Maybe.h"
+ 
+ #include "jsobj.h"
+
+--- a/platform/layout/generic/nsViewportFrame.cpp
++++ b/platform/layout/generic/nsViewportFrame.cpp
+@@ -18,6 +18,8 @@
+ #include "nsIMozBrowserFrame.h"
+ #include "nsPlaceholderFrame.h"
+ 
++#include <limits>
++
+ using namespace mozilla;
+ typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
+ 
+--- a/platform/layout/style/CounterStyleManager.cpp
++++ b/platform/layout/style/CounterStyleManager.cpp
+@@ -20,6 +20,8 @@
+ #include "mozilla/StyleSetHandle.h"
+ #include "mozilla/StyleSetHandleInlines.h"
+ 
++#include <limits>
++
+ namespace mozilla {
+ 
+ struct AdditiveSymbol
+
+--- a/platform/layout/style/StyleAnimationValue.cpp
++++ b/platform/layout/style/StyleAnimationValue.cpp
+@@ -33,6 +33,8 @@
+ #include "nsIFrame.h"
+ #include "gfx2DGlue.h"
+ 
++#include <limits>
++
+ using namespace mozilla;
+ using namespace mozilla::css;
+ using namespace mozilla::gfx;
+
+--- a/platform/layout/style/nsStyleContext.cpp
++++ b/platform/layout/style/nsStyleContext.cpp
+@@ -43,6 +43,8 @@
+ // those in ServoBindings.h.
+ #include "mozilla/ServoBindings.h"
+ 
++#include <limits>
++
+ using namespace mozilla;
+ 
+ //----------------------------------------------------------------------
+
+--- a/platform/layout/svg/SVGTextFrame.h
++++ b/platform/layout/svg/SVGTextFrame.h
+@@ -17,6 +17,8 @@
+ #include "nsStubMutationObserver.h"
+ #include "nsSVGContainerFrame.h"
+ 
++#include <limits>
++
+ class gfxContext;
+ class nsDisplaySVGText;
+ class SVGTextFrame;
+
+--- a/platform/mailnews/import/becky/src/nsBeckyAddressBooks.cpp
++++ b/platform/mailnews/import/becky/src/nsBeckyAddressBooks.cpp
+@@ -2,6 +2,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
++
+ #include "nsCOMPtr.h"
+ #include "nsComponentManagerUtils.h"
+ #include "nsServiceManagerUtils.h"
+
+--- a/platform/media/webrtc/trunk/testing/gtest/src/gtest.cc
++++ b/platform/media/webrtc/trunk/testing/gtest/src/gtest.cc
+@@ -43,6 +43,7 @@
+ #include <wchar.h>
+ #include <wctype.h>
+ 
++#include <limits>
+ #include <algorithm>
+ #include <ostream>  // NOLINT
+ #include <sstream>
+
+--- a/platform/media/webrtc/trunk/webrtc/base/bitbuffer_unittest.cc
++++ b/platform/media/webrtc/trunk/webrtc/base/bitbuffer_unittest.cc
+@@ -8,6 +8,8 @@
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
+ 
++#include <limits>
++
+ #include "webrtc/base/arraysize.h"
+ #include "webrtc/base/bitbuffer.h"
+ #include "webrtc/base/bytebuffer.h"
+
+--- a/platform/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
++++ b/platform/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
+@@ -8,6 +8,8 @@
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
+ 
++#include <limits>
++
+ #include "webrtc/modules/audio_coding/codecs/opus/interface/audio_encoder_opus.h"
+ 
+ #include "webrtc/base/checks.h"
+
+--- a/platform/media/webrtc/trunk/webrtc/modules/audio_device/android/audio_device_unittest.cc
++++ b/platform/media/webrtc/trunk/webrtc/modules/audio_device/android/audio_device_unittest.cc
+@@ -8,6 +8,7 @@
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
+ 
++#include <limits>
+ #include <list>
+ #include <numeric>
+
+--- a/platform/media/webrtc/trunk/webrtc/modules/audio_processing/transient/transient_suppressor.cc
++++ b/platform/media/webrtc/trunk/webrtc/modules/audio_processing/transient/transient_suppressor.cc
+@@ -10,6 +10,7 @@
+ 
+ #include "webrtc/modules/audio_processing/transient/transient_suppressor.h"
+ 
++#include <limits>
+ #include <math.h>
+ #include <string.h>
+ #include <cmath>
+
+--- a/platform/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_unittest_helper.cc
++++ b/platform/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_unittest_helper.cc
+@@ -9,6 +9,7 @@
+  */
+ #include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_unittest_helper.h"
+ 
++#include <limits>
+ #include <algorithm>
+ #include <utility>
+ 
+--- a/platform/media/webrtc/trunk/webrtc/video_engine/test/auto_test/source/vie_autotest_custom_call.cc
++++ b/platform/media/webrtc/trunk/webrtc/video_engine/test/auto_test/source/vie_autotest_custom_call.cc
+@@ -9,6 +9,7 @@
+  */
+ 
+ #include <limits.h>
++#include <limits>
+ #include <stdarg.h>
+ #include <stdio.h>
+
+--- a/platform/mfbt/IntegerTypeTraits.h
++++ b/platform/mfbt/IntegerTypeTraits.h
+@@ -8,6 +8,8 @@
+ #ifndef mozilla_IntegerTypeTraits_h
+ #define mozilla_IntegerTypeTraits_h
+ 
++#include <limits>
++
+ #include "mozilla/TypeTraits.h"
+ #include <stdint.h>
+ 
+--- a/platform/mfbt/decimal/Decimal.cpp
++++ b/platform/mfbt/decimal/Decimal.cpp
+@@ -28,6 +28,8 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#include <limits>
++
+ #include "Decimal.h"
+ #include "moz-decimal-utils.h"
+
+--- a/platform/modules/woff2/src/normalize.cc
++++ b/platform/modules/woff2/src/normalize.cc
+@@ -8,6 +8,7 @@
+ 
+ #include "./normalize.h"
+ 
++#include <limits>
+ #include <inttypes.h>
+ #include <stddef.h>
+
+--- a/platform/netwerk/base/nsIOService.cpp
++++ b/platform/netwerk/base/nsIOService.cpp
+@@ -4,6 +4,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
++
+ #include "mozilla/ArrayUtils.h"
+ #include "mozilla/DebugOnly.h"
+ 
+--- a/platform/netwerk/base/nsStandardURL.cpp
++++ b/platform/netwerk/base/nsStandardURL.cpp
+@@ -4,6 +4,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
++
+ #include "IPCMessageUtils.h"
+ 
+ #include "nsStandardURL.h"
+
+--- a/platform/netwerk/base/nsURLParsers.cpp
++++ b/platform/netwerk/base/nsURLParsers.cpp
+@@ -4,6 +4,7 @@
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+ #include <string.h>
++#include <limits>
+ 
+ #include "mozilla/RangedPtr.h"
+
+--- a/platform/security/manager/ssl/TransportSecurityInfo.cpp
++++ b/platform/security/manager/ssl/TransportSecurityInfo.cpp
+@@ -4,6 +4,7 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
+ #include "TransportSecurityInfo.h"
+ 
+ #include "PSMRunnable.h"
+
+--- a/platform/security/nss/gtests/google_test/gtest/test/googletest-death-test-test.cc
++++ b/platform/security/nss/gtests/google_test/gtest/test/googletest-death-test-test.cc
+@@ -30,6 +30,8 @@
+ //
+ // Tests for death tests.
+ 
++#include <limits>
++
+ #include "gtest/gtest-death-test.h"
+ #include "gtest/gtest.h"
+ #include "gtest/internal/gtest-filepath.h"
+
+--- a/platform/testing/gtest/gtest/src/gtest.cc
++++ b/platform/testing/gtest/gtest/src/gtest.cc
+@@ -42,6 +42,7 @@
+ #include <wchar.h>
+ #include <wctype.h>
+ 
++#include <limits>
+ #include <algorithm>
+ #include <ostream>  // NOLINT
+ #include <sstream>
+
+--- a/platform/toolkit/components/telemetry/Telemetry.cpp
++++ b/platform/toolkit/components/telemetry/Telemetry.cpp
+@@ -3,8 +3,8 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
+ #include <algorithm>
+-
+ #include <fstream>
+ 
+ #include <prio.h>
+
+--- a/platform/toolkit/components/url-classifier/RiceDeltaDecoder.cpp
++++ b/platform/toolkit/components/url-classifier/RiceDeltaDecoder.cpp
+@@ -2,6 +2,7 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
++#include <limits>
+ #include "RiceDeltaDecoder.h"
+ 
+ namespace {
