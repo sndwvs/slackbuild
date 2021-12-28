@@ -3,11 +3,11 @@
 CWD=$(pwd)
 
 NAME="bullet"
-VERSION=${VERSION:-3.08}
+VERSION=${VERSION:-3.21}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
-wget -c https://github.com/bulletphysics/bullet3/archive/$VERSION.tar.gz -O $NAME-$VERSION.tar.xz
+wget -c https://github.com/bulletphysics/bullet3/archive/$VERSION.tar.gz -O $NAME-$VERSION.tar.gz
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
 
@@ -37,7 +37,10 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O3 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "riscv64" ]; then
+  SLKCFLAGS="-O3 -fPIC"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"

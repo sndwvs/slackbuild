@@ -3,8 +3,8 @@
 CWD=$(pwd)
 
 NAME="enlightenment"
-VERSION=${VERSION:-0.24.2}
-BUILD=${BUILD:-4}
+VERSION=${VERSION:-0.25.0}
+BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
 wget -c https://download.enlightenment.org/rel/apps/enlightenment/$NAME-$VERSION.tar.xz
@@ -37,7 +37,10 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O3 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "riscv64" ]; then
+  SLKCFLAGS="-O3 -fPIC"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
@@ -71,8 +74,6 @@ find . \
 patch -Np0 -i $CWD/patches/enlightenment-0.16.999.65256-dont_require_suidbit.patch || exit 1
 # PATCH-FEATURE-OPENSUSE dont_offer_updates.patch -- don't offer updates, that's up to package manager -- sleep_walker@opensuse.org
 patch -Np1 -i $CWD/patches/dont_offer_updates.patch || exit 1
-# PATCH-FEATURE-OPENSUSE as we use Network Manager rather then connman offline mode doesn't do anything so Hide the menu option
-patch -Np1 -i $CWD/patches/feature-suse-disable-offline-menu.patch || exit 1
 patch -Np1 -i $CWD/patches/feature-qt-apps-gtk2-theme.patch || exit 1
 patch -Np1 -i $CWD/patches/system.conf.patch || exit 1
 
