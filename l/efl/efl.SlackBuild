@@ -7,7 +7,7 @@ VERSION=${VERSION:-1.26.0}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
-FLAT_THEME="e-flat-theme-0_pre20210121.edj"
+FLAT_THEME="e-flat-theme-0_pre20210330.edj"
 wget -c https://download.enlightenment.org/rel/libs/efl/$NAME-$VERSION.tar.xz
 wget -c https://dev.gentoo.org/~juippis/distfiles/$FLAT_THEME
 
