@@ -37,6 +37,9 @@ elif [ "$ARCH" = "arm" ]; then
 elif [ "$ARCH" = "aarch64" ]; then
   SLKCFLAGS="-O3"
   LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "riscv64" ]; then
+  SLKCFLAGS="-O3"
+  LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
   LIBDIRSUFFIX=""
