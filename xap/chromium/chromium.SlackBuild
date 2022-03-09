@@ -111,12 +111,9 @@ patch -Np1 -i $CWD/patches/0001-widevine-support-for-arm.patch || exit 1
 patch -Np1 -i $CWD/patches/0002-Run-blink-bindings-generation-single-threaded.patch || exit 1
 patch -Np1 -i $CWD/patches/0003-Fix-eu-strip-build-for-newer-GCC.patch || exit 1
 
-# Build ARMv7 with NEON
 if [[ $CARCH == "armv7h" ]]; then
     export ALARM_NINJA_JOBS="4"
     export MAKEFLAGS="-j4"
-    CFLAGS=`echo $SLKCFLAGS | sed -e 's/vfpv3-d16/neon/'`
-    CXXFLAGS="$SLKCFLAGS"
 fi
 
 # Allow build to set march and options on AArch64 (crc, crypto)
@@ -126,57 +123,22 @@ fi
 sed -i -e 's/\<xmlMalloc\>/malloc/' -e 's/\<xmlFree\>/free/' \
   third_party/blink/renderer/core/xml/*.cc \
   third_party/blink/renderer/core/xml/parser/xml_document_parser.cc \
-  third_party/libxml/chromium/*.cc
+  third_party/libxml/chromium/*.cc \
+  third_party/maldoca/src/maldoca/ole/oss_utils.h
 
 # Use the --oauth2-client-id= and --oauth2-client-secret= switches for
 # setting GOOGLE_DEFAULT_CLIENT_ID and GOOGLE_DEFAULT_CLIENT_SECRET at
 # runtime -- this allows signing into Chromium without baked-in values
 patch -Np1 -i $CWD/patches/use-oauth2-client-switches-as-default.patch || exit 1
 
-# Fix build with older ffmpeg
-patch -Np1 -i $CWD/patches/chromium-93-ffmpeg-4.4.patch || exit 1
-
-# Revert change to custom function av_stream_get_first_dts; will need to
-# switch to bundled ffmpeg when we're no longer using ffmpeg 4.4 in Arch
-# Upstream commit that made first_dts internal causing Chromium to add a
-# custom function: https://github.com/FFmpeg/FFmpeg/commit/591b88e6787c4
-# https://crbug.com/1251779
-#patch -Rp1 -i $CWD/patches/chromium-94-ffmpeg-roll.patch || exit 1
-
-# Fix build with function av_stream_get_first_dts
-patch -Np1 -i $CWD/patches/chromium-98-ffmpeg-fix.patch || exit 1
-
-# https://crbug.com/1207478
-patch -Np0 -i $CWD/patches/unexpire-accelerated-video-decode-flag.patch || exit 1
-
 # Upstream fixes
-#patch -Np1 -i $CWD/patches/maldoca-depend-on-zlib-instead-of-headers-only.patch || exit 1
-#patch -Np1 -i $CWD/patches/ozone-x11-fix-VA-API.patch || exit 1
-#patch -Np1 -i $CWD/patches/chromium-95-harfbuzz-3.patch || exit 1
-#patch -Np1 -i $CWD/patches/xfce-set-zero-insets-on-maximising-the-window.patch || exit 1
-
-# Revert transition to -fsanitize-ignorelist (needs newer clang)
-#patch -Rp1 -i $CWD/patches/replace-blacklist-with-ignorelist.patch || exit 1
-
-# Revert addition of -ffile-compilation-dir= (needs newer clang)
-#patch -Rp1 -i $CWD/patches/add-a-TODO-about-a-missing-pnacl-flag.patch || exit 1
-#patch -Rp1 -i $CWD/patches/use-ffile-compilation-dir.patch || exit 1
-
-# Fix desktop sharing via Pipewire with xdg-desktop-portal 1.10
-#patch -Np1 -d third_party/webrtc < $CWD/patches/pipewire-do-not-typecheck-the-portal-session_handle.patch || exit 1
+patch -Np1 -i $CWD/patches/fix-build-break-with-system-libdrm.patch || exit 1
+patch -Np1 -i $CWD/patches/sandbox-build-if-glibc-2.34-dynamic-stack-size-is-en.patch || exit 1
+patch -Np1 -i $CWD/patches/webcodecs-stop-using-AudioOpusEncoder.patch || exit 1
+patch -Np1 -d third_party/pdfium < $CWD/patches/use-FT_Done_MM_Var-in-CFX_Font-AdjustMMParams.patch || exit 1
 
 # https://chromium-review.googlesource.com/c/chromium/src/+/2862724
 patch -Np1 -i $CWD/patches/sql-make-VirtualCursor-standard-layout-type.patch || exit 1
-
-# Fixes for building with libstdc++ instead of libc++
-#patch -Np1 -i $CWD/patches/chromium-95-quiche-include.patch || exit 1
-
-# Fixes for building elfutils with gcc11
-patch -Np1 -i $CWD/patches/elfutils-fix-gcc11-build.patch || exit 1
-
-# ../../ui/ozone/platform/wayland/gpu/wayland_gl_egl_utility.cc:32:12: error: no member named 'find' in namespace 'std'
-# if (std::find(display_attributes->begin(), display_attributes->end(),
-patch -Np1 -i $CWD/patches/chromium-98-platform_gl_egl_utility-fix.patch || exit 1
 
 # Link to system tools required by the build
 mkdir -p third_party/node/linux/node-linux-x64/bin
@@ -218,6 +180,7 @@ _flags=(
   'clang_use_default_sample_profile=false'
   'use_allocator="none"'
   'is_official_build=true' # implies is_cfi=true on x86_64
+  'symbol_level=0' # sufficient for backtraces on x86(_64)
   'is_cfi=false'
   'chrome_pgo_phase=0'
   'treat_warnings_as_errors=false'
@@ -241,10 +204,6 @@ if [[ -n ${_system_libs[icu]+set} ]]; then
   _flags+=('icu_use_data_file=false')
 fi
 
-#if check_option strip y; then
-  _flags+=('symbol_level=0')
-#fi
-
 if [[ $CARCH == "armv7h" ]]; then
   _flags+=('use_thin_lto=false')
 fi
@@ -261,12 +220,32 @@ CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__='
 CFLAGS+='   -Wno-unknown-warning-option'
 CXXFLAGS+=' -Wno-unknown-warning-option'
 
+# Let Chromium set its own symbol level
+CFLAGS=${CFLAGS/-g }
+CXXFLAGS=${CXXFLAGS/-g }
+# -fvar-tracking-assignments is not recognized by clang
+CFLAGS=${CFLAGS/-fvar-tracking-assignments}
+CXXFLAGS=${CXXFLAGS/-fvar-tracking-assignments}
+
+# https://github.com/ungoogled-software/ungoogled-chromium-archlinux/issues/123
+CFLAGS=${CFLAGS/-fexceptions}
+CFLAGS=${CFLAGS/-fcf-protection}
+CXXFLAGS=${CXXFLAGS/-fexceptions}
+CXXFLAGS=${CXXFLAGS/-fcf-protection}
+
+# This appears to cause random segfaults when combined with ThinLTO
+# https://bugs.archlinux.org/task/73518
+CFLAGS=${CFLAGS/-fstack-clash-protection}
+CXXFLAGS=${CXXFLAGS/-fstack-clash-protection}
+
+# https://crbug.com/957519#c122
+CXXFLAGS=${CXXFLAGS/-Wp,-D_GLIBCXX_ASSERTIONS}
+
 gn gen out/Release --args="${_flags[*]}"
-ninja -C out/Release chrome chrome_sandbox chromedriver || exit 1
+ninja -C out/Release chrome chrome_sandbox chromedriver.unstripped || exit 1
 
 install -D out/Release/chrome "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/chromium"
 install -Dm4755 out/Release/chrome_sandbox "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/chrome-sandbox"
-ln -s /usr/lib${LIBDIRSUFFIX}/chromium/chromedriver "$PKG/usr/bin/chromedriver"
 
 install -Dm644 chrome/installer/linux/common/desktop.template \
   "$PKG/usr/share/applications/chromium.desktop"
@@ -291,6 +270,7 @@ sed -ni \
 toplevel_files=(
   chrome_100_percent.pak
   chrome_200_percent.pak
+  chrome_crashpad_handler
   resources.pak
   v8_context_snapshot.bin
 
@@ -298,8 +278,9 @@ toplevel_files=(
   libEGL.so
   libGLESv2.so
 
-  chromedriver
-  chrome_crashpad_handler
+  # SwiftShader ICD
+  libvk_swiftshader.so
+  vk_swiftshader_icd.json
 )
 
 if [[ -z ${_system_libs[icu]+set} ]]; then

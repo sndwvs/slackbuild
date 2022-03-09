@@ -33,5 +33,5 @@ if /bin/ls build-deps*.txz 1> /dev/null 2> /dev/null ; then # use prebuilt autoc
 else
   ( cd $CWD/build-deps/gn ; ./gn.build ) || exit 1
   # And node.js... WHY
-  ( cd $CWD/build-deps/nodejs ; ./nodejs.build ) || exit 1
+#  ( cd $CWD/build-deps/nodejs ; ./nodejs.build ) || exit 1
 fi
