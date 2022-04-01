@@ -86,12 +86,11 @@ declare -gA _system_libs=(
   #[libpng]=libpng    # https://crbug.com/752403#c10
   [libvpx]=libvpx
   [libwebp]=libwebp
-  [libxml]=libxml2
-  [libxslt]=libxslt
+  #[libxml]=libxml2
+  #[libxslt]=libxslt
   [opus]=opus
   #[re2]=re2
   #[snappy]=snappy
-  [yasm]=yasm
   #[zlib]=minizip
 )
 _unwanted_bundled_libs=(
@@ -132,18 +131,14 @@ sed -i -e 's/\<xmlMalloc\>/malloc/' -e 's/\<xmlFree\>/free/' \
 patch -Np1 -i $CWD/patches/use-oauth2-client-switches-as-default.patch || exit 1
 
 # Upstream fixes
-patch -Np1 -i $CWD/patches/fix-build-break-with-system-libdrm.patch || exit 1
-patch -Np1 -i $CWD/patches/sandbox-build-if-glibc-2.34-dynamic-stack-size-is-en.patch || exit 1
 patch -Np1 -i $CWD/patches/webcodecs-stop-using-AudioOpusEncoder.patch || exit 1
-patch -Np1 -d third_party/pdfium < $CWD/patches/use-FT_Done_MM_Var-in-CFX_Font-AdjustMMParams.patch || exit 1
 
 # https://chromium-review.googlesource.com/c/chromium/src/+/2862724
 patch -Np1 -i $CWD/patches/sql-make-VirtualCursor-standard-layout-type.patch || exit 1
 
 # Link to system tools required by the build
 mkdir -p third_party/node/linux/node-linux-x64/bin
-#ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
-ln -s $TMP/chromium-build-deps/usr/bin/node third_party/node/linux/node-linux-x64/bin/
+ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
 #ln -s /usr/bin/java third_party/jdk/current/bin/
 ln -s $(whereis java | sed 's:\s:\n:g' | grep bin) third_party/jdk/current/bin/
 
@@ -223,9 +218,6 @@ CXXFLAGS+=' -Wno-unknown-warning-option'
 # Let Chromium set its own symbol level
 CFLAGS=${CFLAGS/-g }
 CXXFLAGS=${CXXFLAGS/-g }
-# -fvar-tracking-assignments is not recognized by clang
-CFLAGS=${CFLAGS/-fvar-tracking-assignments}
-CXXFLAGS=${CXXFLAGS/-fvar-tracking-assignments}
 
 # https://github.com/ungoogled-software/ungoogled-chromium-archlinux/issues/123
 CFLAGS=${CFLAGS/-fexceptions}
@@ -241,7 +233,7 @@ CXXFLAGS=${CXXFLAGS/-fstack-clash-protection}
 # https://crbug.com/957519#c122
 CXXFLAGS=${CXXFLAGS/-Wp,-D_GLIBCXX_ASSERTIONS}
 
-gn gen out/Release --args="${_flags[*]}"
+gn gen out/Release --args="${_flags[*]}" --script-executable=python3
 ninja -C out/Release chrome chrome_sandbox chromedriver.unstripped || exit 1
 
 install -D out/Release/chrome "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/chromium"
