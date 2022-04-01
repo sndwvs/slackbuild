@@ -233,7 +233,7 @@ CXXFLAGS=${CXXFLAGS/-fstack-clash-protection}
 # https://crbug.com/957519#c122
 CXXFLAGS=${CXXFLAGS/-Wp,-D_GLIBCXX_ASSERTIONS}
 
-gn gen out/Release --args="${_flags[*]}" --script-executable=python3
+gn gen out/Release --args="${_flags[*]}"
 ninja -C out/Release chrome chrome_sandbox chromedriver.unstripped || exit 1
 
 install -D out/Release/chrome "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/chromium"
