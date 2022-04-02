@@ -139,6 +139,9 @@ patch -Np1 -i $CWD/patches/sql-make-VirtualCursor-standard-layout-type.patch || 
 # media/filters/ffmpeg_demuxer.cc:408:24: error: no matching function for call to 'av_packet_get_side_data'
 patch -Np1 -i $CWD/patches/chromium-93-fix-build-with-system-ffmpeg.patch || exit 1
 
+# media/filters/ffmpeg_demuxer.cc:110:7: error: use of undeclared identifier 'av_stream_get_first_dts'; did you mean 'av_stream_get_end_pts'?
+patch -Np1 -i $CWD/patches/unbundle-ffmpeg-av_stream_get_first_dts.patch || exit 1
+
 # Link to system tools required by the build
 mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
