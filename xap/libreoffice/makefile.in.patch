@@ -1,5 +1,5 @@
---- Makefile.in.orig	2021-08-16 19:56:28.000000000 +0000
-+++ Makefile.in	2021-08-23 09:01:18.037360547 +0000
+--- Makefile.in	2022-03-23 13:32:00.000000000 +0000
++++ Makefile.in	2022-04-07 17:19:23.876740716 +0000
 @@ -9,7 +9,7 @@
  
  gb_Top_MODULE_CHECK_TARGETS := slowcheck unitcheck subsequentcheck perfcheck uicheck screenshot
@@ -9,13 +9,14 @@
  
  MAKECMDGOALS?=build
  build_goal:=$(if $(filter build build-nocheck uicheck,$(MAKECMDGOALS)),build)\
-@@ -58,17 +58,6 @@
+@@ -58,18 +58,6 @@
  
  .DEFAULT_GOAL := build
  
+-# Nested test is to check if the systemd-detect-virt command doesn't exist or it reports we're not
+-# in a container:
 -check-if-root:
 -	@if test ! `uname` = 'Haiku' -a `id -u` = 0; then \
--		# if the systemd-detect-virt command doesn't exist or it reports we're not in a container \
 -		if test ! -x "$$(command -v systemd-detect-virt)" || ! systemd-detect-virt -c -q; then \
 -			echo; \
 -			echo 'Building LibreOffice as root is a very bad idea, use a regular user.'; \
@@ -27,7 +28,7 @@
  gb_Side ?= host
  
  include $(BUILDDIR)/config_$(gb_Side).mk
-@@ -274,7 +263,7 @@
+@@ -275,7 +263,7 @@
  #
  # Bootstrap
  #
