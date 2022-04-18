@@ -132,6 +132,11 @@ patch -Np1 -i $CWD/patches/use-oauth2-client-switches-as-default.patch || exit 1
 
 # Upstream fixes
 patch -Np1 -i $CWD/patches/webcodecs-stop-using-AudioOpusEncoder.patch || exit 1
+patch -Np1 -d third_party/webrtc < $CWD/webrtc-check-existence-of-cursor-metadata.patch || exit 1
+
+# Revert kGlobalMediaControlsCastStartStop enabled by default
+# https://crbug.com/1314342
+patch -Rp1 -F3 -i $CWD/enable-GlobalMediaControlsCastStartStop.patch || exit 1
 
 # https://chromium-review.googlesource.com/c/chromium/src/+/2862724
 patch -Np1 -i $CWD/patches/sql-make-VirtualCursor-standard-layout-type.patch || exit 1
