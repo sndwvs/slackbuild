@@ -2,8 +2,8 @@
 
 CWD=$(pwd)
 
-NAME="libtorrent-rasterbar"
-VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f3 | rev | cut -d . -f3- | rev)}
+NAME="tl-expected"
+VERSION=${VERSION:-$(echo ${NAME/tl-}-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -58,9 +58,9 @@ mkdir -p $PKG
 
 # Delete a directory previous build / create new and change rights
 cd $TMP
-rm -rf $NAME-$VERSION
-tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
-cd $NAME-$VERSION || exit 1
+rm -rf ${NAME/tl-}-$VERSION
+tar xvf $CWD/${NAME/tl-}-$VERSION.tar.?z* || exit 1
+cd ${NAME/tl-}-$VERSION || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -69,24 +69,20 @@ find . \
  -exec chmod 644 {} \;
 
 # Configuration
-mkdir -p build
+mkdir build
 cd build
-  cmake \
-    -DCMAKE_C_FLAGS="$SLKCFLAGS" \
-    -DCMAKE_CXX_FLAGS="$SLKCFLAGS" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX="/usr" \
-    -DCMAKE_INSTALL_LIBDIR="lib${LIBDIRSUFFIX}" \
-    -DCMAKE_INSTALL_MANDIR="man" \
-    -Dpython-bindings=ON \
-    -Dboost-python-module-name="python" \
-    -Dpython-egg-info=ON \
-    .. || exit 1
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX="/usr" \
+  -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+  -DCMAKE_INSTALL_MANDIR=/usr/man \
+..
 
-  # Compilation
-  make $NUMJOBS || exit 1
-  make install DESTDIR=$PKG || exit 1
-cd ..
+# Compilation
+make $NUMJOBS || exit 1
+make install DESTDIR=$PKG
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la

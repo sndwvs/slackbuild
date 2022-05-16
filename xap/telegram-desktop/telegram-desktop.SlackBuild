@@ -2,8 +2,8 @@
 
 CWD=$(pwd)
 
-NAME="libtorrent-rasterbar"
-VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f3 | rev | cut -d . -f3- | rev)}
+NAME="telegram-desktop"
+VERSION=${VERSION:-$(echo tdesktop-*.tar.?z* | cut -d - -f2)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -58,9 +58,9 @@ mkdir -p $PKG
 
 # Delete a directory previous build / create new and change rights
 cd $TMP
-rm -rf $NAME-$VERSION
-tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
-cd $NAME-$VERSION || exit 1
+rm -rf tdesktop-$VERSION-full
+tar xvf $CWD/tdesktop-$VERSION-full.tar.?z* || exit 1
+cd tdesktop-$VERSION-full || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -68,26 +68,41 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
+# Fix https://bugs.archlinux.org/task/73220
+export CXXFLAGS+=" -Wp,-U_GLIBCXX_ASSERTIONS"
+
+export PKG_CONFIG_PATH="/usr/lib${LIBDIRSUFFIX}/ffmpeg4.4/pkgconfig"
+
 # Configuration
-mkdir -p build
-cd build
-  cmake \
-    -DCMAKE_C_FLAGS="$SLKCFLAGS" \
-    -DCMAKE_CXX_FLAGS="$SLKCFLAGS" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX="/usr" \
-    -DCMAKE_INSTALL_LIBDIR="lib${LIBDIRSUFFIX}" \
-    -DCMAKE_INSTALL_MANDIR="man" \
-    -Dpython-bindings=ON \
-    -Dboost-python-module-name="python" \
-    -Dpython-egg-info=ON \
-    .. || exit 1
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+cmake \
+  -B build \
+  -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX="/usr" \
+  -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+  -DCMAKE_INSTALL_MANDIR=/usr/man \
+  -DDESKTOP_APP_QT6:BOOL=OFF \
+  -DTDESKTOP_API_ID=611335 \
+  -DTDESKTOP_API_HASH=d524b414d21f4d37f08684c1df41ac9c
 
-  # Compilation
-  make $NUMJOBS || exit 1
-  make install DESTDIR=$PKG || exit 1
-cd ..
+# Hack to compile for ffmpeg4.4
+sed -i "s|/usr/lib/libav|/usr/lib${LIBDIRSUFFIX}/ffmpeg4.4/libav|g" build/build.ninja
+sed -i "s|/usr/lib/libsw|/usr/lib${LIBDIRSUFFIX}/ffmpeg4.4/libsw|g" build/build.ninja
+sed -i "s|-lavcodec|/usr/lib${LIBDIRSUFFIX}/ffmpeg4.4/libavcodec.so|g" build/build.ninja
+sed -i "s|-lavformat|/usr/lib${LIBDIRSUFFIX}/ffmpeg4.4/libavformat.so|g" build/build.ninja
+sed -i "s|-lavutil|/usr/lib${LIBDIRSUFFIX}/ffmpeg4.4/libavutil.so|g" build/build.ninja
+sed -i "s|-lswscale|/usr/lib${LIBDIRSUFFIX}/ffmpeg4.4/libswscale.so|g" build/build.ninja
+sed -i "s|-lswresample|/usr/lib${LIBDIRSUFFIX}/ffmpeg4.4/libswresample.so|g" build/build.ninja
 
+# Compilation
+ninja -C build || exit 1
+ninja -C build install DESTDIR=$PKG
+
+# They botched the release and put a lot of stuff here.
+rm -rf $PKG/build
+    
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 

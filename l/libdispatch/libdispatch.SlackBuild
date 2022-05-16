@@ -2,8 +2,8 @@
 
 CWD=$(pwd)
 
-NAME="libtorrent-rasterbar"
-VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f3 | rev | cut -d . -f3- | rev)}
+NAME="libdispatch"
+VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -68,25 +68,25 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-# Configuration
-mkdir -p build
-cd build
-  cmake \
-    -DCMAKE_C_FLAGS="$SLKCFLAGS" \
-    -DCMAKE_CXX_FLAGS="$SLKCFLAGS" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX="/usr" \
-    -DCMAKE_INSTALL_LIBDIR="lib${LIBDIRSUFFIX}" \
-    -DCMAKE_INSTALL_MANDIR="man" \
-    -Dpython-bindings=ON \
-    -Dboost-python-module-name="python" \
-    -Dpython-egg-info=ON \
-    .. || exit 1
+patch -Np0 -i $CWD/remove-werror.patch || exit 1
 
-  # Compilation
-  make $NUMJOBS || exit 1
-  make install DESTDIR=$PKG || exit 1
-cd ..
+# Configuration
+mkdir -pv build
+cd build
+CC="clang" \
+CXX="clang" \
+cmake \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+  -DCMAKE_INSTALL_MANDIR=/usr/man \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DBlocksRuntime_INCLUDE_DIR=/usr/include \
+  -DBlocksRuntime_LIBRARIES=/usr/lib${LIBDIRSUFFIX}/libBlocksRuntime.so \
+  ..
+
+# Compilation
+make $NUMJOBS || exit 1
+make install DESTDIR=$PKG
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
