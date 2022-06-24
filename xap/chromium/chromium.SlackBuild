@@ -150,6 +150,9 @@ patch -Np1 -i $CWD/patches/chromium-93-fix-build-with-system-ffmpeg.patch || exi
 # media/filters/ffmpeg_demuxer.cc:110:7: error: use of undeclared identifier 'av_stream_get_first_dts'; did you mean 'av_stream_get_end_pts'?
 patch -Np1 -i $CWD/patches/unbundle-ffmpeg-av_stream_get_first_dts.patch || exit 1
 
+# Fix this by testing for ! bad first.
+patch -Np1 -i $CWD/patches/dont-dereference-databits-if-bad.patch || exit 1
+
 # Link to system tools required by the build
 mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/

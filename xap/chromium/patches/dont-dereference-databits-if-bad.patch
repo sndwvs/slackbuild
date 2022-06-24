@@ -1,0 +1,45 @@
+--- a/buildtools/third_party/eu-strip/build.sh	2022-06-24 19:01:45.801795924 +0000
++++ b/buildtools/third_party/eu-strip/build.sh	2022-06-24 19:02:19.482314057 +0000
+@@ -10,6 +10,7 @@
+ automake --add-missing
+ patch -p1 < ../fix-elf-size.patch
+ patch -p1 < ../0001-gcc-fixes.patch
++patch -p1 < ../dont-dereference-databits-if-bad.patch
+ mkdir build
+ cd build
+ ../configure --enable-maintainer-mode
+--- a/dev/null	2022-05-27 16:31:47.434514368 +0000
++++ b/buildtools/third_party/eu-strip/dont-dereference-databits-if-bad.patch	2022-06-24 19:03:00.142940409 +0000
+@@ -0,0 +1,32 @@
++From: Mark Wielaard <m...@klomp.org>
++Date: Wed, 6 Oct 2021 23:37:42 +0200
++Subject: [PATCH] elflint.c: Don't dereference databits if bad
++
++elflint.c: In function 'check_sections':
++elflint.c:4105:48: error: null pointer dereference [-Werror=null-dereference]
++4105 |                                  idx < databits->d_size && ! bad;
++     |                                        ~~~~~~~~^~~~~~~~
++
++Fix this by testing for ! bad first.
++
++Reported-by: Jan-Benedict Glaw <jbg...@lug-owl.de>
++Signed-off-by: Mark Wielaard <m...@klomp.org>
++---
++ src/elflint.c | 2 +-
++ 2 files changed, 5 insertions(+), 1 deletion(-)
++
++diff --git a/src/elflint.c b/src/elflint.c
++index 1ce75684..ef7725ce 100644
++--- a/src/elflint.c
+++++ b/src/elflint.c
++@@ -4102,7 +4102,7 @@ section [%2zu] '%s' has type NOBITS but is read from the file in segment of prog
++ 			    bad = (databits == NULL
++ 				   || databits->d_size != shdr->sh_size);
++ 			    for (size_t idx = 0;
++-				 idx < databits->d_size && ! bad;
+++				 ! bad && idx < databits->d_size;
++ 				 idx++)
++ 			      bad = ((char *) databits->d_buf)[idx] != 0;
++ 
++-- 
++2.32.0
