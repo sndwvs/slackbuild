@@ -299,7 +299,7 @@
 +  do
 +    while read -r -a file;
 +    do
-+        if $(cp -a --parents "${file}" $WDIR 2>/dev/null) ; then
++        if $(install -D "${file}" $WDIR/${file} 2>/dev/null) ; then
 +            echo "OK: added module $file"
 +            echo $file | rev | cut -d '/' -f1 | cut -d '.' -f2 | rev >> $WDIR/modules
 +        else
@@ -314,7 +314,7 @@
 +    while read -r -a file;
 +    do
 +        [[ -z "${file}" ]] && continue
-+        if $(cp -a --parents "${file}" $WDIR 2>/dev/null) ; then
++        if $(install -D "${file}" $WDIR/${file} 2>/dev/null) ; then
 +            echo "OK: added firmware $file"
 +        else
 +            echo "WARNING: missing firmware $file"
