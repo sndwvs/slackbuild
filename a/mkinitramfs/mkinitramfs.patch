@@ -1,11 +1,13 @@
 --- a/mkinitramfs	2021-06-10 22:17:56.734306317 +0300
-+++ b/mkinitramfs	2021-06-26 20:48:41.763991415 +0300
-@@ -1,19 +1,73 @@
++++ b/mkinitramfs	2022-08-14 12:48:40.910907711 +0300
+@@ -1,19 +1,75 @@
  #!/bin/bash
  # This file based in part on the mkinitramfs script for the LFS LiveCD
  # written by Alexander E. Patrakov and Jeremy Huntwork.
 +#
-+# added installation of certain module with dependencies and firmwared
++# 2021-06-26 added installation of certain module with dependencies and firmwared
++# mara
++# 2022-08-14 added request bin/sbin in /usr
 +# mara
 +
 +usage() {
@@ -76,7 +78,7 @@
    else
      echo "Missing required file: $1 for directory $2"
      rm -rf $WDIR
-@@ -21,54 +75,53 @@
+@@ -21,54 +77,53 @@ copy()
    fi
  }
  
@@ -145,7 +147,7 @@
  
  # Create necessary device nodes
  mknod -m 640 $WDIR/dev/console c 5 1
-@@ -83,9 +136,6 @@
+@@ -83,9 +138,6 @@ for file in $(find /etc/udev/rules.d/ -t
    cp $file $WDIR/etc/udev/rules.d
  done
  
@@ -155,31 +157,42 @@
  # Copy the RAID configuration file if present
  if [ -f /etc/mdadm.conf ] ; then
    cp /etc/mdadm.conf $WDIR/etc
-@@ -95,8 +145,8 @@
+@@ -94,9 +146,9 @@ fi
+ # Install the init file
  install -m0755 $DATADIR/$INITIN $WDIR/init
  
- if [  -n "$KERNEL_VERSION" ] ; then
+-if [  -n "$KERNEL_VERSION" ] ; then
 -  if [ -x /usr/bin/kmod ] ; then
 -    binfiles="$binfiles kmod"
++if [ -n "$KERNEL_VERSION" ] ; then
 +  if [ -x /sbin/kmod ] ; then
 +    sbinfiles="$sbinfiles kmod"
    else
      binfiles="$binfiles lsmod"
      sbinfiles="$sbinfiles insmod"
-@@ -105,49 +155,48 @@
+@@ -105,49 +157,56 @@ fi
  
  # Install basic binaries
  for f in $binfiles ; do
 -  ldd /usr/bin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
 -  copy /usr/bin/$f bin
-+  ldd /bin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
-+  copy /bin/$f bin
++  if [ -x /usr/bin/$f ]; then
++    BIN_PREFFIX="/usr"
++  fi
++  ldd $BIN_PREFFIX/bin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
++  copy $BIN_PREFFIX/bin/$f bin
++  unset BIN_PREFFIX
  done
  
  for f in $sbinfiles ; do
 -  ldd /usr/sbin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
-+  ldd /sbin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
-   copy $f sbin
+-  copy $f sbin
++  if [ -x /usr/sbin/$f ]; then
++    SBIN_PREFFIX="/usr"
++  fi
++  ldd $SBIN_PREFFIX/sbin/$f | sed "s/\t//" | cut -d " " -f1 >> $unsorted
++  copy $SBIN_PREFFIX/sbin/$f sbin
++  unset SBIN_PREFFIX
  done
  
  # Add udevd libraries if not in /usr/sbin
@@ -244,7 +257,7 @@
    # Conf file(s)
    cp -a /etc/lvm $WDIR/etc
  fi
-@@ -166,36 +215,59 @@
+@@ -166,36 +225,62 @@ sort $unsorted | uniq | while read libra
    copy $library lib
  done
  
@@ -252,21 +265,22 @@
 -  cp -a /usr/lib/udev $WDIR/usr/lib
 +if [ -d /lib/udev ]; then
 +  cp -a /lib/udev $WDIR/lib
-+fi
-+if [ -d /lib/systemd ]; then
-+  cp -a /lib/systemd $WDIR/lib
  fi
 -if [ -d /usr/lib/systemd ]; then
 -  cp -a /usr/lib/systemd $WDIR/usr/lib
-+if [ -d /lib/elogind ]; then
-+  cp -a /lib/elogind $WDIR/lib
++if [ -d /lib/systemd ]; then
++  cp -a /lib/systemd $WDIR/lib
  fi
 -if [ -d /usr/lib/elogind ]; then
 -  cp -a /usr/lib/elogind $WDIR/usr/lib
++if [ -d /lib/elogind ]; then
++  cp -a /lib/elogind $WDIR/lib
++fi
 +if [ -d /lib64/elogind ]; then
 +  cp -a /lib64/elogind $WDIR/lib64
  fi
  
++if [ ! -z ${MODULES} ]; then
  # Install the kernel modules if requested
 -if [ -n "$KERNEL_VERSION" ]; then
 -  find                                                                        \
@@ -280,8 +294,8 @@
 -            $WDIR/usr/lib/modules/$KERNEL_VERSION
 -
 -  depmod -b $WDIR $KERNEL_VERSION
-+while read -r -a MODULE;
-+do
++  while read -r -a MODULE;
++  do
 +    while read -r -a file;
 +    do
 +        if $(cp -a --parents "${file}" $WDIR 2>/dev/null) ; then
@@ -290,12 +304,13 @@
 +        else
 +            echo "WARNING: missing module $file"
 +        fi
++  echo "modprobe -S $KERNEL_VERSION --show-depends $MODULE | cut -d ' ' -f2-"
 +    done <<< $(modprobe -S $KERNEL_VERSION --show-depends $MODULE | cut -d ' ' -f2-)
-+done <<< $(tr ':' '\n' <<< ${MODULES})
++  done <<< $(tr ':' '\n' <<< ${MODULES})
 +
 +# Install the kernel firmware if requested
-+while read -r -a MODULE;
-+do
++  while read -r -a MODULE;
++  do
 +    while read -r -a file;
 +    do
 +        [[ -z "${file}" ]] && continue
@@ -305,7 +320,8 @@
 +            echo "WARNING: missing firmware $file"
 +        fi
 +    done <<< $(modinfo -k $KERNEL_VERSION -F firmware $MODULE | grep -v 'name:' | sed 's:^\(.*\):\/lib\/firmware\/\1 :g')
-+done <<< $(tr ':' '\n' <<< ${MODULES})
++  done <<< $(tr ':' '\n' <<< ${MODULES})
++fi
 +
 +if [ ! -z ${MODULES} ] ; then
 +    cp /lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
@@ -324,7 +340,7 @@
  
  # first empty WDIR to reuse it
    rm -r $WDIR/*
-@@ -203,12 +275,12 @@
+@@ -203,12 +288,12 @@ if ls /usr/lib/firmware/intel-ucode/* >/
    DSTDIR=$WDIR/kernel/x86/microcode
    mkdir -p $DSTDIR
  
