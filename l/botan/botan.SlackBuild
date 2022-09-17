@@ -78,7 +78,6 @@ find . \
   --with-lzma \
   --with-zlib \
   --with-boost \
-  --with-openssl \
   --with-sqlite3 \
   --with-os-feature=getrandom
 
