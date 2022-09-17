@@ -1016,27 +1016,3 @@
  #include <algorithm>
  #include <ostream>  // NOLINT
  #include <sstream>
-
---- a/platform/toolkit/components/telemetry/Telemetry.cpp
-+++ b/platform/toolkit/components/telemetry/Telemetry.cpp
-@@ -3,8 +3,8 @@
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
-+#include <limits>
- #include <algorithm>
--
- #include <fstream>
- 
- #include <prio.h>
-
---- a/platform/toolkit/components/url-classifier/RiceDeltaDecoder.cpp
-+++ b/platform/toolkit/components/url-classifier/RiceDeltaDecoder.cpp
-@@ -2,6 +2,7 @@
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
-+#include <limits>
- #include "RiceDeltaDecoder.h"
- 
- namespace {
