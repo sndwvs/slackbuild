@@ -37,6 +37,9 @@ elif [ "$ARCH" = "arm" ]; then
 elif [ "$ARCH" = "aarch64" ]; then
   SLKCFLAGS="-O3"
   LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "riscv64" ]; then
+  SLKCFLAGS="-O3"
+  LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
   LIBDIRSUFFIX=""
@@ -65,8 +68,10 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-cat $CWD/0001-Use-own-thunk-functions-instead-of-fbdevHW-Weak.patch | patch -p1 || exit 1
-cat $CWD/0002-GCC-8-fix.patch | patch -p1 || exit 1
+patch -p1 -i $CWD/0002-Use-own-thunk-functions-instead-of-fbdevHW-Weak.patch || exit 1
+patch -p1 -i $CWD/0003-Update-for-1.20-ABI.patch || exit 1
+patch -p1 -i $CWD/0004-xorg.conf-add-mandatory-modules-fb-shadow-fbdevhw.patch || exit 1
+patch -p1 -i $CWD/0005-backing_store_tuner-struct-_Window-backStorage-is-go.patch || exit 1
 
 [[ ! -x configure ]] && NOCONFIGURE=1 ./autogen.sh
 

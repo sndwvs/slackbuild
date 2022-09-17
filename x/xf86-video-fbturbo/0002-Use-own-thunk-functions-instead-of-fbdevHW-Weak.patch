@@ -1,17 +1,20 @@
-From 5152fea67554f9fe8a6fcd194f88e31a47ec1381 Mon Sep 17 00:00:00 2001
+From 2186a4e5ed6b8b8f24ebd4d2045df10d1f895999 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Wed, 21 May 2014 09:49:56 -0400
-Subject: [PATCH 1/2] Use own thunk functions instead of fbdevHW*Weak
+Subject: [PATCH] Use own thunk functions instead of fbdevHW*Weak
 
 I plan to remove the Weak functions from a future server.
 
 Signed-off-by: Adam Jackson <ajax@redhat.com>
+[Upstream https://gitlab.freedesktop.org/xorg/driver/xf86-video-fbdev/-/commit/2673e727063fe28310836f1e6e9eda552930218a
+ ported to xf86-video-fbturbo]
+Signed-off-by: Peter Seiderer <ps.report@gmx.net>
 ---
- src/fbdev.c | 86 ++++++++++++++++++++++++++++++++++++++++++++++++++-----------
+ src/fbdev.c | 86 +++++++++++++++++++++++++++++++++++++++++++----------
  1 file changed, 71 insertions(+), 15 deletions(-)
 
 diff --git a/src/fbdev.c b/src/fbdev.c
-index 2bbee6e..23ec855 100644
+index 90d9f39..81bd1fb 100644
 --- a/src/fbdev.c
 +++ b/src/fbdev.c
 @@ -269,6 +269,35 @@ FBDevIdentify(int flags)
@@ -153,4 +156,5 @@ index 2bbee6e..23ec855 100644
  	/* Wrap the current CloseScreen function */
  	fPtr->CloseScreen = pScreen->CloseScreen;
 -- 
-2.16.2
+2.31.1
+
