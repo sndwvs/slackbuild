@@ -92,17 +92,6 @@
  using namespace mozilla::dom;
  using namespace mozilla::gfx;
 
---- a/platform/gfx/2d/BaseRect.h
-+++ b/platform/gfx/2d/BaseRect.h
-@@ -9,6 +9,7 @@
- #include <algorithm>
- #include <cmath>
- #include <ostream>
-+#include <limits>
- 
- #include "mozilla/Assertions.h"
- #include "mozilla/FloatingPoint.h"
-
 --- a/platform/gfx/2d/Matrix.h
 +++ b/platform/gfx/2d/Matrix.h
 @@ -13,6 +13,7 @@
@@ -972,16 +961,6 @@
  #include "IPCMessageUtils.h"
  
  #include "nsStandardURL.h"
-
---- a/platform/netwerk/base/nsURLParsers.cpp
-+++ b/platform/netwerk/base/nsURLParsers.cpp
-@@ -4,6 +4,7 @@
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
- #include <string.h>
-+#include <limits>
- 
- #include "mozilla/RangedPtr.h"
 
 --- a/platform/security/manager/ssl/TransportSecurityInfo.cpp
 +++ b/platform/security/manager/ssl/TransportSecurityInfo.cpp

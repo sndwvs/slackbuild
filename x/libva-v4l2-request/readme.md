@@ -26,3 +26,11 @@ This is what I have now.  This is the order I build them as well.
  
 
 The test script, which I linked at the bottom of this post, is mostly just printing out what my setup looks like and responses to various v4l2, va and ffmpeg commands suggested here, the pbp forum and for ffmpeg.  I run it like this: 
+
+
+        4. libva-v4l2-request (git master) with patches
+            https://github.com/atomlong/libva-v4l2-request-git/blob/master/PKGBUILD
+        6. ffmpeg 4.4
+            https://github.com/jernejsk/FFmpeg
+            branch: 4l2-request-hwaccel-4.4
+

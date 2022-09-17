@@ -4,7 +4,7 @@ CWD=$(pwd)
 
 NAME="keepassxc"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d - -f3- | rev)}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-2}
 PACKAGER=${PACKAGER:-mara}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}

@@ -25,19 +25,22 @@ if [ -z "$ARCH" ]; then
 fi
 
 if [ "$ARCH" = "i686" ]; then
-  SLKCFLAGS="-O3 -march=i686 -mtune=i686"
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O3 -fPIC"
+  SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX="64"
 elif [ "$ARCH" = "armv7hl" ]; then
-  SLKCFLAGS="-O3 -march=armv7-a -mfpu=vfpv3-d16"
+  SLKCFLAGS="-O2 -march=armv7-a -mfpu=vfpv3-d16"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "arm" ]; then
-  SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+  SLKCFLAGS="-O2 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "riscv64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
@@ -61,16 +64,21 @@ rm -rf $NAME-$VERSION
 tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
 cd $NAME-$VERSION || exit 1
 chown -R root:root .
-find . \
- \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
- -exec chmod 755 {} \; -o \
- \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
- -exec chmod 644 {} \;
+#find . \
+# \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+# -exec chmod 755 {} \; -o \
+# \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+# -exec chmod 644 {} \;
 
+# fix for glibc 2.36
+patch -Np1 --verbose -i $CWD/qemu-7.0.0-glibc-2.36.patch || exit 1
+
+mkdir -p build
+cd build
 # Configuration
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
-./configure \
+CFLAGS="$SLKCFLAGS -g1" \
+CXXFLAGS="$SLKCFLAGS -g1" \
+../configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --mandir=/usr/man \
@@ -95,7 +103,6 @@ CXXFLAGS="$SLKCFLAGS" \
   --disable-vnc \
   --disable-kvm \
   --disable-libssh \
-  --disable-libxml2 \
   --disable-vde \
   --disable-sdl \
   --disable-opengl \
