@@ -203,7 +203,6 @@ echo "ac_add_options --disable-pulseaudio" >> .mozconfig; fi
 if pkg-config --exists jack && [ "${BLACKLIST_JACK:-no}" != "yes" ]; then
 echo "ac_add_options --enable-jack" >> .mozconfig; fi
 
-sed -i 's/.\/platform\/mach/"python2\ .\/platform\/mach"/g' mach
 ./mach build || exit 1
 
 ## Clean up; and package Pale Moon.
