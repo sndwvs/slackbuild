@@ -1,0 +1,15 @@
+--- a/platform/ipc/chromium/src/third_party/libevent/linux/event2/event-config.h	2022-09-17 19:16:23.700735777 +0000
++++ b/platform/ipc/chromium/src/third_party/libevent/linux/event2/event-config.h	2022-09-17 19:18:04.262763562 +0000
+@@ -24,10 +24,10 @@
+ /* #undef _EVENT_DISABLE_THREAD_SUPPORT */
+ 
+ /* Define to 1 if you have the `arc4random' function. */
+-/* #undef _EVENT_HAVE_ARC4RANDOM */
++#define _EVENT_HAVE_ARC4RANDOM 1
+ 
+ /* Define to 1 if you have the `arc4random_buf' function. */
+-/* #undef _EVENT_HAVE_ARC4RANDOM_BUF */
++#define _EVENT_HAVE_ARC4RANDOM_BUF 1
+ 
+ /* Define to 1 if you have the <arpa/inet.h> header file. */
+ #define _EVENT_HAVE_ARPA_INET_H 1

@@ -148,6 +148,10 @@ export LANG=C
 
 patch -p1 --verbose -i $CWD/fix-build-with-gcc11.patch || exit 1
 
+# 118:54.86 /usr/bin/gcc -std=gnu99 -o Unified_c_src_third_party0.o -c -I/tmp/obj-palemoon/dist/system_wrappers -include /tmp/pale-moon/platform/config/gcc_hidden.h -DNDEBUG=1 -DTRIMMED=1 -DHAVE_CONFIG_H -DSTATIC_EXPORTABLE_JS_API -DMOZ_HAS_MOZGLUE -DMOZILLA_INTERNAL_API -DIMPL_LIBXUL -I/tmp/pale-moon/platform/ipc/chromium/src/third_party -I/tmp/obj-palemoon/ipc/chromium/src/third_party -I/tmp/pale-moon/platform/ipc/chromium/src/third_party/libevent -I/tmp/pale-moon/platform/ipc/chromium/src/third_party/libevent/compat -I/tmp/pale-moon/platform/ipc/chromium/src/third_party/libevent/include -I/tmp/pale-moon/platform/ipc/chromium/src/third_party/libevent/linux -I/tmp/obj-palemoon/dist/include -I/tmp/obj-palemoon/dist/include/nspr -I/tmp/obj-palemoon/dist/include/nss -fPIC -include /tmp/obj-palemoon/mozilla-config.h -DMOZILLA_CLIENT -MD -MP -MF .deps/Unified_c_src_third_party0.o.pp -Wall -Wempty-body -Wignored-qualifiers -Wpointer-arith -Wsign-compare -Wtype-limits -Wunreachable-code -Wno-error=maybe-uninitialized -Wno-error=deprecated-declarations -Wno-error=array-bounds -Wno-error=multistatement-macros -flifetime-dse=1 -O2 -fPIC -fno-strict-aliasing -ffunction-sections -fdata-sections -fno-math-errno -pipe -pthread -O2 -fno-schedule-insns -fomit-frame-pointer /tmp/obj-palemoon/ipc/chromium/src/third_party/Unified_c_src_third_party0.c
+# 118:54.86 gmake[5]: *** [/tmp/pale-moon/platform/config/rules.mk:854: Unified_c_src_third_party0.o] Error 1
+patch -p1 --verbose -i $CWD/arc4random.patch || exit 1
+
 # Keep memory usage as low as possible when linking:
 SLKLDFLAGS=" -Wl,--as-needed -Wl,--reduce-memory-overheads -Wl,--no-keep-memory -Wl,--stats"
 export LDFLAGS="$SLKLDFLAGS"
@@ -163,6 +167,9 @@ export MOZ_ADDON_SIGNING=
 export MOZ_REQUIRE_SIGNING=
 export MOZ_TELEMETRY_REPORTING=
 export PYTHON=/usr/bin/python2
+
+# A stale DBUS_SESSION_BUS_ADDRESS var can cause build failures
+unset DBUS_SESSION_BUS_ADDRESS
 
 # Please see https://www.palemoon.org/redist.shtml for restrictions when using the official branding.
 # Our building options, in a configure-like display ;)
