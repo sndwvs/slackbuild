@@ -4,7 +4,7 @@ CWD=$(pwd)
 
 NAME="lightdm"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
-BUILD=${BUILD:-7}
+BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
@@ -146,7 +146,7 @@ mv $PKG/etc/pam.d/lightdm $PKG/etc/pam.d/lightdm.new
 mv $PKG/etc/pam.d/lightdm-autologin $PKG/etc/pam.d/lightdm-autologin.new
 mv $PKG/etc/pam.d/lightdm-greeter $PKG/etc/pam.d/lightdm-greeter.new
 
-mv $PKG/etc/dbus-1/system.d/org.freedesktop.DisplayManager.conf $PKG/etc/dbus-1/system.d/org.freedesktop.DisplayManager.conf.new
+#mv $PKG/etc/dbus-1/system.d/org.freedesktop.DisplayManager.conf $PKG/etc/dbus-1/system.d/org.freedesktop.DisplayManager.conf.new
 
 # Compress manual pages:
 find $PKG/usr/man -type f -exec gzip -9 {} \;
