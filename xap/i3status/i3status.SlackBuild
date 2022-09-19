@@ -65,25 +65,18 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-mkdir -p build
-( cd build
-  # Configuration
-  CFLAGS="$SLKCFLAGS" \
-  CXXFLAGS="$SLKCFLAGS" \
-  ../configure \
-    --prefix=/usr \
-    --libdir=/usr/lib${LIBDIRSUFFIX} \
-    --mandir=/usr/man \
-    --docdir=/usr/doc/$NAME-$VERSION \
-    --sysconfdir=/etc \
-    --localstatedir=/var \
-    --build=$TARGET
+# Configuration
+meson build \
+  --prefix="/usr" \
+  --libdir="lib${LIBDIRSUFFIX}" \
+  --mandir="/usr/man" \
+  --sysconfdir="/etc" \
+  --buildtype=plain \
+  -Dmans=true || exit 1
 
-  # Compilation
-  make $NUMJOBS || exit 1
-  make install DESTDIR=$PKG
-)
-cd ..
+# Compilation
+ninja -C build || exit 1
+DESTDIR=$PKG ninja -C build install || exit 1
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
