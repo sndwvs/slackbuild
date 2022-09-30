@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="gajim"
+NAME="Pillow"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -35,9 +35,6 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
-  LIBDIRSUFFIX="64"
-elif [ "$ARCH" = "riscv64" ]; then
   SLKCFLAGS="-O3"
   LIBDIRSUFFIX="64"
 else
@@ -73,8 +70,6 @@ find . \
 # Compilation
 python3 setup.py install --root=$PKG || exit 1
 
-mv $PKG/usr/share/man $PKG/usr/man
-
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 
@@ -102,4 +97,4 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/python-${NAME,,}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz

@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="gajim"
+NAME="gtksourceview"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -35,10 +35,10 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O3 -fPIC"
   LIBDIRSUFFIX="64"
 elif [ "$ARCH" = "riscv64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O3 -fPIC"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
@@ -69,11 +69,16 @@ find . \
  -exec chmod 644 {} \;
 
 # Configuration
+meson build \
+  --prefix="/usr" \
+  --libdir="lib${LIBDIRSUFFIX}" \
+  --mandir="/usr/man" \
+  -Dglade_catalog=true \
+  -Dgtk_doc=false || exit 1
 
 # Compilation
-python3 setup.py install --root=$PKG || exit 1
-
-mv $PKG/usr/share/man $PKG/usr/man
+ninja -C build || exit 1
+DESTDIR=$PKG ninja -C build install || exit 1
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
@@ -94,6 +99,7 @@ mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
 cp -fav \
   LICENSE README \
   $PKG/usr/doc/$NAME-$VERSION/
+cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
 
 # Description and installation script
 mkdir -p $PKG/install
