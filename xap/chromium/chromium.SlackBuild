@@ -75,7 +75,7 @@ CRUSERFLAGS="CHROMIUM_USER_FLAGS"
 # Possible replacements are listed in build/linux/unbundle/replace_gn_files.py
 # Keys are the names in the above script; values are the dependencies in Arch
 declare -gA _system_libs=(
-  #[brotli]=brotli
+  [brotli]=brotli
   #[dav1d]=dav1d
   [ffmpeg]=ffmpeg
   [flac]=flac
@@ -137,24 +137,24 @@ sed -i -e 's/\<xmlMalloc\>/malloc/' -e 's/\<xmlFree\>/free/' \
 patch -Np1 -i $CWD/patches/use-oauth2-client-switches-as-default.patch || exit 1
 
 # Upstream fixes
-patch -Np1 -i $CWD/patches/fix-TFLite-build-on-linux-with-system-zlib.patch || exit 1
+patch -Np1 -i $CWD/patches/unbundle-jsoncpp-avoid-CFI-faults-with-is_cfi-true.patch || exit 1
+patch -Np1 -i $CWD/patches/re-fix-TFLite-build-error-on-linux-with-system-zlib.patch || exit 1
 
 # Revert kGlobalMediaControlsCastStartStop enabled by default
 # https://crbug.com/1314342
-patch -Rp1 -F3 -i $CWD/patches/enable-GlobalMediaControlsCastStartStop.patch || exit 1
+patch -Rp1 -F3 -i $CWD/patches/REVERT-enable-GlobalMediaControlsCastStartStop.patch || exit 1
 
 # Revert ffmpeg roll requiring new channel layout API support
 # https://crbug.com/1325301
-patch -Rp1 -i $CWD/patches/roll-src-third_party-ffmpeg.patch || exit 1
+patch -Rp1 -i $CWD/patches/REVERT-roll-src-third_party-ffmpeg-m102.patch || exit 1
+# Revert switch from AVFrame::pkt_duration to AVFrame::duration
+patch -Rp1 -i $CWD/patches/REVERT-roll-src-third_party-ffmpeg-m106.patch || exit 1
 
 # https://crbug.com/angleproject/7582
 patch -Np0 -i $CWD/patches/angle-wayland-include-protocol.patch || exit 1
 
 # Fixes for building with libstdc++ instead of libc++
 patch -Np1 -i $CWD/patches/chromium-103-VirtualCursor-std-layout.patch || exit 1
-patch -Np1 -i $CWD/patches/chromium-105-Bitmap-include.patch || exit 1
-patch -Np1 -i $CWD/patches/chromium-105-browser_finder-include.patch || exit 1
-patch -Np1 -i $CWD/patches/chromium-105-AdjustMaskLayerGeometry-ceilf.patch || exit 1
 
 # media/filters/ffmpeg_demuxer.cc:408:24: error: no matching function for call to 'av_packet_get_side_data'
 patch -Np1 -i $CWD/patches/chromium-93-fix-build-with-system-ffmpeg.patch || exit 1
@@ -200,6 +200,7 @@ export NM=llvm-nm
 _flags=(
   'custom_toolchain="//build/toolchain/linux/unbundle:default"'
   'host_toolchain="//build/toolchain/linux/unbundle:default"'
+  'clang_base_path="/usr"'
   'clang_use_chrome_plugins=false'
   'clang_use_default_sample_profile=false'
   'use_allocator="none"'
@@ -214,10 +215,13 @@ _flags=(
   'proprietary_codecs=true'
   #'rtc_use_pipewire=true'
   'link_pulseaudio=true'
+  'use_custom_libcxx=false'
   'use_gnome_keyring=false'
+  'use_qt=false' # look into enabling this for M108
   'use_gold=false'
   'use_sysroot=false'
-  'use_custom_libcxx=false'
+  'use_system_libwayland_server=true'
+  'use_system_wayland_scanner=true'
   'enable_hangout_services_extension=true'
   'enable_widevine=true'
   'enable_nacl=false'
