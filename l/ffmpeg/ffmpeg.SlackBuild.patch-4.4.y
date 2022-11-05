@@ -1,14 +1,14 @@
---- ffmpeg.SlackBuild.orig	2022-10-10 00:26:48.883033440 +0300
-+++ ffmpeg.SlackBuild	2022-11-03 14:53:06.168320946 +0200
-@@ -31,6 +31,7 @@ cd $(dirname $0) ; CWD=$(pwd)
+--- ffmpeg.SlackBuild.orig	2021-10-26 21:15:38.915153948 +0300
++++ ffmpeg.SlackBuild	2021-10-30 12:46:59.996712915 +0300
+@@ -31,6 +31,7 @@
  PKGNAM=ffmpeg
  VERSION=${VERSION:-$(echo $PKGNAM-*.tar.xz | rev | cut -f 3- -d . | cut -f 1 -d - | rev)}
- BUILD=${BUILD:-1}
+ BUILD=${BUILD:-2}
 +FAMILY=${FAMILY:-}
  
  if [ -z "$ARCH" ]; then
    case "$( uname -m )" in
-@@ -54,6 +55,12 @@ elif [ "$ARCH" = "i686" ]; then
+@@ -54,6 +55,12 @@
  elif [ "$ARCH" = "x86_64" ]; then
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
@@ -21,7 +21,7 @@
  else
    SLKCFLAGS="-O2"
    LIBDIRSUFFIX=""
-@@ -167,6 +174,9 @@ vulkan=""     ; [ "${VULKAN:-yes}" != "n
+@@ -167,6 +174,9 @@
  # No default patent encumbered features:
  aac=""        ; [ "${AAC:-no}" = "no" ]           && aac="--disable-encoder=aac"
  
@@ -31,16 +31,16 @@
  rm -rf $PKG
  mkdir -p $TMP $PKG
  cd $TMP
-@@ -181,6 +191,8 @@ find -L . \
+@@ -181,6 +191,8 @@
   \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
    -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
  
 +[[ ! -z ${FAMILY} ]] && FAMILY="-${FAMILY}"
 +
- # Restore missing function needed by Chromium and qt-webengine:
- zcat $CWD/add-av_stream_get_first_dts-for-chromium.patch.gz | patch -p1 --verbose || exit 1
- 
-@@ -266,7 +278,8 @@ CXXFLAGS="$SLKCFLAGS" \
+ # Fix linking with flite:
+ sed -i "s| -lflite\"| -lflite -lm -lasound\"|" \
+   ./configure
+@@ -268,7 +280,8 @@
    $libsoxr \
    $libsrt \
    $libzimg \
@@ -50,7 +50,7 @@
  
  make $NUMJOBS || make || exit 1
  make install DESTDIR=$PKG || exit 1
-@@ -294,7 +307,8 @@ if [ -r ChangeLog ]; then
+@@ -296,7 +309,8 @@
  fi
  
  mkdir -p $PKG/install
