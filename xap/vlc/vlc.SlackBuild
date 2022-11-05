@@ -112,7 +112,7 @@ CXXFLAGS="$SLKCFLAGS -std=c++11" \
   --disable-opencv \
   --enable-run-as-root \
   --enable-merge-ffmpeg \
-  --enable-libva=yes \
+  --enable-libva=no \
   --enable-lua=no \
   --with-kde-solid=no \
   --build=$TARGET
