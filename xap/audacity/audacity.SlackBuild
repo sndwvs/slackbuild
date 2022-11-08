@@ -37,6 +37,9 @@ elif [ "$ARCH" = "arm" ]; then
 elif [ "$ARCH" = "aarch64" ]; then
   SLKCFLAGS="-O3"
   LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "riscv64" ]; then
+  SLKCFLAGS="-O3"
+  LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
   LIBDIRSUFFIX=""
@@ -65,38 +68,80 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-cat $CWD/system-wx.patch | patch -p0 --verbose || exit 1
+if [ -x /usr/bin/listplugins ];      then do_ladspa="on";         else do_ladspa="off";     fi
+if pkg-config --exists soundtouch;   then do_soundtouch="system"; else do_soundtouch="off"; fi
+if pkg-config --exists twolame;      then do_twolame="system";    else do_twolame="off";    fi
+if pkg-config --exists vamp-hostsdk; then do_vamp="system";       else do_vamp="off";       fi
+if pkg-config --exists jack;         then do_jack="system";       else do_jack="off";       fi
+if $(pkg-config --exists lilv-0) && $(pkg-config --exists suil-0); then do_lv2="system"; else do_lv2="off"; fi
+if pkg-config --exists vst3sdk; then do_vst3="system"; export VST3SDK_DIR=/usr/include/vst3sdk else do_vst3="off"; fi
+if pkg-config --exists portaudio-2.0;         then do_portaudio="system";       else do_portaudio="off";       fi
+if pkg-config --exists portmidi;         then do_portmidi="system";       else do_portmidi="off";       fi
+if pkg-config --exists portsmf;         then do_portsmf="system";       else do_portsmf="local";       fi
+if pkg-config --exists sbsms;         then do_sbsms="system";       else do_sbsms="local";       fi
 
-export WX_CONFIG=wx-config-gtk3
+patch -p1 --verbose -i $CWD/fix-setting-audacity_use_midi-off.patch || exit 1
 
 # Configuration
 mkdir build
 cd build
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
+CFLAGS="$SLKCFLAGS -DNDEBUG -Wno-dev" \
+CXXFLAGS="$SLKCFLAGS -DNDEBUG -Wno-dev" \
 cmake \
-  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_BUILD_TYPE=None \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
   -DCMAKE_INSTALL_MANDIR=/usr/man \
   -DCMAKE_INSTALL_DOCDIR=/usr/doc/${NAME,,}-$VERSION \
+  -DAUDACITY_BUILD_LEVEL=2 \
+  -Daudacity_conan_enabled=OFF \
+  -Daudacity_has_networking=OFF \
+  -Daudacity_has_crashreports=OFF \
+  -Daudacity_has_updates_check=OFF \
+  -Daudacity_has_sentry_reporting=OFF \
+  -Daudacity_use_twolame=$do_twolame \
+  -Daudacity_use_ladspa=$do_ladspa \
+  -Daudacity_use_soundtouch=$do_soundtouch \
+  -Daudacity_use_vamp=$do_vamp \
+  -Daudacity_use_jack=$do_jack \
+  -Daudacity_use_lv2=$do_lv2 \
+  -Daudacity_has_vst3=$do_vst3 \
+  -Daudacity_use_portaudio=$do_portaudio \
+  -Daudacity_use_midi=$do_portmidi \
+  -Daudacity_use_portsmf=$do_portsmf \
+  -Daudacity_use_sbsms=$do_sbsms \
   -Daudacity_use_sqlite=local \
-  -Daudacity_use_sndfile=system \
-  -Daudacity_use_soxr=system \
+  -Daudacity_use_soxr=local \
   -Daudacity_use_lame=system \
-  -Daudacity_use_twolame=off \
-  -Daudacity_use_twolame=system \
-  -Daudacity_use_flac=system \
-  -Daudacity_use_vorbis=system \
-  -Daudacity_use_id3tag=system \
   -Daudacity_use_expat=system \
-  -Daudacity_use_portaudio=local \
-  -Daudacity_use_lv2=off \
+  -Daudacity_use_uuid=system \
+  -Daudacity_lib_preference=system \
+  -Daudacity_obey_system_dependencies=ON \
+  -Daudacity_use_wxwidgets=system \
+  -DwxWidgets_CONFIG_EXECUTABLE=/usr/bin/wx-config-gtk3 \
+  -DwxWidgets_wxrc_EXECUTABLE=/usr/bin/wxrc \
   ..
 
 # Compilation
 make $NUMJOBS || exit 1
 make install DESTDIR=$PKG
+
+# remove unsafe RPATH: https://github.com/audacity/audacity/issues/3289
+(
+  cd "$PKG/usr/lib${LIBDIRSUFFIX}/${NAME,,}"
+  for _lib in *.so; do
+    chrpath --delete "$_lib"
+    chmod 755 "$_lib"
+  done
+)
+(
+  cd "$PKG/usr/lib${LIBDIRSUFFIX}/${NAME,,}/modules"
+  for _lib in *.so; do
+    chrpath --delete "$_lib"
+    chmod 755 "$_lib"
+  done
+)
+# NOTE: private libraries are public: https://github.com/audacity/audacity/issues/3812
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
