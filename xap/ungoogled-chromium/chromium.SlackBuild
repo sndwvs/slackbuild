@@ -1,0 +1,388 @@
+#!/bin/bash
+
+CWD=$(pwd)
+
+NAME="chromium"
+VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
+UC_VERSION=${VERSION}-1
+BUILD=${BUILD:-1}
+PACKAGER=${PACKAGER:-mara}
+
+NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
+
+
+# Automatically determine the architecture we're building on:
+MARCH=$( uname -m )
+if [ -z "$ARCH" ]; then
+  case "$MARCH" in
+    i?86)    export ARCH=i586 ;;
+    armv7hl) export ARCH=$MARCH ;;
+    arm*)    export ARCH=arm ;;
+    # Unless $ARCH is already set, use uname -m for all other archs:
+    *)       export ARCH=$MARCH ;;
+  esac
+fi
+
+if [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "armv7hl" ]; then
+  SLKCFLAGS="-O2 -march=armv7-a -mfpu=vfpv3-d16"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "arm" ]; then
+  SLKCFLAGS="-O2 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "aarch64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+case "$ARCH" in
+    arm*) TARGET=$ARCH-slackware-linux-gnueabihf ;;
+    *)    TARGET=$ARCH-slackware-linux ;;
+esac
+
+# Establishment tmp directory for
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-$NAME
+rm -rf $PKG
+mkdir -p $PKG
+
+# Build or unpack build-time dependencies:
+. ./build-deps.sh
+
+# Delete a directory previous build / create new and change rights
+cd $TMP
+rm -rf $NAME-$VERSION
+tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
+cd $NAME-$VERSION || exit 1
+tar xvf $CWD/ungoogled-$NAME-$UC_VERSION.tar.?z* || exit 1
+chown -R root:root .
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+# Configuration
+CRFLAGS="CHROMIUM_FLAGS"
+CRUSERFLAGS="CHROMIUM_USER_FLAGS"
+
+# Possible replacements are listed in build/linux/unbundle/replace_gn_files.py
+# Keys are the names in the above script; values are the dependencies in Arch
+declare -gA _system_libs=(
+  [brotli]=brotli
+  #[dav1d]=dav1d
+  [ffmpeg]=ffmpeg
+  [flac]=flac
+  [fontconfig]=fontconfig
+  #[freetype]=freetype2
+  #[harfbuzz-ng]=harfbuzz
+  #[icu]=icu
+  #[jsoncpp]=jsoncpp  # triggers a CFI violation (https://crbug.com/1365218)
+  #[libaom]=aom
+  #[libavif]=libavif  # needs https://github.com/AOMediaCodec/libavif/commit/d22d4de94120
+  [libdrm]=
+  [libjpeg]=libjpeg
+  #[libpng]=libpng    # https://crbug.com/752403#c10
+  [libvpx]=libvpx
+  [libwebp]=libwebp
+  #[libxml]=libxml2
+  #[libxslt]=libxslt
+  [opus]=opus
+  #[re2]=re2
+  #[snappy]=snappy
+  [woff2]=woff2
+  #[zlib]=minizip
+)
+_unwanted_bundled_libs=(
+  $(printf "%s\n" ${!_system_libs[@]} | sed 's/^libjpeg$/&_turbo/')
+)
+depends+=(${_system_libs[@]})
+
+# Google API keys (see https://www.chromium.org/developers/how-tos/api-keys)
+_google_api_key=" "
+
+# Allow building against system libraries in official builds
+sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
+  tools/generate_shim_headers/generate_shim_headers.py
+
+# Arch Linux ARM fixes
+patch -Np1 -i $CWD/patches/0001-widevine-support-for-arm.patch || exit 1
+patch -Np1 -i $CWD/patches/0002-Run-blink-bindings-generation-single-threaded.patch || exit 1
+patch -Np1 -i $CWD/patches/0003-Fix-eu-strip-build-for-newer-GCC.patch || exit 1
+patch -Np1 -i $CWD/patches/0004-Fix-missing-cmath-header-build-failure-in-renderer-e.patch || exit 1
+
+if [[ $ARCH == "armv7h" ]]; then
+    export ALARM_NINJA_JOBS="4"
+    export MAKEFLAGS="-j4"
+fi
+
+# Allow build to set march and options on AArch64 (crc, crypto)
+[[ $ARCH == "aarch64" ]] && SLKCFLAGS=$(echo $SLKCFLAGS | sed -e 's/-march=armv8-a//') && CXXFLAGS="$SLKCFLAGS"
+
+# https://crbug.com/893950
+sed -i -e 's/\<xmlMalloc\>/malloc/' -e 's/\<xmlFree\>/free/' \
+  third_party/blink/renderer/core/xml/*.cc \
+  third_party/blink/renderer/core/xml/parser/xml_document_parser.cc \
+  third_party/libxml/chromium/*.cc \
+  third_party/maldoca/src/maldoca/ole/oss_utils.h
+
+# Use the --oauth2-client-id= and --oauth2-client-secret= switches for
+# setting GOOGLE_DEFAULT_CLIENT_ID and GOOGLE_DEFAULT_CLIENT_SECRET at
+# runtime -- this allows signing into Chromium without baked-in values
+patch -Np1 -i $CWD/patches/use-oauth2-client-switches-as-default.patch || exit 1
+
+# Upstream fixes
+patch -Np1 -i $CWD/patches/unbundle-jsoncpp-avoid-CFI-faults-with-is_cfi-true.patch || exit 1
+patch -Np1 -i $CWD/patches/re-fix-TFLite-build-error-on-linux-with-system-zlib.patch || exit 1
+
+# Revert kGlobalMediaControlsCastStartStop enabled by default
+# https://crbug.com/1314342
+patch -Rp1 -F3 -i $CWD/patches/REVERT-enable-GlobalMediaControlsCastStartStop.patch || exit 1
+
+# Revert ffmpeg roll requiring new channel layout API support
+# https://crbug.com/1325301
+patch -Rp1 -i $CWD/patches/REVERT-roll-src-third_party-ffmpeg-m102.patch || exit 1
+# Revert switch from AVFrame::pkt_duration to AVFrame::duration
+patch -Rp1 -i $CWD/patches/REVERT-roll-src-third_party-ffmpeg-m106.patch || exit 1
+
+# https://crbug.com/angleproject/7582
+patch -Np0 -i $CWD/patches/angle-wayland-include-protocol.patch || exit 1
+
+# Fixes for building with libstdc++ instead of libc++
+patch -Np1 -i $CWD/patches/chromium-103-VirtualCursor-std-layout.patch || exit 1
+
+# Fix this by testing for ! bad first.
+patch -Np1 -i $CWD/patches/dont-dereference-databits-if-bad.patch || exit 1
+
+# Ungoogled Chromium changes
+UNGOOGLED_REPO="ungoogled-$NAME-$UC_VERSION"
+UTILS="${UNGOOGLED_REPO}/utils"
+echo 'Pruning binaries'
+python3 "$UTILS/prune_binaries.py" ./ "$UNGOOGLED_REPO/pruning.list"
+echo 'Applying patches'
+python3 "$UTILS/patches.py" apply ./ "$UNGOOGLED_REPO/patches"
+echo 'Applying domain substitution'
+python3 "$UTILS/domain_substitution.py" apply -r "$UNGOOGLED_REPO/domain_regex.list" \
+-f "$UNGOOGLED_REPO/domain_substitution.list" -c domainsubcache.tar.gz ./
+
+# Link to system tools required by the build
+mkdir -p third_party/node/linux/node-linux-x64/bin
+ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/
+#ln -s /usr/bin/java third_party/jdk/current/bin/
+ln -s $(whereis java | sed 's:\s:\n:g' | grep bin) third_party/jdk/current/bin/
+
+# Remove bundled libraries for which we will use the system copies; this
+# *should* do what the remove_bundled_libraries.py script does, with the
+# added benefit of not having to list all the remaining libraries
+for _lib in ${_unwanted_bundled_libs[@]}; do
+    find "third_party/$_lib" -type f \
+      \! -path "third_party/$_lib/chromium/*" \
+      \! -path "third_party/$_lib/google/*" \
+      \! -path "third_party/harfbuzz-ng/utils/hb_scoped.h" \
+      \! -regex '.*\.\(gn\|gni\|isolate\)' \
+      -delete
+done
+
+python3 build/linux/unbundle/replace_gn_files.py \
+  --system-libraries "${!_system_libs[@]}"
+
+# Rebuild eu-strip
+pushd buildtools/third_party/eu-strip
+./build.sh || exit 1
+popd
+
+# Compilation
+export CC=clang
+export CXX=clang++
+export AR=llvm-ar
+export NM=llvm-nm
+
+_flags=(
+  'custom_toolchain="//build/toolchain/linux/unbundle:default"'
+  'host_toolchain="//build/toolchain/linux/unbundle:default"'
+  'clang_base_path="/usr"'
+  'clang_use_chrome_plugins=false'
+  'clang_use_default_sample_profile=false'
+  'use_allocator="none"'
+  'is_official_build=true' # implies is_cfi=true on x86_64
+  'symbol_level=0' # sufficient for backtraces on x86(_64)
+  'is_cfi=false'
+  'chrome_pgo_phase=0'
+  'treat_warnings_as_errors=false'
+  'disable_fieldtrial_testing_config=true'
+  'blink_enable_generated_code_formatting=false'
+  'ffmpeg_branding="Chrome"'
+  'proprietary_codecs=true'
+  #'rtc_use_pipewire=true'
+  'link_pulseaudio=true'
+  'use_custom_libcxx=false'
+  'use_gnome_keyring=false'
+  'use_qt=false' # look into enabling this for M108
+  'use_gold=false'
+  'use_sysroot=false'
+  'use_system_libwayland_server=true'
+  'use_system_wayland_scanner=true'
+  'enable_hangout_services_extension=true'
+  'enable_widevine=true'
+  'enable_nacl=false'
+  "google_api_key=\"$_google_api_key\""
+)
+
+if [[ -n ${_system_libs[icu]+set} ]]; then
+  _flags+=('icu_use_data_file=false')
+fi
+
+if [[ $CARCH == "armv7h" ]]; then
+  _flags+=('use_thin_lto=false')
+fi
+
+CFLAGS+="$SLKCFLAGS"
+CXXFLAGS+="$SLKCFLAGS"
+
+# Append ungoogled chromium flags to _flags array
+#UNGOOGLED_REPO="ungoogled-$NAME-$UC_VERSION"
+readarray -t -O ${#_flags[@]} _flags < "${UNGOOGLED_REPO}/flags.gn"
+  
+# Facilitate deterministic builds (taken from build/config/compiler/BUILD.gn)
+CFLAGS+='   -Wno-builtin-macro-redefined'
+CXXFLAGS+=' -Wno-builtin-macro-redefined'
+CPPFLAGS+=' -D__DATE__=  -D__TIME__=  -D__TIMESTAMP__='
+
+# Do not warn about unknown warning options
+CFLAGS+='   -Wno-unknown-warning-option'
+CXXFLAGS+=' -Wno-unknown-warning-option'
+
+# Let Chromium set its own symbol level
+CFLAGS=${CFLAGS/-g }
+CXXFLAGS=${CXXFLAGS/-g }
+
+# https://github.com/ungoogled-software/ungoogled-chromium-archlinux/issues/123
+CFLAGS=${CFLAGS/-fexceptions}
+CFLAGS=${CFLAGS/-fcf-protection}
+CXXFLAGS=${CXXFLAGS/-fexceptions}
+CXXFLAGS=${CXXFLAGS/-fcf-protection}
+
+# This appears to cause random segfaults when combined with ThinLTO
+# https://bugs.archlinux.org/task/73518
+CFLAGS=${CFLAGS/-fstack-clash-protection}
+CXXFLAGS=${CXXFLAGS/-fstack-clash-protection}
+
+# https://crbug.com/957519#c122
+CXXFLAGS=${CXXFLAGS/-Wp,-D_GLIBCXX_ASSERTIONS}
+
+gn gen out/Release --args="${_flags[*]}"
+ninja -C out/Release chrome chrome_sandbox chromedriver || exit 1
+
+install -D out/Release/chrome "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/chromium"
+install -Dm4755 out/Release/chrome_sandbox "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/chrome-sandbox"
+
+install -Dm644 chrome/installer/linux/common/desktop.template \
+  "$PKG/usr/share/applications/chromium.desktop"
+install -Dm644 chrome/app/resources/manpage.1.in \
+  "$PKG/usr/man/man1/chromium.1"
+sed -i \
+  -e "s/@@MENUNAME@@/Chromium/g" \
+  -e "s/@@PACKAGE@@/chromium/g" \
+  -e "s/@@USR_BIN_SYMLINK_NAME@@/chromium/g" \
+  "$PKG/usr/share/applications/chromium.desktop" \
+  "$PKG/usr/man/man1/chromium.1"
+
+install -Dm644 chrome/installer/linux/common/chromium-browser/chromium-browser.appdata.xml \
+  "$PKG/usr/share/metainfo/chromium.appdata.xml"
+sed -ni \
+  -e 's/chromium-browser\.desktop/chromium.desktop/' \
+  -e '/<update_contact>/d' \
+  -e '/<p>/N;/<p>\n.*\(We invite\|Chromium supports Vorbis\)/,/<\/p>/d' \
+  -e '/^<?xml/,$p' \
+  "$PKG/usr/share/metainfo/chromium.appdata.xml"
+
+toplevel_files=(
+  chrome_100_percent.pak
+  chrome_200_percent.pak
+  chrome_crashpad_handler
+  resources.pak
+  v8_context_snapshot.bin
+
+  # ANGLE
+  libEGL.so
+  libGLESv2.so
+
+  # SwiftShader ICD
+  libvk_swiftshader.so
+  vk_swiftshader_icd.json
+)
+
+if [[ -z ${_system_libs[icu]+set} ]]; then
+  toplevel_files+=(icudtl.dat)
+fi
+
+cp "${toplevel_files[@]/#/out/Release/}" "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/"
+install -Dm644 -t "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/locales" out/Release/locales/*.pak
+install -Dm755 -t "$PKG/usr/lib${LIBDIRSUFFIX}/chromium/swiftshader" out/Release/swiftshader/*.so
+
+for size in 24 48 64 128 256; do
+  install -Dm644 "chrome/app/theme/chromium/product_logo_$size.png" \
+    "$PKG/usr/share/icons/hicolor/${size}x${size}/apps/chromium.png"
+done
+
+for size in 16 32; do
+  install -Dm644 "chrome/app/theme/default_100_percent/chromium/product_logo_$size.png" \
+    "$PKG/usr/share/icons/hicolor/${size}x${size}/apps/chromium.png"
+done
+
+# Install a wrapper script:
+install -D -m0755 $CWD/${NAME}.sh $PKG/usr/bin/${NAME}
+sed \
+    -e "s/@NAME@/${NAME}/g" \
+    -e "s/@LIBDIRSUFFIX@/${LIBDIRSUFFIX}/g" \
+    -e "s/@CRFLAGS@/${CRFLAGS}/g" \
+    -e "s/@CRUSERFLAGS@/${CRUSERFLAGS}/g" \
+    -i $PKG/usr/bin/${NAME}
+
+# Move the 'default' file into place.
+# This allows users to override command-line options:
+mkdir -p $PKG/etc/${NAME}
+cat $CWD/${NAME}.default | sed \
+  -e "s/@NAME@/${NAME}/g" \
+  -e "s/@CRFLAGS@/${CRFLAGS}/g" \
+  -e "s/@CRUSERFLAGS@/${CRUSERFLAGS}/g" \
+  -e "s/@LIBDIRSUFFIX@/${LIBDIRSUFFIX}/g" \
+  > $PKG/etc/${NAME}/00-default.conf.new
+
+# Don't ship .la files:
+rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
+
+# Strip binaries:
+find $PKG | xargs file | grep -e "executable" -e "shared object" \
+  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+
+# Compress manual pages:
+find $PKG/usr/man -type f -exec gzip -9 {} \;
+for i in $( find $PKG/usr/man -type l ) ; do
+  ln -s $( readlink $i ).gz $i.gz
+  rm $i
+done
+
+# Copy docs
+mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
+cp -fav \
+  LICENSE README \
+  $PKG/usr/doc/$NAME-$VERSION/
+cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
+
+# Description and installation script
+mkdir -p $PKG/install
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Package creation
+cd $PKG
+makepkg -l n -c n $TMP/ungoogled-${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz

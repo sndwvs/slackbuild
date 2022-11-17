@@ -1,0 +1,10 @@
+VERSION
+    https://chromium.googlesource.com/chromium/src.git/+refs
+    or
+    https://github.com/chromium/chromium/tags
+
+download:
+    https://commondatastorage.googleapis.com/chromium-browser-official/chromium-107.0.5304.110.tar.xz
+
+ungoogled:
+    https://github.com/ungoogled-software/ungoogled-chromium/archive/refs/tags/107.0.5304.110-1.tar.gz
