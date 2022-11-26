@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="lua"
-VERSION=${VERSION:-5.4.3}
+VERSION=${VERSION:-5.4.4}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 

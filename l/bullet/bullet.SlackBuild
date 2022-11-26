@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="bullet"
-VERSION=${VERSION:-3.21}
+VERSION=${VERSION:-3.24}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
