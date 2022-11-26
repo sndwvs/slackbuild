@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="enlightenment"
-VERSION=${VERSION:-0.25.0}
+VERSION=${VERSION:-0.25.4}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 

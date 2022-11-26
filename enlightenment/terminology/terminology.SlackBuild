@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="terminology"
-VERSION=${VERSION:-1.11.0}
+VERSION=${VERSION:-1.12.1}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
