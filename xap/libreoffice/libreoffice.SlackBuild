@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 NAME="libreoffice"
-VERSION=7.3.2.2
+VERSION=7.4.3.2
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -31,14 +31,14 @@ DOWNLOADS+=( ${SOURCE_URL2}/libfreehand-0.1.2.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/bae83fa5dc7f081768daace6e199adc3-glm-0.9.4.6-libreoffice.zip )
 DOWNLOADS+=( ${SOURCE_URL2}/5ade6ae2a99bc1e9e57031ca88d36dad-hyphen-2.8.8.tar.gz )
 DOWNLOADS+=( ${SOURCE_URL2}/libexttextcat-3.4.6.tar.xz )
-DOWNLOADS+=( ${SOURCE_URL2}/language-subtag-registry-2021-12-29.tar.bz2 )
+DOWNLOADS+=( ${SOURCE_URL2}/language-subtag-registry-2022-08-08.tar.bz2 )
 DOWNLOADS+=( ${SOURCE_URL2}/liblangtag-0.6.3.tar.bz2 )
-DOWNLOADS+=( ${SOURCE_URL2}/libnumbertext-1.0.8.tar.xz )
-DOWNLOADS+=( ${SOURCE_URL2}/xmlsec1-1.2.33.tar.gz )
+DOWNLOADS+=( ${SOURCE_URL2}/libnumbertext-1.0.10.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/xmlsec1-1.2.34.tar.gz )
 DOWNLOADS+=( ${SOURCE_URL2}/26b3e95ddf3d9c077c480ea45874b3b8-lp_solve_5.5.tar.gz )
 DOWNLOADS+=( ${SOURCE_URL2}/lxml-4.1.1.tgz )
 DOWNLOADS+=( ${SOURCE_URL2}/zxing-cpp-1.2.0.tar.gz )
-DOWNLOADS+=( ${SOURCE_URL2}/mdds-2.0.1.tar.bz2 )
+DOWNLOADS+=( ${SOURCE_URL2}/mdds-2.0.3.tar.bz2 )
 DOWNLOADS+=( ${SOURCE_URL2}/libmspub-0.1.4.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libmwaw-0.3.21.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/a8c2c5b8f09e7ede322d5c602ff6a4b6-mythes-1.2.4.tar.gz )
@@ -48,19 +48,19 @@ DOWNLOADS+=( ${SOURCE_URL2}/libqxp-0.0.2.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libstaroffice-0.0.7.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libwps-0.4.12.tar.xz )
 DOWNLOADS+=( ${SOURCE_URL2}/libzmf-0.0.2.tar.xz )
-DOWNLOADS+=( ${SOURCE_URL2}/skia-m97-a7230803d64ae9d44f4e1282444801119a3ae967.tar.xz )
-DOWNLOADS+=( ${SOURCE_URL2}/icu4c-70_1-src.tgz )
-DOWNLOADS+=( ${SOURCE_URL2}/icu4c-70_1-data.zip )
+DOWNLOADS+=( ${SOURCE_URL2}/skia-m103-b301ff025004c9cd82816c86c547588e6c24b466.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/icu4c-71_1-src.tgz )
+DOWNLOADS+=( ${SOURCE_URL2}/icu4c-71_1-data.zip )
 DOWNLOADS+=( ${SOURCE_URL2}/graphite2-minimal-1.3.14.tgz )
-DOWNLOADS+=( ${SOURCE_URL2}/boost_1_77_0.tar.xz )
-DOWNLOADS+=( ${SOURCE_URL2}/harfbuzz-2.8.2.tar.xz )
-DOWNLOADS+=( ${SOURCE_URL2}/poppler-21.11.0.tar.xz )
-DOWNLOADS+=( ${SOURCE_URL2}/poppler-data-0.4.10.tar.gz )
+DOWNLOADS+=( ${SOURCE_URL2}/boost_1_79_0.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/harfbuzz-4.3.0.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/poppler-22.09.0.tar.xz )
+DOWNLOADS+=( ${SOURCE_URL2}/poppler-data-0.4.11.tar.gz )
 DOWNLOADS+=( ${SOURCE_URL2}/a39f6c07ddb20d7dd2ff1f95fa21e2cd-raptor2-2.0.15.tar.gz )
 DOWNLOADS+=( ${SOURCE_URL2}/e5be03eda13ef68aabab6e42aa67715e-redland-1.0.17.tar.gz )
 DOWNLOADS+=( ${SOURCE_URL2}/1f5def51ca0026cd192958ef07228b52-rasqal-0.9.33.tar.gz )
-DOWNLOADS+=( ${SOURCE_URL2}/box2d-2.3.1.tar.gz )
-DOWNLOADS+=( ${SOURCE_URL2}/libcuckoo-93217f8d391718380c508a722ab9acd5e9081233.tar.gz )
+DOWNLOADS+=( ${SOURCE_URL2}/box2d-2.4.1.tar.gz )
+DOWNLOADS+=( ${SOURCE_URL2}/dragonbox-1.1.0.tar.gz )
 DOWNLOADS+=( ${SOURCE_URL3}/8249374c274932a21846fa7629c2aa9b-officeotron-0.7.4-master.jar ) # for test suite
 DOWNLOADS+=( ${SOURCE_URL3}/odfvalidator-1.2.0-incubating-SNAPSHOT-jar-with-dependencies-971c54fd38a968f5860014b44301872706f9e540.jar ) # for test suite
 DOWNLOADS+=( ${SOURCE_URL3}/185d60944ea767075d27247c3162b3bc-unowinreg.dll )
@@ -177,7 +177,7 @@ CPPFLAGS+=' -DU_USING_ICU_NAMESPACE=1'
   --mandir=/usr/man \
   --docdir=/usr/doc/$NAME-$VERSION \
   --with-external-tar="$TMP/$NAME/ext_sources" \
-  --enable-{build-opensymbol,dbus,firebird-sdbc=no,gtk3,introspection=yes,release-build,odk,openssl,python=system} \
+  --enable-{dbus,firebird-sdbc=no,gtk3,introspection=yes,release-build,odk,openssl,python=system} \
   --with-{lang="",myspell-dicts,parallelism} \
   --with-extra-buildid="${VERSION}-${BUILD}" \
   --with-vendor="Slarm64 Linux" \
@@ -189,12 +189,12 @@ CPPFLAGS+=' -DU_USING_ICU_NAMESPACE=1'
   --without-{doxygen,fonts,gssapi,help,helppack-integration,java,system-firebird} \
   --disable-{avahi,dconf,dependency-tracking,extension-update} \
   --disable-{firebird-sdbc,postgresql-sdbc,report-builder,sdremote-bluetooth,werror} \
-  --disable-{cmis,coinmp,pdfium} \
+  --disable-{libcmis,coinmp,pdfium} \
   --without-system-{xmlsec,libepubgen,libwps,libcdr,libmspub,libmwaw,libetonyek,libfreehand} \
   --without-system-{libebook,libabw,libpagemaker,libqxp,libzmf,libstaroffice,cppunit,mdds,glm,orcus} \
   --without-system-{altlinuxhyph,mythes,lpsolve,libexttextcat,libnumbertext,liblangtag} \
   --without-system-{icu,graphite,boost,harfbuzz,poppler} \
-  --without-system-{zxing,redland,box2d,cuckoo} \
+  --without-system-{zxing,redland,box2d,dragonbox,libfixmath} \
   --build=$TARGET \
   --host=$TARGET
 
@@ -203,7 +203,7 @@ CPPFLAGS+=' -DU_USING_ICU_NAMESPACE=1'
 
 # Compilation
 touch src.downloaded
-make build-nocheck || exit 1
+make build || exit 1
 
 #pushd workdir/installation/LibreOffice/archive/install/en-US
 #tar xf *.tar.gz
