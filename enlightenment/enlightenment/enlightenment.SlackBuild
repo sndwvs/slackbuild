@@ -85,11 +85,11 @@ SLKCFLAGS="$SLKCFLAGS -fcommon" # https://wiki.gentoo.org/wiki/Gcc_10_porting_no
 SLKCFLAGS="$SLKCFLAGS -fvisibility=hidden"
 
 # Configuration
+mkdir build
 meson . build \
     --prefix=/usr/ \
     --libdir=/usr/lib${LIBDIRSUFFIX} \
-    -Dsystemd=false \
-    -Dbuild-id=$TARGET
+    -Dsystemd=false
 
 # Compilation
 CFLAGS="$SLKCFLAGS" \
