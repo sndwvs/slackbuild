@@ -117,7 +117,7 @@ sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
 patch -Np1 -i $CWD/patches/0001-widevine-support-for-arm.patch || exit 1
 patch -Np1 -i $CWD/patches/0002-Run-blink-bindings-generation-single-threaded.patch || exit 1
 patch -Np1 -i $CWD/patches/0003-Fix-eu-strip-build-for-newer-GCC.patch || exit 1
-patch -Np1 -i $CWD/patches/0004-Fix-missing-cmath-header-build-failure-in-renderer-e.patch || exit 1
+#patch -Np1 -i $CWD/patches/0004-Fix-missing-cmath-header-build-failure-in-renderer-e.patch || exit 1
 
 if [[ $ARCH == "armv7h" ]]; then
     export ALARM_NINJA_JOBS="4"
