@@ -138,18 +138,17 @@ sed -i -e 's/\<xmlMalloc\>/malloc/' -e 's/\<xmlFree\>/free/' \
 patch -Np1 -i $CWD/patches/use-oauth2-client-switches-as-default.patch || exit 1
 
 # Upstream fixes
-patch -Np1 -i $CWD/patches/unbundle-jsoncpp-avoid-CFI-faults-with-is_cfi-true.patch || exit 1
 patch -Np1 -i $CWD/patches/re-fix-TFLite-build-error-on-linux-with-system-zlib.patch || exit 1
-
-# Revert kGlobalMediaControlsCastStartStop enabled by default
-# https://crbug.com/1314342
-patch -Rp1 -F3 -i $CWD/patches/REVERT-enable-GlobalMediaControlsCastStartStop.patch || exit 1
 
 # Revert ffmpeg roll requiring new channel layout API support
 # https://crbug.com/1325301
 patch -Rp1 -i $CWD/patches/REVERT-roll-src-third_party-ffmpeg-m102.patch || exit 1
 # Revert switch from AVFrame::pkt_duration to AVFrame::duration
 patch -Rp1 -i $CWD/patches/REVERT-roll-src-third_party-ffmpeg-m106.patch || exit 1
+
+# Disable kGlobalMediaControlsCastStartStop by default
+# https://crbug.com/1314342
+patch -Np1 -i $CWD/patches/disable-GlobalMediaControlsCastStartStop.patch || exit 1
 
 # https://crbug.com/angleproject/7582
 patch -Np0 -i $CWD/patches/angle-wayland-include-protocol.patch || exit 1
@@ -212,10 +211,10 @@ _flags=(
   'link_pulseaudio=true'
   'use_custom_libcxx=false'
   'use_gnome_keyring=false'
-  'use_qt=false' # look into enabling this for M108
+  'use_qt=false' # look into enabling this
   'use_gold=false'
   'use_sysroot=false'
-  'use_system_libwayland_server=true'
+  'use_system_libwayland=true'
   'use_system_wayland_scanner=true'
   'enable_hangout_services_extension=true'
   'enable_widevine=true'
