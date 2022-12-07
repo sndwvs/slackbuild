@@ -1,0 +1,35 @@
+[build CXX] vcl/unx/gtk3/gloactiongroup.cxx
+[build CXX] vcl/unx/gtk3/hudawareness.cxx
+/tmp/libreoffice/libreoffice-7.4.3.2/vcl/unx/gtk3/hudawareness.cxx:38:7: error: no matching function for call to 'strcmp'
+  if (g_str_equal (method_name, "HudActiveChanged"))
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/glib-2.0/glib/ghash.h:165:30: note: expanded from macro 'g_str_equal'
+#define g_str_equal(v1, v2) (strcmp ((gconstpointer) (v1), (gconstpointer) (v2)) == 0)
+                             ^~~~~~
+/usr/include/string.h:156:12: note: candidate function not viable: cannot convert argument of incomplete type 'gconstpointer' (aka 'const void *') to 'const char *' for 1st argument
+extern int strcmp (const char *__s1, const char *__s2)
+           ^
+1 error generated.
+make[1]: *** [/tmp/libreoffice/libreoffice-7.4.3.2/solenv/gbuild/LinkTarget.mk:334: /tmp/libreoffice/libreoffice-7.4.3.2/workdir/CxxObject/vcl/unx/gtk3/hudawareness.o] Error 1
+make[1]: *** Waiting for unfinished jobs....
+
+--- a/libreoffice.SlackBuild	2022-11-27 00:07:09.023892907 +0200
++++ b/libreoffice.SlackBuild	2022-11-27 17:06:41.762018869 +0200
+@@ -164,12 +164,15 @@
+ [[ -e /usr/lib${LIBDIRSUFFIX}/pkgconfig/valgrind.pc ]] && OPT_LIBREOFFICE+=" --with-valgrind"
+ 
+ # Choose a compiler (gcc/g++ or clang/clang++):
+-export CC=${CC:-clang}
+-export CXX=${CXX:-clang++}
++export CC=${CC:-gcc}
++export CXX=${CXX:-g++}
+ 
+ # http://site.icu-project.org/download/61#TOC-Migration-Issues
+ CPPFLAGS+=' -DU_USING_ICU_NAMESPACE=1'
+ 
++export CFLAGS+=" -fpermissive"
++export CXXFLAGS+=" -fpermissive"
++
+ # Configuration
+ ./autogen.sh \
+   $OPT_LIBREOFFICE \
