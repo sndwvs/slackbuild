@@ -81,7 +81,7 @@ cmake \
   # Compilation
   make $NUMJOBS || exit 1
   make install DESTDIR=$PKG
-cd .
+cd ..
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la

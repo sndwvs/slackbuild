@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-NAME="tg_owt"
+NAME="tdlib"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
@@ -68,23 +68,25 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-export CFLAGS+="$SLKCFLAGS -ffat-lto-objects"
-export CXXFLAGS+="$SLKCFLAGS -ffat-lto-objects -I/usr/include/libdrm"
-export PKG_CONFIG_PATH="/usr/lib${LIBDIRSUFFIX}/openssl-1.1/pkgconfig"
+sed 's/tdnet/tdcore tdnet/' -i benchmark/CMakeLists.txt
+sed '/target_link_libraries(tdjson_private/s/tdutils/tdutils tdcore/' -i CMakeLists.txt
 
+mkdir build
+cd build
 # Configuration
 cmake \
-  -B build \
-  -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+  -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
-  -DCMAKE_INSTALL_MANDIR=/usr/man \
-  -DBUILD_SHARED_LIBS=OFF
+  -DTD_ENABLE_JNI=OFF \
+  -DTD_ENABLE_DOTNET=OFF \
+  ..
 
-# Compilation
-ninja -C build || exit 1
-DESTDIR=$PKG ninja -C build install
+  # Compilation
+  make $NUMJOBS || exit 1
+  make install DESTDIR=$PKG
+cd ..
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la

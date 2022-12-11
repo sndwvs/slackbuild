@@ -2,8 +2,8 @@
 
 CWD=$(pwd)
 
-NAME="tg_owt"
-VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
+NAME="tdlib-purple"
+VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f3 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -35,10 +35,7 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3 -fPIC"
-  LIBDIRSUFFIX="64"
-elif [ "$ARCH" = "riscv64" ]; then
-  SLKCFLAGS="-O3 -fPIC"
+  SLKCFLAGS="-O3"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
@@ -68,23 +65,20 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-export CFLAGS+="$SLKCFLAGS -ffat-lto-objects"
-export CXXFLAGS+="$SLKCFLAGS -ffat-lto-objects -I/usr/include/libdrm"
-export PKG_CONFIG_PATH="/usr/lib${LIBDIRSUFFIX}/openssl-1.1/pkgconfig"
-
+mkdir build
+cd build
 # Configuration
 cmake \
-  -B build \
-  -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+  -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
   -DCMAKE_INSTALL_PREFIX=/usr \
-  -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
-  -DCMAKE_INSTALL_MANDIR=/usr/man \
-  -DBUILD_SHARED_LIBS=OFF
+  -DNoVoip=True \
+  ..
 
-# Compilation
-ninja -C build || exit 1
-DESTDIR=$PKG ninja -C build install
+  # Compilation
+  make $NUMJOBS || exit 1
+  make install DESTDIR=$PKG
+cd ..
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la

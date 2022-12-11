@@ -68,10 +68,7 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-# Fix https://bugs.archlinux.org/task/73220
-export CXXFLAGS+=" -Wp,-U_GLIBCXX_ASSERTIONS"
-
-export PKG_CONFIG_PATH="/usr/lib${LIBDIRSUFFIX}/ffmpeg4.4/pkgconfig"
+rm -rf Telegram/ThirdParty/libtgvoip/webrtc_dsp/absl
 
 # Configuration
 CFLAGS="$SLKCFLAGS" \
