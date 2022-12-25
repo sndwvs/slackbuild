@@ -140,6 +140,8 @@ patch -Np1 -i $CWD/patches/use-oauth2-client-switches-as-default.patch || exit 1
 
 # Upstream fixes
 patch -Np1 -i $CWD/patches/re-fix-TFLite-build-error-on-linux-with-system-zlib.patch || exit 1
+patch -Np1 -i $CWD/patches/chromium-icu72.patch || exit 1
+patch -Np1 -d v8 <$CWD/patches/v8-enhance-Date-parser-to-take-Unicode-SPACE.patch || exit 1
 
 # Revert ffmpeg roll requiring new channel layout API support
 # https://crbug.com/1325301
