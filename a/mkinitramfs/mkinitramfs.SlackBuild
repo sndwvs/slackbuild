@@ -92,4 +92,4 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/${NAME}-${VERSION}-noarch-${BUILD}${PACKAGER}.txz
