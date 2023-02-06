@@ -72,15 +72,15 @@ WDIR=$(mktemp -d ${WORK_DIR}/deppkg.XXXXXXXXXX)
 
 # distribution kit depending on architecture
 if [[ "$ARCH" == "i586" ]]; then
-    MANIFEST_URL="http://slackware.uk/slackware/slackware64-current/slackware64/"
-elif [[ "$ARCH" == "x86_64" ]]; then
     MANIFEST_URL="http://slackware.uk/slackware/slackware-current/slackware/"
+elif [[ "$ARCH" == "x86_64" ]]; then
+    MANIFEST_URL="http://slackware.uk/slackware/slackware64-current/slackware64/"
 elif [[ "$ARCH" == "arm" ]]; then
-    MANIFEST_URL="http://slackware.uk/slackwarearm/slackwarearm-current/"
+    MANIFEST_URL="http://slackware.uk/slackwarearm/slackwarearm-15.0/slackware/"
 elif [[ "$ARCH" == "aarch64" ]]; then
     MANIFEST_URL="http://slackware.uk/slarm64/slarm64-current/slarm64/"
 elif [[ "$ARCH" == "riscv64" ]]; then
-    MANIFEST_URL="http://slackware.uk/slarm64/slarm64-current/slarm64/"
+    MANIFEST_URL="http://slackware.uk/slarm64/slarm64-riscv64-current/slarm64/"
 fi
 
 # download MANIFEST
