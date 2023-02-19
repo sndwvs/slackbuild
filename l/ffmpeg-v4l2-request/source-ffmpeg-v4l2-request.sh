@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# info: https://forum.clockworkpi.com/t/a06-mainline-hardware-video-decoding-tested-working/9239
 # source: https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=ffmpeg-v4l2-request-git
 
 NAME="ffmpeg-v4l2-request"
