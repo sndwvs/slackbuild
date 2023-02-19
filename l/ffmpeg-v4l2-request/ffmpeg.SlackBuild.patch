@@ -1,0 +1,44 @@
+--- a/ffmpeg.SlackBuild	2023-02-12 21:42:33.524100810 +0200
++++ b/ffmpeg.SlackBuild	2023-02-19 17:41:47.671760943 +0200
+@@ -28,7 +28,7 @@
+ 
+ cd $(dirname $0) ; CWD=$(pwd)
+ 
+-PKGNAM=ffmpeg
++PKGNAM=ffmpeg-v4l2-request
+ VERSION=${VERSION:-$(echo $PKGNAM-*.tar.xz | rev | cut -f 3- -d . | cut -f 1 -d - | rev)}
+ BUILD=${BUILD:-2}
+ 
+@@ -54,6 +54,12 @@ elif [ "$ARCH" = "i686" ]; then
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2 -fPIC"
++  LIBDIRSUFFIX="64"
++elif [ "$ARCH" = "riscv64" ]; then
++  SLKCFLAGS="-O2 -fPIC"
++  LIBDIRSUFFIX="64"
+ else
+   SLKCFLAGS="-O2"
+   LIBDIRSUFFIX=""
+@@ -163,6 +169,8 @@ librsvg=""    ; [ "${LIBRSVG:-yes}" != "
+ libdrm=""     ; [ "${LIBDRM:-yes}" != "no" ]      && libdrm="--enable-libdrm"
+ libglslang="" ; [ "${GLSLANG:-yes}" != "no" ]     && libglslang="--enable-libglslang"
+ vulkan=""     ; [ "${VULKAN:-yes}" != "no" ]      && vulkan="--enable-vulkan"
++v4l2m2m=""    ; [ "${V4L2M2M:-yes}" != "no" ]     && v4l2m2m="--enable-v4l2_m2m"
++v4l2request=""  ; [ "${V4L2REQUEST:-yes}" != "no" ] && v4l2request="--enable-v4l2-request"
+ 
+ # No default patent encumbered features:
+ aac=""        ; [ "${AAC:-no}" = "no" ]           && aac="--disable-encoder=aac"
+@@ -266,7 +274,9 @@ CXXFLAGS="$SLKCFLAGS" \
+   $libsoxr \
+   $libsrt \
+   $libzimg \
+-  $vapoursynth || exit 1
++  $vapoursynth \
++  $v4l2m2m \
++  $v4l2request || exit 1
+ 
+ make $NUMJOBS || make || exit 1
+ make install DESTDIR=$PKG || exit 1
