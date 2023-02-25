@@ -156,9 +156,9 @@ patch -Np1 -i $CWD/patches/disable-GlobalMediaControlsCastStartStop.patch || exi
 
 # Fixes for building with libstdc++ instead of libc++
 patch -Np1 -i $CWD/patches/chromium-103-VirtualCursor-std-layout.patch || exit 1
-patch -Np1 -i $CWD/patches/patches/chromium-110-NativeThemeBase-fabs.patch || exit 1
-patch -Np1 -i $CWD/patches/patches/chromium-110-CredentialUIEntry-const.patch || exit 1
-patch -Np1 -i $CWD/patches/patches/chromium-110-DarkModeLABColorSpace-pow.patch || exit 1
+patch -Np1 -i $CWD/patches/chromium-110-NativeThemeBase-fabs.patch || exit 1
+patch -Np1 -i $CWD/patches/chromium-110-CredentialUIEntry-const.patch || exit 1
+patch -Np1 -i $CWD/patches/chromium-110-DarkModeLABColorSpace-pow.patch || exit 1
 
 # Fix this by testing for ! bad first.
 patch -Np1 -i $CWD/patches/dont-dereference-databits-if-bad.patch || exit 1
