@@ -25,17 +25,17 @@ NAME1=openjdk
 NAME2=openjre
 MAJORVER=11
 MINORVER=0
-SECURITYVER=10
-UPDATEVER=7
+SECURITYVER=18
+UPDATEVER=10
 VERSION=${MAJORVER}.${MINORVER}.${SECURITYVER}.u${UPDATEVER}
 SRCVERSION=jdk-${MAJORVER}.${MINORVER}.${SECURITYVER}+${UPDATEVER}
-PKGVERSION=jdk${MAJORVER}u-jdk-${MAJORVER}.${MINORVER}.${SECURITYVER}+${UPDATEVER}
+PKGVERSION=jdk${MAJORVER}u-jdk-${MAJORVER}.${MINORVER}.${SECURITYVER}-${UPDATEVER}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
 NUMJOBS=${NUMJOBS:-" -j$(grep -c ^processor /proc/cpuinfo 2>/dev/null) "}
 
-wget -c https://hg.openjdk.java.net/jdk-updates/jdk${MAJORVER}u/archive/jdk-${MAJORVER}.${MINORVER}.${SECURITYVER}+${UPDATEVER}.tar.gz
+wget -c https://github.com/openjdk/jdk${MAJORVER}u/archive/jdk-${MAJORVER}.${MINORVER}.${SECURITYVER}+${UPDATEVER}.tar.gz
 
 # Automatically determine the architecture we're building on:
 MARCH=$( uname -m )
