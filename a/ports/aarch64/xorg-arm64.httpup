@@ -1,0 +1,8 @@
+#
+# /etc/ports/xorg-arm64.httpup: CRUX-ARM aarch64 ports overlay for CRUX xorg collection
+#
+
+ROOT_DIR=/usr/ports/xorg-arm64
+URL=https://raw.githubusercontent.com/crux-arm/crux-ports-xorg-arm64/3.6/
+
+# End of file

@@ -1,0 +1,8 @@
+#
+# /etc/ports/opt-arm.httpup: CRUX-ARM ports overlay for CRUX opt collection
+#
+
+ROOT_DIR=/usr/ports/opt-arm
+URL=https://raw.githubusercontent.com/crux-arm/crux-ports-opt-arm/3.6/
+
+# End of file

@@ -1,0 +1,8 @@
+#
+# /etc/ports/core-arm.httpup: CRUX-ARM ports overlay for CRUX core collection
+#
+
+ROOT_DIR=/usr/ports/core-arm
+URL=https://raw.githubusercontent.com/crux-arm/crux-ports-core-arm/3.7/
+
+# End of file
