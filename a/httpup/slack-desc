@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description. Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in. You must
+# make exactly 11 lines for the formatting to be correct. It's also
+# customary to leave one space after the ':'.
+
+      |-----handy-ruler------------------------------------------------------|
+httpup: httpup (one way sync over http)
+httpup:
+httpup: This is httpup, and one way synchronize tool over http. It depends on libcurl
+httpup: and was written on linux but it should build on any platform supported by
+httpup: libcurl.
+httpup:
+httpup: home: https://crux.nu/gitweb/?p=tools/httpup.git;a=tree
+httpup:
+httpup:
+httpup:
+httpup:
