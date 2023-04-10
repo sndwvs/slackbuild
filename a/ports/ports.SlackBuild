@@ -92,12 +92,17 @@ install -m 0644 $CWD/xorg.pub $PKG/etc/ports
 install -m 0644 $CWD/contrib.pub $PKG/etc/ports
 # end of shared files
 
+# start of ports under architecture
 install -m 0644 $CWD/$ARCH/core-$PORTS_ARCH.httpup $PKG/etc/ports
 install -m 0644 $CWD/$ARCH/core-$PORTS_ARCH.pub $PKG/etc/ports
 install -m 0644 $CWD/$ARCH/opt-$PORTS_ARCH.httpup $PKG/etc/ports
 install -m 0644 $CWD/$ARCH/opt-$PORTS_ARCH.pub $PKG/etc/ports
 install -m 0644 $CWD/$ARCH/xorg-$PORTS_ARCH.httpup $PKG/etc/ports
 install -m 0644 $CWD/$ARCH/xorg-$PORTS_ARCH.pub $PKG/etc/ports
+# end of ports under architecture
+
+# install rsync driver
+install -m 0755 $CWD/drivers/rsync.driver $PKG/etc/ports/drivers/rsync
 
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
