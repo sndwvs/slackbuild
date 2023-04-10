@@ -104,6 +104,9 @@ install -m 0644 $CWD/$ARCH/xorg-$PORTS_ARCH.pub $PKG/etc/ports
 # install rsync driver
 install -m 0755 $CWD/drivers/rsync.driver $PKG/etc/ports/drivers/rsync
 
+# install git driver
+install -m 0755 $CWD/drivers/git.driver $PKG/etc/ports/drivers/git
+
 # Strip binaries:
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
   | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
