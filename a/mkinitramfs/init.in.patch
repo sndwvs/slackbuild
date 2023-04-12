@@ -1,5 +1,5 @@
 --- a/init.in	2021-06-10 22:18:00.718370221 +0300
-+++ b/init.in	2021-06-26 20:52:10.175242696 +0300
++++ b/init.in	2023-04-12 22:57:34.184885904 +0300
 @@ -1,6 +1,6 @@
  #!/bin/sh
  
@@ -8,7 +8,17 @@
  export PATH
  
  problem()
-@@ -121,6 +121,21 @@
+@@ -77,7 +77,8 @@ device=
+ resume=
+ noresume=false
+ 
+-mount -n -t devtmpfs devtmpfs /dev
++UDEVOPTS="exec,nosuid,noatime,mode=0755,nr_blocks=2048,nr_inodes=16384"
++mount -n -t devtmpfs -o ${UDEVOPTS} dev /dev
+ mount -n -t proc     proc     /proc
+ mount -n -t sysfs    sysfs    /sys
+ mount -n -t tmpfs    tmpfs    /run
+@@ -121,6 +122,21 @@ if [ -n "$rootdelay"    ] ; then sleep "
  do_try_resume # This function will not return if resuming from disk
  do_mount_root
  
