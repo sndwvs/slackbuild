@@ -1,5 +1,5 @@
---- a/mkinitramfs	2021-06-10 22:17:56.734306317 +0300
-+++ b/mkinitramfs	2022-08-14 13:13:17.836770380 +0300
+--- a/mkinitramfs	2023-04-12 23:22:41.153330832 +0300
++++ b/mkinitramfs	2023-04-13 20:45:19.985778576 +0300
 @@ -1,19 +1,76 @@
  #!/bin/bash
  # This file based in part on the mkinitramfs script for the LFS LiveCD
@@ -79,7 +79,7 @@
    else
      echo "Missing required file: $1 for directory $2"
      rm -rf $WDIR
-@@ -21,54 +78,53 @@
+@@ -21,54 +78,53 @@ copy()
    fi
  }
  
@@ -148,7 +148,7 @@
  
  # Create necessary device nodes
  mknod -m 640 $WDIR/dev/console c 5 1
-@@ -83,9 +139,6 @@
+@@ -83,9 +139,6 @@ for file in $(find /etc/udev/rules.d/ -t
    cp $file $WDIR/etc/udev/rules.d
  done
  
@@ -158,7 +158,7 @@
  # Copy the RAID configuration file if present
  if [ -f /etc/mdadm.conf ] ; then
    cp /etc/mdadm.conf $WDIR/etc
-@@ -94,9 +147,9 @@
+@@ -94,9 +147,9 @@ fi
  # Install the init file
  install -m0755 $DATADIR/$INITIN $WDIR/init
  
@@ -171,7 +171,7 @@
    else
      binfiles="$binfiles lsmod"
      sbinfiles="$sbinfiles insmod"
-@@ -105,49 +158,56 @@
+@@ -105,49 +158,56 @@ fi
  
  # Install basic binaries
  for f in $binfiles ; do
@@ -258,7 +258,7 @@
    # Conf file(s)
    cp -a /etc/lvm $WDIR/etc
  fi
-@@ -166,36 +226,61 @@
+@@ -166,40 +226,69 @@ sort $unsorted | uniq | while read libra
    copy $library lib
  done
  
@@ -267,13 +267,14 @@
 +if [ -d /lib/udev ]; then
 +  cp -a /lib/udev $WDIR/lib
  fi
--if [ -d /usr/lib/systemd ]; then
--  cp -a /usr/lib/systemd $WDIR/usr/lib
-+if [ -d /lib/systemd ]; then
-+  cp -a /lib/systemd $WDIR/lib
+ if [ -d /usr/lib/systemd ]; then
+   cp -a /usr/lib/systemd $WDIR/usr/lib
  fi
 -if [ -d /usr/lib/elogind ]; then
 -  cp -a /usr/lib/elogind $WDIR/usr/lib
++if [ -d /lib/systemd ]; then
++  cp -a /lib/systemd $WDIR/lib
++fi
 +if [ -d /lib/elogind ]; then
 +  cp -a /lib/elogind $WDIR/lib
 +fi
@@ -284,17 +285,18 @@
 +if [ ! -z ${MODULES} ]; then
  # Install the kernel modules if requested
 -if [ -n "$KERNEL_VERSION" ]; then
--  find                                                                        \
+-  find \
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/{crypto,fs,lib}                      \
--     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/{block,ata,md,firewire}      \
+-     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/{block,ata,nvme,md,firewire} \
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/{scsi,message,pcmcia,virtio} \
 -     /usr/lib/modules/$KERNEL_VERSION/kernel/drivers/usb/{host,storage}           \
 -     -type f 2> /dev/null | cpio --make-directories -p --quiet $WDIR
 -
--  cp /usr/lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
+-  cp /usr/lib/modules/$KERNEL_VERSION/modules.{builtin,order} \
 -            $WDIR/usr/lib/modules/$KERNEL_VERSION
--
--  depmod -b $WDIR $KERNEL_VERSION
+-  if [ -f /usr/lib/modules/$KERNEL_VERSION/modules.builtin.modinfo ]; then
+-    cp /usr/lib/modules/$KERNEL_VERSION/modules.builtin.modinfo \
+-            $WDIR/usr/lib/modules/$KERNEL_VERSION
 +  while read -r -a MODULE;
 +  do
 +    while read -r -a file;
@@ -325,8 +327,13 @@
 +
 +if [ ! -z ${MODULES} ] ; then
 +    cp /lib/modules/$KERNEL_VERSION/modules.{builtin,order}                     \
-+                $WDIR/lib/modules/$KERNEL_VERSION
-+    depmod -a -b $WDIR $KERNEL_VERSION
++            $WDIR/lib/modules/$KERNEL_VERSION
++  if [ -f /lib/modules/$KERNEL_VERSION/modules.builtin.modinfo ]; then
++    cp /lib/modules/$KERNEL_VERSION/modules.builtin.modinfo \
++            $WDIR/lib/modules/$KERNEL_VERSION
+   fi
+ 
+   depmod -b $WDIR $KERNEL_VERSION
  fi
  
 -( cd $WDIR ; find . | cpio -o -H newc --quiet | gzip -9 ) > $INITRAMFS_FILE
@@ -341,7 +348,7 @@
  
  # first empty WDIR to reuse it
    rm -r $WDIR/*
-@@ -203,18 +289,18 @@
+@@ -207,18 +296,18 @@ if ls /usr/lib/firmware/intel-ucode/* >/
    DSTDIR=$WDIR/kernel/x86/microcode
    mkdir -p $DSTDIR
  
