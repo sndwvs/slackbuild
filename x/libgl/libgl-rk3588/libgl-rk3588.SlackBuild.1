@@ -72,28 +72,35 @@ export GPU="valhall-g610"
 export PLATFORM=${PLATFORM:-x11-gbm}
 
 # Configuration
-mkdir meson-build
-cd meson-build
-meson setup \
-  --prefix=/usr \
-  --libdir=lib${LIBDIRSUFFIX}/mali-egl \
-  --mandir=/usr/man \
-  --sysconfdir=/etc \
-  -Dgpu=${GPU} \
-  -Dplatform=${PLATFORM} \
-  -Dversion=${_VERSION} \
-  -Dhooks=false \
-  -Dwrappers=disabled \
-  .. || exit 1
+#mkdir meson-build
+#cd meson-build
+#meson setup \
+#  --prefix=/usr \
+#  --libdir=lib${LIBDIRSUFFIX}/mali-egl \
+#  --mandir=/usr/man \
+#  --sysconfdir=/etc \
+#  -Dgpu=${GPU} \
+#  -Dplatform=${PLATFORM} \
+#  -Dversion=${_VERSION} \
+#  .. || exit 1
 # Compilation
-  "${NINJA:=ninja}" $NUMJOBS || exit 1
-  DESTDIR=$PKG $NINJA install || exit 1
-cd ..
+#  "${NINJA:=ninja}" $NUMJOBS || exit 1
+#  DESTDIR=$PKG $NINJA install || exit 1
+#cd ..
+
+# install the firmware
+install -Dm755 firmware/g610/mali_csffw.bin $PKG/lib/firmware/mali_csffw.bin
+
+# install blob drivers
+install -Dm755 lib/aarch64-linux-gnu/$NAME-$GPU-${_VERSION}-$PLATFORM.so $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/$NAME-$GPU-${_VERSION}-$PLATFORM.so
+for l in libEGL.so libEGL.so.1 libgbm.so.1 libGLESv2.so libGLESv2.so.2 libGLESv2_CM.so libOpenCL.so.1 libmali.so libmali.so.1; do
+    ln -s $NAME-$GPU-${_VERSION}-$PLATFORM.so $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/$l;
+done
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 
-mv $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/pkgconfig $PKG/usr/lib${LIBDIRSUFFIX}/
+#mv $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/pkgconfig $PKG/usr/lib${LIBDIRSUFFIX}/
 
 # Strip binaries:
 #find $PKG | xargs file | grep -e "executable" -e "shared object" \
