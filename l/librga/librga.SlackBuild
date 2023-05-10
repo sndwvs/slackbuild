@@ -2,10 +2,8 @@
 
 CWD=$(pwd)
 
-NAME="libmali"
-_NAME="libgl-rk3588"
+NAME="librga"
 VERSION=${VERSION:-$(echo $NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
-_VERSION=${_VERSION:-g6p0}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -37,7 +35,10 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O3 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "riscv64" ]; then
+  SLKCFLAGS="-O3 -fPIC"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
@@ -67,44 +68,36 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 
-export GPU="valhall-g610"
-# platform: x11, gbm, wayland, only-cl
-export PLATFORM=${PLATFORM:-x11-gbm}
-
 # Configuration
-#mkdir meson-build
-#cd meson-build
-#meson setup \
-#  --prefix=/usr \
-#  --libdir=lib${LIBDIRSUFFIX}/mali-egl \
-#  --mandir=/usr/man \
-#  --sysconfdir=/etc \
-#  -Dgpu=${GPU} \
-#  -Dplatform=${PLATFORM} \
-#  -Dversion=${_VERSION} \
-#  .. || exit 1
-# Compilation
-#  "${NINJA:=ninja}" $NUMJOBS || exit 1
-#  DESTDIR=$PKG $NINJA install || exit 1
-#cd ..
+export CFLAGS="$SLKCFLAGS"
+export CXXFLAGS="$SLKCFLAGS"
+mkdir meson-build
+cd meson-build
+meson setup \
+  --prefix=/usr \
+  --libdir=lib${LIBDIRSUFFIX} \
+  --libexecdir=/usr/libexec \
+  --bindir=/usr/bin \
+  --sbindir=/usr/sbin \
+  --includedir=/usr/include \
+  --datadir=/usr/share \
+  --mandir=/usr/man \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --buildtype=release \
+  .. || exit 1
+  "${NINJA:=ninja}" $NUMJOBS || exit 1
+  DESTDIR=$PKG $NINJA install || exit 1
+cd ..
 
-# install the firmware
-install -Dm755 firmware/g610/mali_csffw.bin $PKG/lib/firmware/mali_csffw.bin
-
-# install blob drivers
-install -Dm755 lib/aarch64-linux-gnu/$NAME-$GPU-${_VERSION}-$PLATFORM.so $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/$NAME-$GPU-${_VERSION}-$PLATFORM.so
-for l in libEGL.so libEGL.so.1 libgbm.so.1 libGLESv2.so libGLESv2.so.2 libGLESv2_CM.so libOpenCL.so.1 libmali.so libmali.so.1; do
-    ln -s $NAME-$GPU-${_VERSION}-$PLATFORM.so $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/$l;
-done
+rm -rf $PKG/usr/lib
 
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 
-#mv $PKG/usr/lib${LIBDIRSUFFIX}/mali-egl/pkgconfig $PKG/usr/lib${LIBDIRSUFFIX}/
-
 # Strip binaries:
-#find $PKG | xargs file | grep -e "executable" -e "shared object" \
-#  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+find $PKG | xargs file | grep -e "executable" -e "shared object" \
+  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
 # Compress manual pages:
 find $PKG/usr/man -type f -exec gzip -9 {} \;
@@ -114,16 +107,17 @@ for i in $( find $PKG/usr/man -type l ) ; do
 done
 
 # Copy docs
-mkdir -vpm755 $PKG/usr/doc/${_NAME}-${_VERSION}
+mkdir -vpm755 $PKG/usr/doc/$NAME-$VERSION
 cp -fav \
-  $CWD/$0 \
-  $PKG/usr/doc/${_NAME}-${_VERSION}/
+  LICENSE README \
+  $PKG/usr/doc/$NAME-$VERSION/
+cat $CWD/$NAME.SlackBuild > $PKG/usr/doc/$NAME-$VERSION/$NAME.SlackBuild
 
 # Description and installation script
 mkdir -p $PKG/install
-zcat $CWD/doinst.sh.gz | sed "s:lib:lib${LIBDIRSUFFIX}:g" > $PKG/install/doinst.sh
+zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Package creation
 cd $PKG
-makepkg -l n -c n $TMP/${_NAME}-${_VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
+makepkg -l n -c n $TMP/${NAME}-${VERSION}-${ARCH}-${BUILD}${PACKAGER}.txz
