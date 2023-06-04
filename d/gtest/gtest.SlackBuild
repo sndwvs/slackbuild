@@ -4,7 +4,7 @@ CWD=$(pwd)
 
 NAME="gtest"
 SRC_NAME="googletest"
-VERSION=${VERSION:-$(echo $SRC_NAME-*.tar.?z* | cut -d - -f3 | rev | cut -d . -f3- | rev)}
+VERSION=${VERSION:-$(echo $SRC_NAME-*.tar.?z* | cut -d - -f2 | rev | cut -d . -f3- | rev)}
 BUILD=${BUILD:-1}
 PACKAGER=${PACKAGER:-mara}
 
@@ -59,9 +59,9 @@ mkdir -p $PKG
 
 # Delete a directory previous build / create new and change rights
 cd $TMP
-rm -rf $SRC_NAME-release-$VERSION
-tar xvf $CWD/$SRC_NAME-release-$VERSION.tar.?z* || exit 1
-cd $SRC_NAME-release-$VERSION || exit 1
+rm -rf $SRC_NAME-$VERSION
+tar xvf $CWD/$SRC_NAME-$VERSION.tar.?z* || exit 1
+cd $SRC_NAME-$VERSION || exit 1
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -72,7 +72,7 @@ find . \
 #sed "s|__GOOGLETEST_VERSION__|$VERSION|g" -i $CWD/gtest-version.patch
 #patch -Np1 -i $CWD/gtest-version.patch || exit 1
 cat $CWD/gtest-version.patch | sed "s|__GOOGLETEST_VERSION__|$VERSION|g" | patch -Np1 || exit 1
-exit
+
 # Configuration
 mkdir -p build
 cd build
