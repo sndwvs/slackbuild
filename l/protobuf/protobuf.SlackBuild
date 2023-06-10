@@ -35,7 +35,10 @@ elif [ "$ARCH" = "arm" ]; then
   SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
   LIBDIRSUFFIX=""
 elif [ "$ARCH" = "aarch64" ]; then
-  SLKCFLAGS="-O3"
+  SLKCFLAGS="-O3 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "riscv64" ]; then
+  SLKCFLAGS="-O3 -fPIC"
   LIBDIRSUFFIX="64"
 else
   SLKCFLAGS="-O2"
@@ -56,7 +59,7 @@ mkdir -p $PKG
 # Delete a directory previous build / create new and change rights
 cd $TMP
 rm -rf $NAME-$VERSION
-tar xvf $CWD/$NAME-v$VERSION.tar.?z* || exit 1
+tar xvf $CWD/$NAME-$VERSION.tar.?z* || exit 1
 cd $NAME-$VERSION || exit 1
 chown -R root:root .
 find . \
@@ -64,6 +67,10 @@ find . \
  -exec chmod 755 {} \; -o \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
+
+patch -Rp1 -i $CWD/101b6199.patch || exit 1 # Revert ABI break
+patch -Np1 -i $CWD/protobuf-21.12-python3.11.patch || exit 1
+patch -Np1 -i $CWD/protobuf-21.12-pep517.patch || exit 1
 
 mkdir build
 cd build
