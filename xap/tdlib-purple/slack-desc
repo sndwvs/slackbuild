@@ -6,13 +6,13 @@
 # customary to leave one space after the ':' except on otherwise blank lines.
 
             |-----handy-ruler------------------------------------------------------|
-tdlib-purple: tdlib-purple (Cross-platform library for building Telegram clients)
+tdlib-purple: tdlib-purple (libpurple/pidgin Telegram plugin implemented using official tdlib client library)
 tdlib-purple:
 tdlib-purple:
 tdlib-purple:
 tdlib-purple:
 tdlib-purple:
-tdlib-purple: home:  https://github.com/tdlib/td
+tdlib-purple: home: https://github.com/ars3niy/tdlib-purple/
 tdlib-purple:
 tdlib-purple:
 tdlib-purple:
