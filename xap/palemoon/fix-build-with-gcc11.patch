@@ -723,30 +723,6 @@
  #include "jit/JitCompartment.h"
  #include "js/MemoryMetrics.h"
  
---- a/platform/js/src/new-regexp/regexp-bytecode-peephole.cc
-+++ b/platform/js/src/new-regexp/regexp-bytecode-peephole.cc
-@@ -2,8 +2,9 @@
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
- 
--#include "new-regexp/regexp-bytecode-peephole.h"
-+#include <limits>
- 
-+#include "new-regexp/regexp-bytecode-peephole.h"
- #include "new-regexp/regexp-bytecodes.h"
- 
- namespace v8 {
-
---- a/platform/js/src/new-regexp/util/vector.h
-+++ b/platform/js/src/new-regexp/util/vector.h
-@@ -5,6 +5,7 @@
- #ifndef V8_UTIL_VECTOR_H_
- #define V8_UTIL_VECTOR_H_
- 
-+#include <limits>
- #include <algorithm>
- #include <cstring>
- #include <iterator>
 
 --- a/platform/js/src/vm/ArrayBufferObject.h
 +++ b/platform/js/src/vm/ArrayBufferObject.h
