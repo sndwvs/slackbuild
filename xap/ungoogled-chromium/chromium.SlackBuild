@@ -139,7 +139,10 @@ sed -i -e 's/\<xmlMalloc\>/malloc/' -e 's/\<xmlFree\>/free/' \
 patch -Np1 -i $CWD/patches/use-oauth2-client-switches-as-default.patch || exit 1
 
 # Upstream fixes
-patch -Np1 -i $CWD/patches/sql-relax-constraints-on-VirtualCursor-layout.patch || exit 1
+patch -Np1 -i $CWD/patches/add-some-typename-s-that-are-required-in-C-17.patch || exit 1
+
+# Revert addition of compiler flag that needs newer clang
+patch -Rp1 -i $CWD/patches/REVERT-disable-autoupgrading-debug-info.patch || exit 1
 
 # Revert ffmpeg roll requiring new channel layout API support
 # https://crbug.com/1325301
@@ -151,10 +154,13 @@ patch -Rp1 -i $CWD/patches/REVERT-roll-src-third_party-ffmpeg-m106.patch || exit
 # https://crbug.com/1314342
 patch -Np1 -i $CWD/patches/disable-GlobalMediaControlsCastStartStop.patch || exit 1
 
-# Fixes for building with libstdc++ instead of libc++
-
 # Fix this by testing for ! bad first.
 patch -Np1 -i $CWD/patches/dont-dereference-databits-if-bad.patch || exit 1
+
+# Build fixes
+patch -Np1 -i $CWD/patches/download-bubble-typename.patch || exit 1
+patch -Np1 -i $CWD/patches/webauthn-variant.patch || exit 1
+patch -Np1 -i $CWD/patches/random-fixes-for-gcc13.patch || exit 1
 
 # Ungoogled Chromium changes
 UNGOOGLED_REPO="ungoogled-$NAME-$UC_VERSION"

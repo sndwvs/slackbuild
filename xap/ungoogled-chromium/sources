@@ -4,7 +4,7 @@ VERSION
     https://github.com/chromium/chromium/tags
 
 download:
-    https://commondatastorage.googleapis.com/chromium-browser-official/chromium-111.0.5563.64.tar.xz
+    https://commondatastorage.googleapis.com/chromium-browser-official/chromium-114.0.5735.106.tar.xz
 
 ungoogled:
-    https://github.com/ungoogled-software/ungoogled-chromium/archive/refs/tags/111.0.5563.64-1.tar.gz
+    https://github.com/ungoogled-software/ungoogled-chromium/archive/refs/tags/114.0.5735.106-1.tar.gz
