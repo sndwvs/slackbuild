@@ -5,15 +5,15 @@
 # make exactly 11 lines for the formatting to be correct.  It's also
 # customary to leave one space after the ':' except on otherwise blank lines.
 
-        |-----handy-ruler------------------------------------------------------|
-chromium: chromium (Open Source version of Chrome Web Browser)
-chromium:
-chromium: Chromium is the open-source project behind Google Chrome,
-chromium: an attempt at creating a safer, faster, and more stable browser.
-chromium:
-chromium:
-chromium:
-chromium:
-chromium:
-chromium: chromium home: http://www.chromium.org/
-chromium:
+                  |-----handy-ruler------------------------------------------------------|
+ungoogled-chromium: chromium (Open Source version of Chrome Web Browser)
+ungoogled-chromium:
+ungoogled-chromium: Chromium is the open-source project behind Google Chrome,
+ungoogled-chromium: an attempt at creating a safer, faster, and more stable browser.
+ungoogled-chromium:
+ungoogled-chromium:
+ungoogled-chromium:
+ungoogled-chromium:
+ungoogled-chromium:
+ungoogled-chromium: chromium home: http://www.chromium.org/
+ungoogled-chromium:
