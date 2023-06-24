@@ -1,0 +1,101 @@
+--- a/ffmpeg.SlackBuild	2023-06-24 10:48:24.748046900 +0000
++++ b/ffmpeg.SlackBuild	2023-06-24 11:34:37.832537505 +0000
+@@ -30,7 +30,8 @@ cd $(dirname $0) ; CWD=$(pwd)
+ 
+ PKGNAM=ffmpeg
+ VERSION=${VERSION:-$(echo $PKGNAM-*.tar.xz | rev | cut -f 3- -d . | cut -f 1 -d - | rev)}
+-BUILD=${BUILD:-1}
++BUILD=${BUILD:-6}
++FAMILY=${FAMILY:-rk35xx}
+ 
+ if [ -z "$ARCH" ]; then
+   case "$( uname -m )" in
+@@ -54,6 +55,15 @@ elif [ "$ARCH" = "i686" ]; then
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
++elif [ "$ARCH" = "arm" ]; then
++  SLKCFLAGS="-O3 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
++  LIBDIRSUFFIX=""
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O3"
++  LIBDIRSUFFIX="64"
++elif [ "$ARCH" = "riscv64" ]; then
++  SLKCFLAGS="-O3"
++  LIBDIRSUFFIX="64"
+ else
+   SLKCFLAGS="-O2"
+   LIBDIRSUFFIX=""
+@@ -134,11 +144,11 @@ decklink=""   ; [ "${DECKLINK:-no}" != "
+ liblensfun="" ; [ "${LENSFUN:-no}" != "no" ]     && liblensfun="--enable-liblensfun"
+ 
+ # Default enabled features:
+-fontconfig="" ; [ "${FONTCONFIG:-yes}" != "no" ]  && fontconfig="--enable-libfontconfig"
+-freetype=""   ; [ "${FREETYPE:-yes}" != "no" ]    && freetype="--enable-libfreetype"
++#fontconfig="" ; [ "${FONTCONFIG:-yes}" != "no" ]  && fontconfig="--enable-libfontconfig"
++#freetype=""   ; [ "${FREETYPE:-yes}" != "no" ]    && freetype="--enable-libfreetype"
+ fribidi=""    ; [ "${FRIBIDI:-yes}" != "no" ]     && fribidi="--enable-libfribidi"
+ gnutls=""     ; [ "${GNUTLS:-yes}" != "no" ]      && gnutls="--enable-gnutls"
+-libbluray=""  ; [ "${BLURAY:-yes}" != "no" ]      && libbluray="--enable-libbluray"
++#libbluray=""  ; [ "${BLURAY:-yes}" != "no" ]      && libbluray="--enable-libbluray"
+ libcaca=""    ; [ "${CACA:-yes}" != "no" ]        && libcaca="--enable-libcaca"
+ libcdio=""    ; [ "${LIBCDIO:-yes}" != "no" ]     && libcdio="--enable-libcdio"
+ libssh=""     ; [ "${LIBSSH:-yes}" != "no" ]      && libssh="--enable-libssh"
+@@ -159,7 +169,7 @@ libopenal=""  ; [ "${OPENAL:-yes}" != "n
+ libopus=""    ; [ "${OPUS:-yes}" != "no" ]        && libopus="--enable-libopus"
+ libvidstab="" ; [ "${VIDSTAB:-yes}" != "no" ]     && libvidstab="--enable-libvidstab"
+ libxml2=""    ; [ "${LIBXML2:-yes}" != "no" ]     && libxml2="--enable-libxml2"
+-librsvg=""    ; [ "${LIBRSVG:-yes}" != "no" ]     && librsvg="--enable-librsvg"
++#librsvg=""    ; [ "${LIBRSVG:-yes}" != "no" ]     && librsvg="--enable-librsvg"
+ libdrm=""     ; [ "${LIBDRM:-yes}" != "no" ]      && libdrm="--enable-libdrm"
+ libglslang="" ; [ "${GLSLANG:-yes}" != "no" ]     && libglslang="--enable-libglslang"
+ vulkan=""     ; [ "${VULKAN:-yes}" != "no" ]      && vulkan="--enable-vulkan"
+@@ -167,12 +177,15 @@ vulkan=""     ; [ "${VULKAN:-yes}" != "n
+ # No default patent encumbered features:
+ aac=""        ; [ "${AAC:-no}" = "no" ]           && aac="--disable-encoder=aac"
+ 
++# add support rockchip mpp
++rkmpp=""     ; [ "${RKMPP:-yes}" != "no" ]        && rkmpp="--enable-rkmpp"
++
+ rm -rf $PKG
+ mkdir -p $TMP $PKG
+ cd $TMP
+-rm -rf $PKGNAM-$VERSION
+-tar xvf $CWD/$PKGNAM-$VERSION.tar.xz || exit 1
+-cd $PKGNAM-$VERSION || exit 1
++rm -rf $PKGNAM-rockchip-$VERSION
++tar xvf $CWD/$PKGNAM-rockchip-$VERSION.tar.xz || exit 1
++cd $PKGNAM-rockchip-$VERSION || exit 1
+ 
+ chown -R root:root .
+ find -L . \
+@@ -181,6 +194,8 @@ find -L . \
+  \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+   -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+ 
++[[ ! -z ${FAMILY} ]] && FAMILY="-${FAMILY}"
++
+ # Restore missing function needed by Chromium and qt-webengine:
+ zcat $CWD/add-av_stream_get_first_dts-for-chromium.patch.gz | patch -p1 --verbose || exit 1
+ 
+@@ -266,7 +281,8 @@ CXXFLAGS="$SLKCFLAGS" \
+   $libsoxr \
+   $libsrt \
+   $libzimg \
+-  $vapoursynth || exit 1
++  $vapoursynth \
++  $rkmpp || exit 1
+ 
+ make $NUMJOBS || make || exit 1
+ make install DESTDIR=$PKG || exit 1
+@@ -294,7 +310,8 @@ if [ -r ChangeLog ]; then
+ fi
+ 
+ mkdir -p $PKG/install
+-cat $CWD/slack-desc > $PKG/install/slack-desc
++# fixed slack-desc
++cat $CWD/slack-desc | sed "s#^${PKGNAM}#${PKGNAM}${FAMILY}#g" > $PKG/install/slack-desc
+ 
+ cd $PKG
+-/sbin/makepkg -l y -c n $TMP/$PKGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
++/sbin/makepkg -l y -c n $TMP/$PKGNAM${FAMILY}-$VERSION-$ARCH-$BUILD$TAG.txz
