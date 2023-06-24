@@ -1,5 +1,5 @@
---- a/ffmpeg.SlackBuild	2022-10-10 00:26:48.883033440 +0300
-+++ b/ffmpeg.SlackBuild	2022-11-03 14:53:06.168320946 +0200
+--- a/ffmpeg.SlackBuild	2023-06-19 19:43:06.121004610 +0300
++++ b/ffmpeg.SlackBuild	2023-06-25 01:22:48.290091057 +0300
 @@ -31,6 +31,7 @@ cd $(dirname $0) ; CWD=$(pwd)
  PKGNAM=ffmpeg
  VERSION=${VERSION:-$(echo $PKGNAM-*.tar.xz | rev | cut -f 3- -d . | cut -f 1 -d - | rev)}
@@ -8,7 +8,7 @@
  
  if [ -z "$ARCH" ]; then
    case "$( uname -m )" in
-@@ -54,6 +55,12 @@ elif [ "$ARCH" = "i686" ]; then
+@@ -54,6 +55,15 @@ elif [ "$ARCH" = "i686" ]; then
  elif [ "$ARCH" = "x86_64" ]; then
    SLKCFLAGS="-O2 -fPIC"
    LIBDIRSUFFIX="64"
@@ -18,10 +18,13 @@
 +elif [ "$ARCH" = "aarch64" ]; then
 +  SLKCFLAGS="-O3"
 +  LIBDIRSUFFIX="64"
++elif [ "$ARCH" = "riscv64" ]; then
++  SLKCFLAGS="-O3"
++  LIBDIRSUFFIX="64"
  else
    SLKCFLAGS="-O2"
    LIBDIRSUFFIX=""
-@@ -167,6 +174,9 @@ vulkan=""     ; [ "${VULKAN:-yes}" != "n
+@@ -167,6 +177,9 @@ vulkan=""     ; [ "${VULKAN:-yes}" != "n
  # No default patent encumbered features:
  aac=""        ; [ "${AAC:-no}" = "no" ]           && aac="--disable-encoder=aac"
  
@@ -31,7 +34,7 @@
  rm -rf $PKG
  mkdir -p $TMP $PKG
  cd $TMP
-@@ -181,6 +191,8 @@ find -L . \
+@@ -181,8 +194,11 @@ find -L . \
   \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
    -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
  
@@ -39,8 +42,11 @@
 +
  # Restore missing function needed by Chromium and qt-webengine:
  zcat $CWD/add-av_stream_get_first_dts-for-chromium.patch.gz | patch -p1 --verbose || exit 1
++xzcat $CWD/rkmpp-5.patch.xz | patch -p1 --verbose || exit 1
  
-@@ -266,7 +278,8 @@ CXXFLAGS="$SLKCFLAGS" \
+ CFLAGS="$SLKCFLAGS" \
+ CXXFLAGS="$SLKCFLAGS" \
+@@ -266,7 +282,8 @@ CXXFLAGS="$SLKCFLAGS" \
    $libsoxr \
    $libsrt \
    $libzimg \
@@ -50,7 +56,7 @@
  
  make $NUMJOBS || make || exit 1
  make install DESTDIR=$PKG || exit 1
-@@ -294,7 +307,8 @@ if [ -r ChangeLog ]; then
+@@ -294,7 +311,8 @@ if [ -r ChangeLog ]; then
  fi
  
  mkdir -p $PKG/install

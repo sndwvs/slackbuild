@@ -90,8 +90,6 @@ meson setup \
   DESTDIR=$PKG $NINJA install || exit 1
 cd ..
 
-rm -rf $PKG/usr/lib
-
 # Don't ship .la files:
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 
