@@ -82,6 +82,7 @@ find . \
   --enable-dvdnav \
   --enable-libarchive \
   --enable-libmpv-shared \
+  --enable-drm \
   --enable-egl-drm
 
 # Compilation
