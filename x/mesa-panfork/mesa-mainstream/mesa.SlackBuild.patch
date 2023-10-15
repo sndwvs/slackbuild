@@ -1,0 +1,44 @@
+--- a/mesa.SlackBuild	2023-09-22 17:58:17.898971132 +0000
++++ b/mesa.SlackBuild	2023-09-23 07:44:57.958507617 +0000
+@@ -34,7 +34,7 @@ CODECS=${CODECS:-h264dec,h264enc,h265dec
+ NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
+ 
+ # Be sure this list is up-to-date:
+-GALLIUM_DRIVERS="nouveau,r300,r600,svga,radeonsi,swrast,virgl,iris,crocus,zink"
++GALLIUM_DRIVERS="nouveau,r300,r600,radeonsi,swrast,virgl,zink,freedreno,etnaviv,kmsro,lima,panfrost,v3d,vc4"
+ 
+ if [ -z "$ARCH" ]; then
+   case "$( uname -m )" in
+@@ -70,6 +70,12 @@ if [ "$ARCH" = "i586" ]; then
+ elif [ "$ARCH" = "x86_64" ]; then
+   SLKCFLAGS="-O2 -fPIC"
+   LIBDIRSUFFIX="64"
++elif [ "$ARCH" = "aarch64" ]; then
++  SLKCFLAGS="-O2 -fPIC"
++  LIBDIRSUFFIX="64"
++elif [ "$ARCH" = "riscv64" ]; then
++  SLKCFLAGS="-O2 -fPIC"
++  LIBDIRSUFFIX="64"
+ else
+   SLKCFLAGS="-O2"
+   LIBDIRSUFFIX=""
+@@ -135,8 +141,8 @@ meson setup \
+   -Drust_std=2021 \
+   -Dosmesa=true \
+   -Dgallium-drivers=$GALLIUM_DRIVERS \
+-  -Dvulkan-drivers=amd,intel,intel_hasvk,swrast \
+-  -Dvulkan-layers=device-select,intel-nullhw,overlay \
++  -Dvulkan-drivers=amd,swrast,broadcom,panfrost \
++  -Dvulkan-layers=device-select,overlay \
+   -Dvideo-codecs="$CODECS" \
+   -Dglvnd=true \
+   -Dllvm=enabled \
+@@ -147,6 +153,8 @@ meson setup \
+   -Dgles2=enabled \
+   -Dopengl=true \
+   -Dglx=dri \
++  -Ddri3=enabled \
++  -Dgbm=enabled \
+   .. || exit 1
+   "${NINJA:=ninja}" $NUMJOBS || exit 1
+   DESTDIR=$PKG $NINJA install || exit 1
