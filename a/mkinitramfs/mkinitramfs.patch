@@ -1,6 +1,6 @@
 --- a/mkinitramfs	2023-04-12 23:22:41.153330832 +0300
-+++ b/mkinitramfs	2023-04-13 20:45:19.985778576 +0300
-@@ -1,19 +1,76 @@
++++ b/mkinitramfs	2023-11-03 20:53:12.862988732 +0200
+@@ -1,19 +1,83 @@
  #!/bin/bash
  # This file based in part on the mkinitramfs script for the LFS LiveCD
  # written by Alexander E. Patrakov and Jeremy Huntwork.
@@ -68,7 +68,14 @@
 +    file=$(PATH=/lib type -p $1)
 +    if [ -z $file ]; then
 +        file=$(PATH=/lib64 type -p $1)
++        if [ -z $file ]; then
++            file=$(PATH=/usr/lib type -p $1)
++            if [ -z $file ]; then
++                file=$(PATH=/usr/lib64 type -p $1)
++            fi
++        fi
 +    fi
++
    else
      file=$(type -p $1)
    fi
@@ -79,7 +86,7 @@
    else
      echo "Missing required file: $1 for directory $2"
      rm -rf $WDIR
-@@ -21,54 +78,53 @@ copy()
+@@ -21,54 +85,53 @@ copy()
    fi
  }
  
@@ -148,7 +155,7 @@
  
  # Create necessary device nodes
  mknod -m 640 $WDIR/dev/console c 5 1
-@@ -83,9 +139,6 @@ for file in $(find /etc/udev/rules.d/ -t
+@@ -83,9 +146,6 @@ for file in $(find /etc/udev/rules.d/ -t
    cp $file $WDIR/etc/udev/rules.d
  done
  
@@ -158,7 +165,7 @@
  # Copy the RAID configuration file if present
  if [ -f /etc/mdadm.conf ] ; then
    cp /etc/mdadm.conf $WDIR/etc
-@@ -94,9 +147,9 @@ fi
+@@ -94,9 +154,9 @@ fi
  # Install the init file
  install -m0755 $DATADIR/$INITIN $WDIR/init
  
@@ -171,7 +178,7 @@
    else
      binfiles="$binfiles lsmod"
      sbinfiles="$sbinfiles insmod"
-@@ -105,49 +158,56 @@ fi
+@@ -105,49 +165,56 @@ fi
  
  # Install basic binaries
  for f in $binfiles ; do
@@ -258,7 +265,7 @@
    # Conf file(s)
    cp -a /etc/lvm $WDIR/etc
  fi
-@@ -166,40 +226,69 @@ sort $unsorted | uniq | while read libra
+@@ -166,40 +233,69 @@ sort $unsorted | uniq | while read libra
    copy $library lib
  done
  
@@ -348,7 +355,7 @@
  
  # first empty WDIR to reuse it
    rm -r $WDIR/*
-@@ -207,18 +296,18 @@ if ls /usr/lib/firmware/intel-ucode/* >/
+@@ -207,18 +303,18 @@ if ls /usr/lib/firmware/intel-ucode/* >/
    DSTDIR=$WDIR/kernel/x86/microcode
    mkdir -p $DSTDIR
  
