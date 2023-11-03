@@ -1,6 +1,6 @@
 --- a/mkinitramfs	2023-04-12 23:22:41.153330832 +0300
 +++ b/mkinitramfs	2023-11-03 20:53:12.862988732 +0200
-@@ -1,19 +1,83 @@
+@@ -1,19 +1,82 @@
  #!/bin/bash
  # This file based in part on the mkinitramfs script for the LFS LiveCD
  # written by Alexander E. Patrakov and Jeremy Huntwork.
@@ -75,7 +75,6 @@
 +            fi
 +        fi
 +    fi
-+
    else
      file=$(type -p $1)
    fi
