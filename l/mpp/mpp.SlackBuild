@@ -68,6 +68,8 @@ find . \
 
 [[ ! -z ${FAMILY} ]] && FAMILY="-${FAMILY}"
 
+xzcat $CWD/fix-hardware-limited-to-memory-less-than-4G.patch.xz | patch -p1 --verbose || exit 0
+
 # Configuration
 cmake \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
