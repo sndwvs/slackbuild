@@ -1,5 +1,5 @@
---- a/mesa.SlackBuild	2023-04-08 16:37:40.680984529 +0000
-+++ b/mesa.SlackBuild	2023-06-24 07:44:03.362893613 +0000
+--- a/mesa.SlackBuild	2023-09-24 20:34:32.399296545 +0000
++++ b/mesa.SlackBuild	2023-10-02 17:48:16.949921534 +0000
 @@ -34,7 +34,7 @@ CODECS=${CODECS:-h264dec,h264enc,h265dec
  NUMJOBS=${NUMJOBS:-" -j$(expr $(nproc) + 1) "}
  
@@ -26,7 +26,7 @@
    -Drust_std=2021 \
    -Dosmesa=true \
    -Dgallium-drivers=$GALLIUM_DRIVERS \
--  -Dvulkan-drivers=amd,intel,swrast \
+-  -Dvulkan-drivers=amd,intel,intel_hasvk,swrast \
 -  -Dvulkan-layers=device-select,intel-nullhw,overlay \
 +  -Dvulkan-drivers=amd,swrast,broadcom \
 +  -Dvulkan-layers=device-select,overlay \
@@ -46,5 +46,5 @@
  zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
  
  cd $PKG
--/sbin/makepkg -l y -c n $TMP/${PKGNAM}-$VERSION-$ARCH-$BUILD.txz
-+/sbin/makepkg -l y -c n $TMP/${PKGNAM}-panfork-$VERSION-$ARCH-$BUILD.txz
+-/sbin/makepkg -l y -c n $TMP/${PKGNAM}-$(echo $VERSION | tr - _)-$ARCH-$BUILD.txz
++/sbin/makepkg -l y -c n $TMP/${PKGNAM}-panfork-$(echo $VERSION | tr - _)-$ARCH-$BUILD.txz
