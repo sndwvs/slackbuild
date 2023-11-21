@@ -1,5 +1,5 @@
---- a/mkinitramfs	2023-04-12 23:22:41.153330832 +0300
-+++ b/mkinitramfs	2023-11-03 20:53:12.862988732 +0200
+--- a/mkinitramfs	2023-11-21 07:06:43.345453426 +0200
++++ b/mkinitramfs	2023-11-21 07:07:24.491536996 +0200
 @@ -1,19 +1,82 @@
  #!/bin/bash
  # This file based in part on the mkinitramfs script for the LFS LiveCD
@@ -85,7 +85,7 @@
    else
      echo "Missing required file: $1 for directory $2"
      rm -rf $WDIR
-@@ -21,54 +85,53 @@ copy()
+@@ -21,54 +84,53 @@ copy()
    fi
  }
  
@@ -154,7 +154,7 @@
  
  # Create necessary device nodes
  mknod -m 640 $WDIR/dev/console c 5 1
-@@ -83,9 +146,6 @@ for file in $(find /etc/udev/rules.d/ -t
+@@ -83,9 +145,6 @@ for file in $(find /etc/udev/rules.d/ -t
    cp $file $WDIR/etc/udev/rules.d
  done
  
@@ -164,7 +164,7 @@
  # Copy the RAID configuration file if present
  if [ -f /etc/mdadm.conf ] ; then
    cp /etc/mdadm.conf $WDIR/etc
-@@ -94,9 +154,9 @@ fi
+@@ -94,9 +153,9 @@ fi
  # Install the init file
  install -m0755 $DATADIR/$INITIN $WDIR/init
  
@@ -177,7 +177,7 @@
    else
      binfiles="$binfiles lsmod"
      sbinfiles="$sbinfiles insmod"
-@@ -105,49 +165,56 @@ fi
+@@ -105,49 +164,56 @@ fi
  
  # Install basic binaries
  for f in $binfiles ; do
@@ -264,7 +264,7 @@
    # Conf file(s)
    cp -a /etc/lvm $WDIR/etc
  fi
-@@ -166,40 +233,69 @@ sort $unsorted | uniq | while read libra
+@@ -166,40 +232,69 @@ sort $unsorted | uniq | while read libra
    copy $library lib
  done
  
@@ -274,16 +274,17 @@
 +  cp -a /lib/udev $WDIR/lib
  fi
  if [ -d /usr/lib/systemd ]; then
-   cp -a /usr/lib/systemd $WDIR/usr/lib
- fi
--if [ -d /usr/lib/elogind ]; then
--  cp -a /usr/lib/elogind $WDIR/usr/lib
+-  cp -a /usr/lib/systemd $WDIR/usr/lib
++  cp -a /usr/lib/systemd $WDIR/lib
++fi
 +if [ -d /lib/systemd ]; then
 +  cp -a /lib/systemd $WDIR/lib
 +fi
 +if [ -d /lib/elogind ]; then
 +  cp -a /lib/elogind $WDIR/lib
-+fi
+ fi
+-if [ -d /usr/lib/elogind ]; then
+-  cp -a /usr/lib/elogind $WDIR/usr/lib
 +if [ -d /lib64/elogind ]; then
 +  cp -a /lib64/elogind $WDIR/lib64
  fi
@@ -354,7 +355,7 @@
  
  # first empty WDIR to reuse it
    rm -r $WDIR/*
-@@ -207,18 +303,18 @@ if ls /usr/lib/firmware/intel-ucode/* >/
+@@ -207,18 +302,18 @@ if ls /usr/lib/firmware/intel-ucode/* >/
    DSTDIR=$WDIR/kernel/x86/microcode
    mkdir -p $DSTDIR
  
